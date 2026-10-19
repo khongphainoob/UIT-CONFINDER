@@ -23,7 +23,7 @@ UIT ConFinder là website hỗ trợ tìm kiếm và theo dõi thông tin hội 
 
 | Vai trò | Họ và tên | MSSV | Phụ trách chính |
 |---|---|---|---|
-| Thành viên 1 | Lê Phạm Gia Huy| [24520668] | Dữ liệu, API/adapter, deadline và trang chi tiết hội nghị |
+| Thành viên 1 | Lê Phạm Gia Huy| 24520668 | Dữ liệu, API/adapter, deadline và trang chi tiết hội nghị |
 | Thành viên 2 | Nguyễn Huy Hoàng | 24520555 | Bộ giao diện chung, trang chủ và trang giới thiệu dữ liệu |
 | Thành viên 3 | Phạm Nguyễn Nhật Huy | 24520691 | Trang khám phá, tìm kiếm, bộ lọc, sắp xếp và phân trang |
 | Thành viên 4 | Trương Huy Hoàng | 24520574 | Trang đã lưu, LocalStorage, Calendar/ICS và tích hợp sản phẩm |(Nhóm trưởng)
