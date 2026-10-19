@@ -1,0 +1,23 @@
+<!doctype html>
+<html lang="vi">
+<head>
+  <meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
+  <title>Bộ component chung · UIT ConFinder</title>
+  <link rel="stylesheet" href="css/tokens.css"><link rel="stylesheet" href="css/base.css">
+  <link rel="stylesheet" href="css/components.css"><link rel="stylesheet" href="css/pages/components.css">
+  <script type="module" src="js/pages/components.js"></script>
+</head>
+<body>
+  <a class="skip-link" href="#main">Đến nội dung chính</a>
+  <header class="site-header" data-site-header></header>
+  <main id="main" class="container stack"><h1>Bộ component chung</h1>
+    <!-- Chủ trang tự xây HTML layout, CSS responsive và JavaScript nghiệp vụ tại đây. -->
+    <p>Trang thử component nội bộ; không phải chức năng nghiệp vụ.</p>
+    <section class="card stack"><h2>Button và input</h2><label class="field">Nhãn input<input placeholder="Nội dung mẫu" disabled></label>
+    <div class="inline"><button class="button" type="button" disabled>Nút mẫu</button><button class="button button--secondary" type="button" disabled>Nút phụ</button><span class="badge">TBA</span></div></section>
+    <section id="page-content" class="stack"></section>
+  </main>
+  <footer class="site-footer" data-site-footer></footer>
+  <noscript>Hãy bật JavaScript để dùng tra cứu hội nghị.</noscript>
+</body>
+</html>

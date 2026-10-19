@@ -1,0 +1,19 @@
+/* TV2: thay đổi token tại đây để toàn site đổi đồng bộ. */
+:root {
+  --color-ink: #172b46;
+  --color-muted: #53637a;
+  --color-paper: #f7f8fb;
+  --color-surface: #fff;
+  --color-accent: #244b94;
+  --color-border: #d2dae6;
+  --color-danger: #a42727;
+  --space-1: 4px;
+  --space-2: 8px;
+  --space-3: 12px;
+  --space-4: 16px;
+  --space-5: 24px;
+  --space-6: 32px;
+  --radius: 12px;
+  --container: 1200px;
+  --font-body: system-ui, -apple-system, 'Segoe UI', sans-serif;
+}
