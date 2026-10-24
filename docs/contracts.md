@@ -63,8 +63,9 @@ Các hàm TV4 hiện là stub; chưa có lưu/xuất lịch thật trong starter
 
 ## 4. UI chung (TV2)
 
-- `initCommonUI(pageKey)` chỉ dựng nav/footer và menu mobile; không xử lý business.
-- `showState(host,{kind,title,message})` dùng DOM/textContent; kind loading/error/empty.
+- `initCommonUI(pageKey)` chỉ dựng nav/footer và menu mobile; không xử lý business. pageKey: `home | explore | detail | saved | about | components`; `detail` đánh dấu mục Khám phá.
+- `showState(host,{kind,title,message,action?})` dùng DOM/textContent; kind loading/error/empty. `action` tuỳ chọn: `{label,onClick}` (nút, vd. Thử lại) hoặc `{label,href}` (liên kết http/https hoặc tương đối). Không truyền `action` thì chạy như cũ.
+- `createIcon(name, className?)` trong common.js trả `<svg class="icon">` dùng sprite `#i-<name>`; dùng khi render bằng DOM API.
 - tokens/base/components là nền chung; chủ trang tự viết layout/responsive CSS của mình.
 - Card renderer có thể do từng chủ trang viết theo cùng shape; không bắt buộc tạo framework component.
 

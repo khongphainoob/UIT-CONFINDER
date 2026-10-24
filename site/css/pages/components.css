@@ -1,1 +1,10 @@
-/* CSS riêng trang Bộ component chung. Chủ trang tự viết; dùng token từ tokens.css. */
+/* TV2: chỉ bố cục trang demo components.html; không dùng class này ở trang khác. */
+.demo-section { display: grid; gap: var(--space-4); padding-top: var(--space-5); border-top: 1px solid var(--color-rule); }
+.demo-row { display: flex; flex-wrap: wrap; align-items: center; gap: var(--space-3); }
+.demo-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(min(100%, 18rem), 1fr)); gap: var(--space-4); align-items: start; }
+.demo-card-grid { grid-template-columns: repeat(auto-fill, minmax(min(100%, 18rem), 1fr)); gap: var(--space-4); }
+.demo-filter-panel { max-width: 20rem; padding-block: 0; }
+.demo-note { color: var(--color-mute); font-size: var(--text-small); }
+.demo-fieldset { margin: 0; padding: var(--space-3) var(--space-4); border: 1px solid var(--color-rule); border-radius: var(--radius); background: var(--color-card); }
+.demo-fieldset legend { padding: 0 var(--space-1); font-size: var(--text-small); font-weight: 600; }
+code { font-family: var(--font-mono); font-size: .875em; }
