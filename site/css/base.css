@@ -1,16 +1,52 @@
+/* TV2: reset, chữ, focus, khung trang dùng chung. Chỉ dùng token trong tokens.css.
+   Tham khảo phần base của Hoagjaxz/uit-confinder, site/css/site.css. */
 * { box-sizing: border-box; }
-body { margin: 0; color: var(--color-ink); background: var(--color-paper); font: 16px/1.5 var(--font-body); }
-a { color: var(--color-accent); text-underline-offset: 3px; }
-button, input, select { font: inherit; }
-button, input, select { min-height: 44px; }
+html { scroll-padding-top: 72px; scrollbar-color: var(--color-rule-strong) var(--color-paper); }
+body {
+  margin: 0; min-height: 100vh; display: flex; flex-direction: column;
+  color: var(--color-ink); background: var(--color-paper); caret-color: var(--color-primary);
+  font: var(--text-body)/var(--leading-body) var(--font-ui);
+  font-variant-numeric: tabular-nums; /* cột số, ngày giờ thẳng hàng */
+}
+main { flex: 1; padding-block: var(--space-6); }
+main:focus { outline: none; } /* main nhận focus từ skip link, không cần vòng focus */
+
+h1, h2, h3, p, ul, ol, figure { margin: 0; }
+h1, h2, h3 { font-family: var(--font-serif); font-optical-sizing: auto; font-weight: 600; line-height: 1.2; text-wrap: balance; }
+h1 { font-size: var(--text-page); line-height: 1.15; }
+h2 { font-size: var(--text-section); }
+h3 { font-size: var(--text-card-title); }
+h1, h2, h3, p { overflow-wrap: anywhere; }
+
+a { color: var(--color-primary); text-underline-offset: 3px; }
+img, svg { max-width: 100%; }
+img { display: block; }
+button, input, select, textarea { font: inherit; color: inherit; }
+button, select, input:not([type=checkbox], [type=radio]) { min-height: var(--control-height); }
 button { cursor: pointer; }
-button:disabled { cursor: not-allowed; opacity: .65; }
-img { display: block; max-width: 100%; }
-h1, h2, p { overflow-wrap: anywhere; }
-h1 { font-size: clamp(1.8rem, 4vw, 2.8rem); line-height: 1.2; }
-:focus-visible { outline: 3px solid var(--color-accent); outline-offset: 3px; }
+button:disabled { cursor: not-allowed; }
 [hidden] { display: none !important; }
-.container { width: min(calc(100% - 32px), var(--container)); margin-inline: auto; }
-main { min-height: 65vh; padding-block: var(--space-6); }
-.skip-link { position: absolute; left: 16px; top: -100px; background: white; padding: 12px; z-index: 10; }
-.skip-link:focus { top: 8px; }
+
+/* phần trình duyệt tự vẽ cũng theo bảng màu */
+::selection { background: var(--color-primary); color: var(--color-card); }
+:focus-visible { outline: 2px solid var(--color-primary); outline-offset: 2px; }
+
+.container { width: min(100% - 2 * var(--gutter), var(--container)); margin-inline: auto; }
+.stack { display: grid; gap: var(--space-5); }
+.inline { display: flex; flex-wrap: wrap; gap: var(--space-3); align-items: end; }
+.inline > .field { flex: 1 1 220px; }
+.mono { font-family: var(--font-mono); }
+.visually-hidden { position: absolute; width: 1px; height: 1px; overflow: hidden; clip: rect(0 0 0 0); white-space: nowrap; }
+
+/* skip link: ẩn trên đỉnh, hiện khi được focus bằng Tab */
+.skip-link {
+  position: absolute; left: var(--space-3); top: -64px; z-index: var(--z-skip);
+  padding: var(--space-3) var(--space-4); border-radius: var(--radius);
+  background: var(--color-ink); color: var(--color-paper); font-weight: 600; text-decoration: none;
+}
+.skip-link:focus { top: var(--space-3); }
+
+/* tôn trọng người dùng chọn giảm chuyển động */
+@media (prefers-reduced-motion: reduce) {
+  *, *::before, *::after { transition-duration: .01ms !important; animation-duration: .01ms !important; animation-iteration-count: 1 !important; scroll-behavior: auto !important; }
+}
