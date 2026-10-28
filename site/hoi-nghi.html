@@ -3,6 +3,9 @@
 <head>
   <meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
   <title>Chi tiết hội nghị · UIT ConFinder</title>
+  <link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 32 32'%3E%3Crect width='32' height='32' rx='6' fill='%235b2d9b'/%3E%3Ctext x='16' y='23' font-size='20' text-anchor='middle' fill='%23ffffff' font-family='system-ui,sans-serif' font-weight='700'%3EC%3C/text%3E%3C/svg%3E">
+  <link rel="preconnect" href="https://fonts.googleapis.com"><link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Be+Vietnam+Pro:wght@400;500;600;700&family=JetBrains+Mono:wght@400;500;700&family=Newsreader:opsz,wght@6..72,400;6..72,500;6..72,600&display=swap">
   <link rel="stylesheet" href="css/tokens.css"><link rel="stylesheet" href="css/base.css">
   <link rel="stylesheet" href="css/components.css"><link rel="stylesheet" href="css/pages/conference-detail.css">
   <script type="module" src="js/pages/conference-detail.js"></script>
@@ -10,10 +13,14 @@
 <body>
   <a class="skip-link" href="#main">Đến nội dung chính</a>
   <header class="site-header" data-site-header></header>
-  <main id="main" class="container stack"><h1>Chi tiết hội nghị</h1>
-    <!-- Chủ trang tự xây HTML layout, CSS responsive và JavaScript nghiệp vụ tại đây. -->
-    <a href="lich-hoi-nghi.html">Quay lại Khám phá</a>
-    <section id="page-content" class="stack" aria-label="Chi tiết hội nghị"></section>
+  <main id="main" class="container stack">
+    <nav class="detail-nav" aria-label="Điều hướng phụ">
+      <a class="button button--ghost detail-back-link" href="lich-hoi-nghi.html">
+        <svg class="icon" aria-hidden="true"><use href="#i-left"/></svg>
+        <span>Quay lại Khám phá</span>
+      </a>
+    </nav>
+    <section id="page-content" class="stack" aria-label="Nội dung chi tiết hội nghị" aria-live="polite"></section>
   </main>
   <footer class="site-footer" data-site-footer></footer>
   <noscript>Hãy bật JavaScript để dùng tra cứu hội nghị.</noscript>

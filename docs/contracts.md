@@ -7,6 +7,9 @@ Hợp đồng là tên hàm và cấu trúc dữ liệu mà 4 người thống n
 `getCatalog({signal}?) -> Promise<{meta, editions}>`.
 Trong starter, hàm này chỉ đọc snapshot rỗng. TV1 bổ sung validate đầy đủ, live API/adapter/fallback. Trang gọi một lần rồi dùng catalog đã có; không fetch lại mỗi lần gõ tìm kiếm.
 
+> 📖 **Xem tài liệu chi tiết đầy đủ:** [Tài liệu đặc tả Catalog API](./data-catalog-api.md) bao gồm bảng mô tả từng trường, các helper xử lý deadline và ví dụ mẫu cho từng thành viên.
+
+
 ```js
 const catalog = {
   meta: { mode: 'snapshot', fetchedAt: null, checkedAt: null, sourceUrl: null },
