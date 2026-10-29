@@ -148,7 +148,7 @@ Nút 44px là vùng bấm, `.chip__face` 30px là phần nhìn thấy.
   <li>
     <article class="badge-card">
       <div class="badge-card__main">
-        <h3 class="badge-card__name"><a href="hoi-nghi.html?id=...">ICSE 2027</a></h3>
+        <h3 class="badge-card__name"><a href="conference.html?id=...">ICSE 2027</a></h3>
         <p class="badge-card__full-name">Tên đầy đủ</p>
         <div class="badge-card__meta">
           <span class="ribbon ribbon--core-a-star">CORE A*</span>
@@ -229,7 +229,7 @@ showState(host, { kind: 'loading', title: 'Đang tải dữ liệu', message: 'V
 showState(host, { kind: 'error', title: 'Không tải được dữ liệu', message: 'Kiểm tra mạng rồi thử lại.',
   action: { label: 'Thử lại', onClick: loadPage } });
 showState(host, { kind: 'empty', title: 'Chưa có hội nghị phù hợp', message: 'Thử bỏ bớt bộ lọc.',
-  action: { label: 'Xem tất cả hội nghị', href: 'lich-hoi-nghi.html' } });
+  action: { label: 'Xem tất cả hội nghị', href: 'conferences.html' } });
 ```
 
 `loading` có `role="status"` và khung xương (chỉ đổi opacity); `error` có `role="alert"`; `action` tuỳ chọn. Hàm thay toàn bộ nội dung của `host`.
