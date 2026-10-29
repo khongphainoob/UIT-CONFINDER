@@ -135655,6 +135655,102 @@
           ]
         }
       ]
+    },
+    {
+      "id": "fixture-ai-2027",
+      "seriesKey": "fixture-ai",
+      "acronym": "FAI",
+      "name": "Fixture AI Conference",
+      "year": 2027,
+      "fields": [
+        "AI",
+        "Data"
+      ],
+      "ranks": {
+        "ccf": null,
+        "core": null,
+        "year": null,
+        "sourceUrl": null
+      },
+      "place": "Ho Chi Minh City",
+      "format": "Offline",
+      "websiteUrl": "https://example.com/fixture-ai-2027",
+      "sourceUrl": "https://example.com/fixture-ai-2027",
+      "checkedAt": "2026-10-29T00:00:00Z",
+      "verifiedAt": null,
+      "links": {
+        "cfp": null,
+        "template": null,
+        "authorGuide": null
+      },
+      "rounds": [
+        {
+          "id": "r1",
+          "label": "Round 1",
+          "deadlines": [
+            {
+              "id": "d1",
+              "type": "paper",
+              "instant": "2027-01-15T23:59:00Z",
+              "sourceText": "15 January 2027",
+              "timezone": "UTC",
+              "precision": "instant",
+              "quality": "unverified",
+              "sourceUrl": "https://example.com/fixture-ai-2027",
+              "checkedAt": "2026-10-29T00:00:00Z",
+              "verifiedAt": null
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "id": "fixture-web-2027",
+      "seriesKey": "fixture-web",
+      "acronym": "FWC",
+      "name": "Fixture Web Conference",
+      "year": 2027,
+      "fields": [
+        "Web",
+        "Systems"
+      ],
+      "ranks": {
+        "ccf": null,
+        "core": null,
+        "year": null,
+        "sourceUrl": null
+      },
+      "place": null,
+      "format": "Online",
+      "websiteUrl": "https://example.com/fixture-web-2027",
+      "sourceUrl": "https://example.com/fixture-web-2027",
+      "checkedAt": "2026-10-29T00:00:00Z",
+      "verifiedAt": null,
+      "links": {
+        "cfp": null,
+        "template": null,
+        "authorGuide": null
+      },
+      "rounds": [
+        {
+          "id": "r1",
+          "label": "Round 1",
+          "deadlines": [
+            {
+              "id": "d1",
+              "type": "paper",
+              "instant": "2027-02-20T23:59:00Z",
+              "sourceText": "20 February 2027",
+              "timezone": "UTC",
+              "precision": "instant",
+              "quality": "unverified",
+              "sourceUrl": "https://example.com/fixture-web-2027",
+              "checkedAt": "2026-10-29T00:00:00Z",
+              "verifiedAt": null
+            }
+          ]
+        }
+      ]
     }
   ]
 }

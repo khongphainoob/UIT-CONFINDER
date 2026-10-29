@@ -1,1 +1,12 @@
-/* CSS riêng trang Hội nghị đã lưu. Chủ trang tự viết; dùng token từ tokens.css. */
+.saved-page__intro { max-width: 720px; color: var(--color-muted); }
+.saved-summary { margin: 0; color: var(--color-muted); font-weight: 650; }
+.saved-list { display: grid; gap: var(--space-4); }
+.saved-card { display: grid; gap: var(--space-3); }
+.saved-card__title { margin: 0; font-size: 1.25rem; }
+.saved-card__meta { margin: 0; color: var(--color-muted); }
+.saved-card__actions { display: flex; flex-wrap: wrap; gap: var(--space-3); }
+.button--danger { border-color: var(--color-danger); background: var(--color-danger); }
+.notice--warning { border-left-color: var(--color-danger); background: #fff1f1; }
+@media (min-width: 768px) {
+  .saved-list { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+}
