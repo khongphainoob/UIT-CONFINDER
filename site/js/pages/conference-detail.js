@@ -588,7 +588,7 @@ async function initPage() {
         kind: 'empty',
         title: 'Chưa chọn kỳ hội nghị',
         message: 'Vui lòng quay lại trang Khám phá để chọn một hội nghị cần xem chi tiết.',
-        action: { label: 'Đến trang Khám phá', href: 'lich-hoi-nghi.html' },
+        action: { label: 'Đến trang Khám phá', href: 'conferences.html' },
       });
       return;
     }
@@ -600,7 +600,7 @@ async function initPage() {
         kind: 'empty',
         title: 'Không tìm thấy kỳ hội nghị',
         message: `Hệ thống không tìm thấy hội nghị nào với mã "${editionId}".`,
-        action: { label: 'Quay lại danh sách hội nghị', href: 'lich-hoi-nghi.html' },
+        action: { label: 'Quay lại danh sách hội nghị', href: 'conferences.html' },
       });
       return;
     }
