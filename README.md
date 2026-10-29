@@ -9,6 +9,11 @@ UIT ConFinder là website hỗ trợ tìm kiếm và theo dõi thông tin hội 
 
 ## 1. Thông tin đồ án
 
+Quy trình task, handoff và báo cáo nằm tại
+[docs/task-workflow.md](docs/task-workflow.md). Quy tắc đóng góp nằm tại
+[CONTRIBUTING.md](CONTRIBUTING.md); khung báo cáo nằm tại
+[docs/report-outline.md](docs/report-outline.md).
+
 | Nội dung | Thông tin |
 |---|---|
 | Tên đồ án | UIT ConFinder — Website tra cứu hội nghị khoa học |
@@ -128,15 +133,19 @@ Blog và chuyển đổi giao diện sáng/tối là chức năng bổ sung, đ�
 
 ## 6. Các trang chính
 
+Vì đây là static site, route được tạo từ tên file trong thư mục `site/`. Không có
+router backend riêng. Khi đổi tên file, phải cập nhật mọi `href`, `action`, link
+JavaScript và tài liệu liên quan.
+
 | Trang | Đường dẫn | Nội dung |
 |---|---|---|
-| Trang chủ | `index.html` | Giới thiệu, tìm nhanh và các deadline sắp tới |
-| Khám phá | `lich-hoi-nghi.html` | Tìm kiếm, lọc, sắp xếp và phân trang |
-| Chi tiết | `hoi-nghi.html?id=...` | Thông tin một kỳ hội nghị và các deadline |
-| Đã lưu | `da-luu.html` | Danh sách hội nghị người dùng đã lưu |
-| Giới thiệu dữ liệu | `gioi-thieu.html` | Nguồn, cách cập nhật, hướng dẫn và liên hệ |
+| Home | `/index.html` | Giới thiệu, tìm nhanh và các deadline sắp tới |
+| Explore | `/conferences.html` | Tìm kiếm, lọc, sắp xếp và phân trang |
+| Conference detail | `/conference.html?id=<edition-id>` | Thông tin một kỳ hội nghị và các deadline |
+| Saved | `/saved.html` | Danh sách hội nghị người dùng đã lưu |
+| Data and guide | `/about.html` | Nguồn, cách cập nhật, hướng dẫn và liên hệ |
 
-`components.html` là trang thử giao diện dùng trong quá trình phát triển.
+`/components.html` là trang thử giao diện dùng trong quá trình phát triển.
 
 ## 7. Công nghệ sử dụng
 

@@ -55,8 +55,9 @@ TV3 lọc cửa sổ bằng futureDeadlines: now < deadline <= now + N*24h. Khô
 
 ## 3. Lưu hội nghị và Calendar (TV4)
 
+- `STORAGE_KEY = 'uit-confinder:saved:v1'`; storage payload là `{version:1, ids:string[]}`.
 - `getSavedIds() -> {ok, ids, error}`: ids là array edition ID hợp lệ về kiểu dữ liệu, error là null hoặc thông tin để trang hiển thị warning. Đối chiếu ID còn trong catalog ở page layer.
-- `toggleSaved(id) -> {ok, saved, ids, error}`: chỉ thành công sau khi ghi storage; key đề xuất `uit-confinder:saved:v1`, lưu JSON `{version:1, ids:[...]}`.
+- `toggleSaved(id) -> {ok, saved, ids, error}`: chỉ thành công sau khi ghi storage; ID rỗng bị từ chối. `saved` chỉ phản ánh kết quả sau khi ghi thành công.
 - Sau khi ghi thành công, phát `window` CustomEvent `saved:changed` với `detail:{ids}` để đồng bộ các nút trong cùng trang. Sự kiện `storage` để đồng bộ tab khác nếu thực hiện; không đồng bộ tài khoản.
 - `buildGoogleCalendarUrl(edition, selectedDeadline) -> string URL`.
 - `createIcs(edition, selectedDeadline) -> string nội dung ICS`; caller tạo Blob/tải, revoke Object URL sau khi dùng.

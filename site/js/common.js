@@ -1,11 +1,14 @@
 // TV2: chỉ shell UI (sprite icon, header, nav, menu mobile, footer). Không fetch dữ liệu, không lưu hội nghị ở đây.
+import { ROUTES } from './routes.js';
+
 // Tham khảo Hoagjaxz/uit-confinder: tools/chrome.mjs (khung header/footer, brand), site/js/nav.js (menu + Escape).
 
 // Một mảng cấu hình nav duy nhất: [pageKey, nhãn, đường dẫn tương đối]. Trang chưa có thì xoá dòng tương ứng.
 const navigation = [
-  ['explore', 'Khám phá', 'lich-hoi-nghi.html'],
-  ['saved', 'Đã lưu', 'da-luu.html'],
-  ['about', 'Giới thiệu dữ liệu', 'gioi-thieu.html'],
+  ['home', 'Trang chủ', ROUTES.home],
+  ['explore', 'Hội nghị', ROUTES.conferences],
+  ['saved', 'Đã lưu', ROUTES.saved],
+  ['about', 'Dữ liệu & hướng dẫn', ROUTES.about],
 ];
 const footerNote = 'Hãy kiểm tra lại trên trang chính thức của hội nghị trước khi nộp bài.';
 
@@ -49,7 +52,7 @@ export function createIcon(name, className = 'icon') {
 function createBrand() {
   const brand = document.createElement('a');
   brand.className = 'brand';
-  brand.href = 'index.html';
+  brand.href = ROUTES.home;
   const accent = document.createElement('span');
   accent.className = 'brand__accent';
   accent.textContent = 'ConFinder';
@@ -122,7 +125,7 @@ export function initCommonUI(pageKey) {
     const row = document.createElement('div');
     row.className = 'container footer-row';
     // footer có thêm Trang chủ (nav trên đầu đã bỏ mục này vì brand dẫn về); không đánh dấu trang hiện tại
-    const links = createNav('footer-nav', 'Liên kết chân trang', [['home', 'Trang chủ', 'index.html'], ...navigation], null);
+    const links = createNav('footer-nav', 'Liên kết chân trang', navigation, null);
     const note = document.createElement('p');
     note.className = 'footer-note';
     note.textContent = `${footerNote} Đồ án IE104 · UIT · Nhóm 2.`;

@@ -87,7 +87,7 @@ Mỗi phần tử trong mảng `catalog.editions` đại diện cho **1 kỳ t�
 
 | Trường | Kiểu dữ liệu | Ý nghĩa & Hướng dẫn sử dụng |
 |---|---|---|
-| `id` | `string` | **Định danh duy nhất** của kỳ hội nghị (vd: `'cvpr27'`, `'aaai21'`). Dùng làm tham số URL `hoi-nghi.html?id=...` và ID lưu trong `LocalStorage`. |
+| `id` | `string` | **Định danh duy nhất** của kỳ hội nghị (vd: `'cvpr27'`, `'aaai21'`). Dùng làm tham số URL `conference.html?id=...` và ID lưu trong `LocalStorage`. |
 | `seriesKey` | `string` | Mã định danh chuỗi hội nghị (vd: `'AI/cvpr'`). |
 | `acronym` | `string` | Tên viết tắt của hội nghị (vd: `'CVPR'`, `'ICSE'`, `'SIGMOD'`). |
 | `name` | `string` | Tên đầy đủ của hội nghị. |
@@ -207,7 +207,7 @@ Hàm quan trọng nhất cho **Trang chủ** và **Trang khám phá**:
      .sort((a, b) => Date.parse(a.sub.deadline.instant) - Date.parse(b.sub.deadline.instant))
      .slice(0, 6); // Lấy tối đa 6 hội nghị gần nhất
    ```
-3. Render các thẻ Card hiển thị: Tên viết tắt (`acronym`), Tên đầy đủ (`name`), Badge Rank (`ccf`/`core`), Thời gian đếm ngược (`getCountdownText`), và nút click chuyển đến `hoi-nghi.html?id=${conf.id}`.
+3. Render các thẻ Card hiển thị: Tên viết tắt (`acronym`), Tên đầy đủ (`name`), Badge Rank (`ccf`/`core`), Thời gian đếm ngược (`getCountdownText`), và nút click chuyển đến `conference.html?id=${conf.id}`.
 
 ### 🔍 Thành viên 3 (Trang khám phá - `site/js/pages/conference-list.js`)
 1. Gọi `const { editions } = await getCatalog();`.

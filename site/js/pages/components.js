@@ -1,5 +1,6 @@
 // TV2: tương tác của trang demo component. Không có logic nghiệp vụ, không dùng dữ liệu catalog.
 import { initCommonUI } from '../common.js';
+import { ROUTES } from '../routes.js';
 import { showState } from '../ui/state.js';
 
 initCommonUI('components');
@@ -48,5 +49,5 @@ function showDemoError() {
 showDemoError();
 showState(document.querySelector('#demo-state-empty'), {
   kind: 'empty', title: 'Chưa có hội nghị phù hợp', message: 'Thử bỏ bớt bộ lọc hoặc xem toàn bộ danh sách.',
-  action: { label: 'Xem tất cả hội nghị', href: 'lich-hoi-nghi.html' },
+  action: { label: 'Xem tất cả hội nghị', href: ROUTES.conferences },
 });

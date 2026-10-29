@@ -1,14 +1,33 @@
-## Task Notion / người phụ trách
-Mã task và link:
+## Task
+- ID / link: `T<number>`
+- Owner:
+- Goal:
 
-## Thay đổi và cách thử
-Đầu vào → thao tác → kết quả mong đợi/thực tế:
+## Changed
+- Files:
+- Behavior:
 
-## Bằng chứng
-Ảnh/log, trình duyệt và viewport:
+## API / Contract
+- None / changed in:
 
-## File dùng chung / ảnh hưởng module khác
-Ghi thay đổi contract nếu có:
+## Verification
+- Command:
+- Result:
+
+## Limitations
+- None / ...
+
+## Handoff
+- Next task:
+- Dependency:
+
+## Evidence
+- Screenshot/log/browser/viewport:
 
 ## Reviewer
-TV1 ↔ TV3; TV2 ↔ TV4.
+- TV1 ↔ TV3
+- TV2 ↔ TV4
+
+<!-- T always means Task. PR title format:
+[Task T<number>][TV<owner>] <Verb> <scope>
+Example: [Task T1][TV3] Implement explore filter state -->
