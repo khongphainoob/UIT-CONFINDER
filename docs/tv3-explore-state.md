@@ -112,12 +112,6 @@ paginate(items, page, pageSize)
 | T28 | Deadline sau biên 1ms | Không vào window |
 | T29 | URL lỗi hoặc có tham số lạ | Trang không bị lỗi và dùng giá trị mặc định |
 
-## 6. Chạy kiểm thử
+## 6. Kết quả kiểm tra
 
-Từ thư mục gốc repository:
-
-```powershell
-node tools/explore-state.test.mjs
-```
-
-Hiện bộ test chạy đạt 31/31 trường hợp. Trước khi chuyển task sang Done, nhóm vẫn cần đưa thay đổi lên branch riêng, gắn commit hoặc Pull Request và nhờ TV1 xem lại cách dùng helper deadline. Phần phụ thuộc chính là `T1-TV1-01` — model dữ liệu và helper chọn hạn.
+Các trường hợp trong bảng trên đã được đối chiếu expected/actual và đều cho kết quả đúng. Chi tiết được ghi tại `docs/tv3-explore-state-test-report.md`. Trước khi chuyển task sang Done, nhóm vẫn cần tạo Pull Request và nhờ TV1 xem lại cách dùng helper deadline. Phần phụ thuộc chính là `T1-TV1-01` — model dữ liệu và helper chọn hạn.
