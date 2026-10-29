@@ -1,15 +1,23 @@
 # Kiểm tra trước PR
 
-## Kiểm bộ khung
+## Smoke test
 
-- Chạy server, mở 5 trang và components.html; kiểm Network/Console không lỗi import/404.
-- Thử dưới /ten-repo/ để phát hiện đường dẫn bắt đầu bằng /; dùng đường dẫn tương đối cho link/asset.
-- Mobile 360px, tablet 768px, desktop 1366px; tab qua input/nút, mở/đóng menu bằng phím.
-- Home search chuyển q đúng mã hóa sang Khám phá; TV3 còn phải hiện thực parse/filter/URL history.
-- Snapshot starter rỗng; chưa có hội nghị thật, filter, save, countdown hoặc calendar hoàn chỉnh.
+- Chạy `python tools/serve.py`, mở 5 trang và `components.html`.
+- Kiểm tra Console/Network: không lỗi import, 404 hoặc MIME.
+- Mở site dưới `/ten-repo/`; link và asset phải dùng đường dẫn tương đối.
+- Kiểm tra responsive ở 360, 768 và 1366 px.
+- Dùng bàn phím để đi qua input/nút và mở/đóng menu.
 
-## Khi hiện thực business
+## Khi thay đổi business
 
-Ghi mã case trong đặc tả Notion + input/now cố định/expected/actual/browser/commit/reviewer. Tách fixture kiểm thử khỏi snapshot thật. Ưu tiên timezone qua ngày/năm, abstract đã qua/paper còn hạn, nhiều round, TBA/date-only/Estimated, OR/AND, URL history, 0/1/12/13 kết quả, JSON storage hỏng/ID mất và import ICS.
+- Tách fixture kiểm thử khỏi snapshot thật.
+- Cố định `now` khi test deadline và filter.
+- Bao phủ: timezone, nhiều round, date-only/TBA/Estimated, OR trong nhóm,
+  AND giữa nhóm, URL history, 0/1/12/13 kết quả, storage hỏng và ID không còn.
+- Ghi `input`, `expected`, `actual`, browser, commit và reviewer trong test report
+  hoặc hệ thống theo dõi task.
 
-Phần kiểm lúc tạo starter: syntax ES modules, import/link local, HTTP/MIME và getCatalog đọc snapshot. Không đồng nghĩa đã kiểm tương tác browser hay nghiệm thu chức năng IE104.
+## Phạm vi kết luận
+
+Syntax/import/HTTP chỉ xác nhận bộ khung chạy được. Không dùng kết quả đó để khẳng
+định browser interaction hoặc nghiệm thu chức năng hoàn chỉnh.

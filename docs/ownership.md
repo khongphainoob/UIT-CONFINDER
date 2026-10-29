@@ -2,10 +2,10 @@
 
 | Người | HTML tự xây | CSS tự xây | JavaScript chính |
 |---|---|---|---|
-| TV1 | hoi-nghi.html | css/pages/conference-detail.css | data-service.js, data-adapter.js, deadline-utils.js, pages/conference-detail.js; data/ |
-| TV2 | index.html, gioi-thieu.html, components.html | tokens.css, base.css, components.css, css/pages/home.css, about.css, components.css | common.js, ui/state.js, pages/home.js, about.js, components.js |
-| TV3 | lich-hoi-nghi.html | css/pages/conference-list.css | pages/conference-list.js, pages/explore-state.js |
-| TV4 | da-luu.html | css/pages/saved.css | saved-store.js, calendar-export.js, pages/saved.js; tools/Git/hosting |
+| TV1 | conference.html | css/pages/conference-detail.css | data-service.js, data-adapter.js, deadline-utils.js, pages/conference-detail.js; data/ |
+| TV2 | index.html, about.html, components.html | tokens.css, base.css, components.css, css/pages/home.css, about.css, components.css | common.js, ui/state.js, pages/home.js, about.js, components.js |
+| TV3 | conferences.html | css/pages/conference-list.css | pages/conference-list.js, pages/explore-state.js |
+| TV4 | saved.html | css/pages/saved.css | saved-store.js, calendar-export.js, pages/saved.js; tools/Git/hosting |
 
 config.js và docs/contracts.md: đề xuất thay đổi qua PR, có owner module review. Không ai giữ quyền độc quyền cả repo; bảng này giúp tránh sửa chồng file.
 
