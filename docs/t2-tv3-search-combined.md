@@ -54,3 +54,14 @@ Mỗi lựa chọn đang áp dụng có một chip riêng. Bỏ chip chỉ xóa 
 - Conference Alerts: ô tìm kiếm chính nổi bật, bộ lọc chi tiết và nút reset đặt chung một khu vực.
 
 Trang chỉ học cách tổ chức thông tin từ các nguồn trên; HTML, CSS và JavaScript vẫn do nhóm tự viết theo component chung của UIT ConFinder.
+
+## 7. Mẫu giao diện được áp dụng
+
+Phiên bản hiện tại dùng bố cục của một conference deadline tracker:
+
+1. Ô tìm kiếm là thao tác chính ở đầu trang.
+2. Lĩnh vực và CCF là chip chọn nhanh vì được dùng thường xuyên.
+3. CORE và hình thức nằm trong “Lọc thêm” để giao diện không quá dài.
+4. Kết quả bắt đầu bằng tiêu đề “Hạn nộp sắp tới”, sau đó là các card có deadline, countdown và nút lưu.
+
+Cách tổ chức này được tham khảo từ Conference Deadline Tracker và các mẫu website hội nghị HTML/CSS đơn giản. Nhóm không sao chép logo, hình ảnh hoặc mã nguồn của website khác.

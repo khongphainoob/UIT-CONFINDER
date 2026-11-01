@@ -117,6 +117,35 @@ function createCheckboxGroup(titleText, key, options) {
   return fieldset;
 }
 
+// Chip dùng cho các bộ lọc hay bấm nhất: lĩnh vực và CCF.
+function createQuickFilter(titleText, key, options) {
+  const section = document.createElement('section');
+  section.className = 'quick-filter';
+  const title = document.createElement('p');
+  title.className = 'quick-filter__title';
+  title.textContent = titleText;
+  const list = document.createElement('div');
+  list.className = 'quick-filter__list';
+
+  for (const [value, labelText] of Object.entries(options)) {
+    const selected = state[key].includes(value);
+    const button = document.createElement('button');
+    button.type = 'button';
+    button.className = 'chip';
+    button.setAttribute('aria-pressed', String(selected));
+    button.setAttribute('aria-label', `${titleText}: ${FIELD_LABELS[value] || labelText}`);
+    const face = document.createElement('span');
+    face.className = 'chip__face';
+    face.textContent = labelText;
+    button.append(face);
+    button.addEventListener('click', () => toggleArrayFilter(key, value, !selected));
+    list.append(button);
+  }
+
+  section.append(title, list);
+  return section;
+}
+
 function renderFilters() {
   const form = document.createElement('form');
   form.className = 'explore-filters';
@@ -141,6 +170,15 @@ function renderFilters() {
   searchButton.className = 'button explore-filters__search-button';
   searchButton.append(createIcon('search'), 'Tìm kiếm');
   searchRow.append(searchLabel, searchButton);
+
+  const fieldOptions = {};
+  for (const field of validFields) fieldOptions[field] = field;
+  const quickFilters = document.createElement('div');
+  quickFilters.className = 'quick-filters';
+  quickFilters.append(
+    createQuickFilter('Lĩnh vực', 'fields', fieldOptions),
+    createQuickFilter('Xếp hạng CCF', 'ccf', CCF_OPTIONS),
+  );
 
   const controls = document.createElement('div');
   controls.className = 'explore-filters__controls';
@@ -170,7 +208,7 @@ function renderFilters() {
 
   const advanced = document.createElement('details');
   advanced.className = 'explore-advanced';
-  const advancedCount = state.fields.length + state.ccf.length + state.core.length + state.mode.length;
+  const advancedCount = state.core.length + state.mode.length;
   advanced.open = advancedCount > 0;
   const advancedSummary = document.createElement('summary');
   advancedSummary.className = 'explore-advanced__summary';
@@ -180,22 +218,16 @@ function renderFilters() {
     : 'Lọc nâng cao';
   const advancedHint = document.createElement('span');
   advancedHint.className = 'explore-advanced__hint';
-  advancedHint.textContent = 'Lĩnh vực · CCF · CORE · Hình thức';
+  advancedHint.textContent = 'CORE · Hình thức tổ chức';
   advancedSummary.append(advancedTitle, advancedHint, createIcon('down'));
   const advancedBody = document.createElement('div');
   advancedBody.className = 'explore-advanced__body';
-  const fieldOptions = {};
-  for (const field of validFields) {
-    fieldOptions[field] = FIELD_LABELS[field] || field;
-  }
   advancedBody.append(
-    createCheckboxGroup('Lĩnh vực', 'fields', fieldOptions),
-    createCheckboxGroup('Hạng CCF', 'ccf', CCF_OPTIONS),
     createCheckboxGroup('Hạng CORE', 'core', CORE_OPTIONS),
     createCheckboxGroup('Hình thức', 'mode', MODE_OPTIONS),
   );
   advanced.append(advancedSummary, advancedBody);
-  form.append(searchRow, controls, advanced);
+  form.append(searchRow, quickFilters, controls, advanced);
 
   form.addEventListener('submit', (event) => {
     event.preventDefault();
