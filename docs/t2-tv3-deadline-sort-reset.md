@@ -4,12 +4,14 @@
 
 Task này nối state TV3 vào trang `conferences.html` và bổ sung các thao tác:
 
-1. Chọn loại hạn `any`, `abstract` hoặc `paper`.
-2. Lọc hạn trong tất cả, 7, 14, 30 hoặc 90 ngày tới.
-3. Mặc định ẩn hội nghị đã đóng; có thể bật “Hiện hạn đã qua”.
-4. Sắp xếp riêng theo deadline, tên, hạng CCF hoặc hạng CORE.
-5. Đặt lại toàn bộ state và chip về mặc định, quay về trang 1.
-6. Giữ nguyên danh sách hội nghị đã lưu vì reset không đọc, ghi hoặc xóa `localStorage`.
+1. Tìm theo tên đầy đủ hoặc tên viết tắt, không phân biệt hoa/thường và dấu tiếng Việt.
+2. Lọc kết hợp theo lĩnh vực, CCF, CORE và hình thức; OR trong một nhóm, AND giữa các nhóm.
+3. Chọn loại hạn `any`, `abstract` hoặc `paper`.
+4. Lọc hạn trong tất cả, 7, 14, 30 hoặc 90 ngày tới.
+5. Mặc định ẩn hội nghị đã đóng; có thể bật “Hiện hạn đã qua”.
+6. Sắp xếp riêng theo deadline, tên, hạng CCF hoặc hạng CORE.
+7. Đặt lại toàn bộ state và chip về mặc định, quay về trang 1.
+8. Giữ nguyên danh sách hội nghị đã lưu vì reset không đọc, ghi hoặc xóa `localStorage`.
 
 ## 2. Cách xử lý deadline
 
@@ -40,6 +42,10 @@ Vì vậy deadline TBA, date-only, Estimated, deadline đúng bằng `now` và n
 | Sort CCF/CORE | Hạng cao trước, thiếu hạng ở cuối | Dùng bảng trọng số, deadline và ID làm khóa phụ | PASS |
 | Reset | State/chip mặc định, page 1 | Tạo state mặc định mới và đồng bộ URL | PASS |
 | Reset và saved | Không xóa hội nghị đã lưu | Không gọi hàm ghi/xóa saved | PASS |
+| Hai lĩnh vực | OR trong cùng nhóm | Nhận edition thuộc một trong hai lĩnh vực | PASS |
+| Lĩnh vực + CCF + hình thức | AND giữa các nhóm | Chỉ nhận edition thỏa cả ba nhóm | PASS |
+| URL multi-select | Mỗi giá trị dùng param lặp | Parse/serialize giữ đủ `field`, `ccf`, `core`, `mode` | PASS |
+| Bỏ từng chip | Chỉ xóa đúng lựa chọn | State và URL giữ các lựa chọn còn lại | PASS |
 
 ## 4. Cách kiểm tra thủ công
 

@@ -35,6 +35,9 @@ let savedIds = [];
 const KIND_LABELS = { any: 'Mọi hạn nộp', abstract: 'Abstract', paper: 'Full paper' };
 const WINDOW_LABELS = { all: 'Mọi thời điểm', 7: '7 ngày tới', 14: '14 ngày tới', 30: '30 ngày tới', 90: '90 ngày tới' };
 const SORT_LABELS = { deadline: 'Hạn gần nhất', name: 'Tên A–Z', ccf: 'Hạng CCF', core: 'Hạng CORE' };
+const CCF_OPTIONS = { A: 'CCF A', B: 'CCF B', C: 'CCF C' };
+const CORE_OPTIONS = { 'A*': 'CORE A*', A: 'CORE A', B: 'CORE B', C: 'CORE C' };
+const MODE_OPTIONS = { online: 'Online', offline: 'Offline', hybrid: 'Hybrid' };
 
 function copyDefaultState() {
   return { ...DEFAULT_STATE, fields: [], ccf: [], core: [], mode: [] };
@@ -66,6 +69,37 @@ function createSelectField(labelText, name, options) {
   }
   label.append(select);
   return { label, select };
+}
+
+function toggleArrayFilter(key, value, checked) {
+  const current = state[key];
+  const next = checked
+    ? [...new Set([...current, value])]
+    : current.filter((item) => item !== value);
+  changeFilters({ [key]: next });
+}
+
+function createCheckboxGroup(titleText, key, options) {
+  const fieldset = document.createElement('fieldset');
+  fieldset.className = 'explore-filter-group';
+  const legend = document.createElement('legend');
+  legend.textContent = titleText;
+  const optionList = document.createElement('div');
+  optionList.className = 'explore-filter-group__options';
+  for (const [value, labelText] of Object.entries(options)) {
+    const label = document.createElement('label');
+    label.className = 'option';
+    const input = document.createElement('input');
+    input.type = 'checkbox';
+    input.name = key;
+    input.value = value;
+    input.checked = state[key].includes(value);
+    input.addEventListener('change', () => toggleArrayFilter(key, value, input.checked));
+    label.append(input, labelText);
+    optionList.append(label);
+  }
+  fieldset.append(legend, optionList);
+  return fieldset;
 }
 
 function renderFilters() {
@@ -118,7 +152,32 @@ function renderFilters() {
   reset.append(createIcon('refresh'), 'Đặt lại');
   actions.append(reset);
   controls.append(kind.label, windowField.label, sort.label, pastLabel, actions);
-  form.append(searchRow, controls);
+
+  const advanced = document.createElement('details');
+  advanced.className = 'explore-advanced';
+  const advancedCount = state.fields.length + state.ccf.length + state.core.length + state.mode.length;
+  advanced.open = advancedCount > 0;
+  const advancedSummary = document.createElement('summary');
+  advancedSummary.className = 'explore-advanced__summary';
+  const advancedTitle = document.createElement('span');
+  advancedTitle.textContent = advancedCount
+    ? `Lọc nâng cao (${advancedCount} lựa chọn)`
+    : 'Lọc nâng cao';
+  const advancedHint = document.createElement('span');
+  advancedHint.className = 'explore-advanced__hint';
+  advancedHint.textContent = 'Lĩnh vực · CCF · CORE · Hình thức';
+  advancedSummary.append(advancedTitle, advancedHint, createIcon('down'));
+  const advancedBody = document.createElement('div');
+  advancedBody.className = 'explore-advanced__body';
+  const fieldOptions = Object.fromEntries(validFields.map((field) => [field, field]));
+  advancedBody.append(
+    createCheckboxGroup('Lĩnh vực', 'fields', fieldOptions),
+    createCheckboxGroup('Hạng CCF', 'ccf', CCF_OPTIONS),
+    createCheckboxGroup('Hạng CORE', 'core', CORE_OPTIONS),
+    createCheckboxGroup('Hình thức', 'mode', MODE_OPTIONS),
+  );
+  advanced.append(advancedSummary, advancedBody);
+  form.append(searchRow, controls, advanced);
 
   form.addEventListener('submit', (event) => {
     event.preventDefault();
