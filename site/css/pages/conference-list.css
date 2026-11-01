@@ -1,12 +1,27 @@
-/* Trang Khám phá: bố cục gọn, dùng component và token chung của TV2. */
+/* Bố cục kiểu conference tracker, giữ nguyên màu chung của UIT ConFinder. */
 .explore-eyebrow {
   color: var(--color-primary); font-size: var(--text-xs); font-weight: 700;
   letter-spacing: .08em; text-transform: uppercase;
 }
+.explore-hero {
+  grid-template-columns: auto minmax(0, 1fr); align-items: start;
+  padding-bottom: var(--space-5); border-bottom: 1px solid var(--color-rule);
+}
+.explore-hero__icon {
+  display: grid; place-items: center; width: 52px; height: 52px;
+  border: 1px solid var(--color-rule-strong); border-radius: var(--radius);
+  background: var(--color-card); color: var(--color-primary); font-size: 1.7rem;
+}
+.explore-hero__content { display: grid; gap: var(--space-2); }
+.explore-hero__facts { display: flex; flex-wrap: wrap; gap: var(--space-2); margin-top: var(--space-1); }
+.explore-hero__facts span {
+  padding: 3px 9px; border: 1px solid var(--color-rule); border-radius: 999px;
+  background: var(--color-card); color: var(--color-mute); font-size: var(--text-label);
+}
 
 .explore-filters {
   display: grid; gap: var(--space-4); padding: var(--space-4);
-  border: 1px solid var(--color-rule); border-radius: var(--radius); background: var(--color-card);
+  border: 1px solid var(--color-rule); border-radius: 12px; background: var(--color-card);
 }
 .explore-filters__search { display: grid; grid-template-columns: minmax(0, 1fr) auto; gap: var(--space-2); }
 .explore-filters__search .field { gap: 0; }
@@ -41,15 +56,34 @@
 .explore-filter-group__options .option { min-width: 0; }
 
 .result-bar { display: grid; gap: var(--space-2); padding-bottom: var(--space-3); border-bottom: 1px solid var(--color-rule); }
-.result-bar h2 { margin-bottom: 2px; }
+.result-bar h2 {
+  margin-bottom: 2px; color: var(--color-mute); font-family: var(--font-ui);
+  font-size: var(--text-xs); font-weight: 700; letter-spacing: .08em; text-transform: uppercase;
+}
 #result-status { color: var(--color-mute); font-size: var(--text-small); font-weight: 600; }
 .active-filters { display: flex; flex-wrap: wrap; gap: var(--space-2); }
 .active-filters:empty { display: none; }
 .active-filters__label { align-self: center; color: var(--color-mute); font-size: var(--text-xs); }
 
-.conference-list { display: grid; gap: var(--space-3); padding: 0; list-style: none; }
-.conference-list .badge-card { border-left: 3px solid var(--color-primary); }
+.conference-list {
+  display: grid; grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+  gap: var(--space-3); padding: 0; list-style: none;
+}
+.conference-list .badge-card {
+  height: 100%; min-height: 310px; align-content: start; border: 1px solid var(--color-rule);
+  border-radius: 12px; background: var(--color-card);
+}
+.conference-list .badge-card::before { display: none; }
+.conference-list .badge-card:hover { border-color: var(--color-primary); background: var(--color-hover); }
+.conference-list .badge-card__full-name { min-height: 3em; white-space: normal; }
+.conference-list .badge-card__due { margin-top: var(--space-2); padding-top: var(--space-3); border-top: 1px solid var(--color-rule); }
+.conference-list .badge-card__state { margin-top: auto; padding-top: var(--space-2); }
+.conference-list .badge-card__countdown { color: var(--color-primary); font-size: 1.35rem; }
+.conference-list .badge-card__save { color: var(--color-mute); }
+.conference-list .badge-card__save:hover,
+.conference-list .badge-card__save[aria-pressed=true] { color: var(--color-primary); }
 .conference-card__rank-list { display: flex; flex-wrap: wrap; gap: 6px; }
+.conference-card__rank-list .ribbon { height: 20px; padding: 0 7px; border-radius: 3px; clip-path: none; }
 .conference-card__deadline-empty { color: var(--color-mute); font-size: var(--text-small); }
 .conference-card__save[aria-pressed="true"] { color: var(--color-primary); }
 .conference-card__save-message { color: var(--color-danger); font-size: var(--text-xs); }
@@ -64,8 +98,14 @@
 }
 
 @media (max-width: 31rem) {
+  .explore-hero { grid-template-columns: 1fr; }
+  .explore-hero__icon { width: 44px; height: 44px; }
   .explore-filters__search { grid-template-columns: 1fr; }
   .explore-filters__search-button { width: 100%; }
   .explore-advanced__summary { align-items: flex-start; flex-direction: column; padding-block: var(--space-2); }
   .explore-advanced__summary .icon { position: absolute; right: 0; }
+}
+
+@media (min-width: 90rem) {
+  .conference-list { grid-template-columns: repeat(5, minmax(0, 1fr)); }
 }

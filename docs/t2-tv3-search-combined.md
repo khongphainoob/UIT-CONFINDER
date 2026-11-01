@@ -64,4 +64,4 @@ Phiên bản hiện tại dùng bố cục của một conference deadline track
 3. CORE và hình thức nằm trong “Lọc thêm” để giao diện không quá dài.
 4. Kết quả bắt đầu bằng tiêu đề “Hạn nộp sắp tới”, sau đó là các card có deadline, countdown và nút lưu.
 
-Cách tổ chức này được tham khảo từ Conference Deadline Tracker và các mẫu website hội nghị HTML/CSS đơn giản. Nhóm không sao chép logo, hình ảnh hoặc mã nguồn của website khác.
+Cách tổ chức này được tham khảo từ Conference Deadline Tracker và các mẫu website hội nghị HTML/CSS đơn giản. Nhóm không sao chép logo, hình ảnh hoặc mã nguồn của website khác. Trang giữ nguyên bảng màu chung do TV2 xây dựng.
