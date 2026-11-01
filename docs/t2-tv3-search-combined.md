@@ -46,3 +46,11 @@ Mỗi lựa chọn đang áp dụng có một chip riêng. Bỏ chip chỉ xóa 
 - Thêm `q=ICST` vào tổ hợp còn đúng 1 hội nghị.
 - Reset xóa toàn bộ checkbox/chip/query, trở về trang 1 và giữ nguyên dữ liệu saved.
 - Viewport 390 × 844 không có thanh cuộn ngang; không ghi nhận lỗi JavaScript.
+
+## 6. Tham khảo bố cục
+
+- CCFDDL: ưu tiên card deadline, countdown, rank và bộ lọc theo lĩnh vực.
+- WikiCFP: danh sách cần quét nhanh tên, nơi tổ chức và deadline.
+- Conference Alerts: ô tìm kiếm chính nổi bật, bộ lọc chi tiết và nút reset đặt chung một khu vực.
+
+Trang chỉ học cách tổ chức thông tin từ các nguồn trên; HTML, CSS và JavaScript vẫn do nhóm tự viết theo component chung của UIT ConFinder.

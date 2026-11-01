@@ -32,12 +32,25 @@ let state = { ...DEFAULT_STATE, fields: [], ccf: [], core: [], mode: [] };
 let validFields = [];
 let savedIds = [];
 
+// Các nhãn này nằm gần phần giao diện để người đọc dễ sửa chữ hiển thị.
 const KIND_LABELS = { any: 'Mọi hạn nộp', abstract: 'Abstract', paper: 'Full paper' };
 const WINDOW_LABELS = { all: 'Mọi thời điểm', 7: '7 ngày tới', 14: '14 ngày tới', 30: '30 ngày tới', 90: '90 ngày tới' };
 const SORT_LABELS = { deadline: 'Hạn gần nhất', name: 'Tên A–Z', ccf: 'Hạng CCF', core: 'Hạng CORE' };
 const CCF_OPTIONS = { A: 'CCF A', B: 'CCF B', C: 'CCF C' };
 const CORE_OPTIONS = { 'A*': 'CORE A*', A: 'CORE A', B: 'CORE B', C: 'CORE C' };
 const MODE_OPTIONS = { online: 'Online', offline: 'Offline', hybrid: 'Hybrid' };
+const FIELD_LABELS = {
+  AI: 'AI — Trí tuệ nhân tạo',
+  CG: 'CG — Đồ họa và đa phương tiện',
+  CT: 'CT — Lý thuyết máy tính',
+  DB: 'DB — Cơ sở dữ liệu',
+  DS: 'DS — Kiến trúc và hệ phân tán',
+  HI: 'HI — Tương tác người–máy',
+  MX: 'MX — Liên ngành và lĩnh vực mới',
+  NW: 'NW — Mạng máy tính',
+  SC: 'SC — An toàn hệ thống và mạng',
+  SE: 'SE — Kỹ thuật phần mềm',
+};
 
 function copyDefaultState() {
   return { ...DEFAULT_STATE, fields: [], ccf: [], core: [], mode: [] };
@@ -47,7 +60,11 @@ function setState(nextState, { addHistory = true } = {}) {
   state = { ...nextState, page: Number(nextState.page) || 1 };
   const params = serializeState(state, { validFields });
   const url = `${window.location.pathname}${params.size ? `?${params}` : ''}`;
-  window.history[addHistory ? 'pushState' : 'replaceState']({}, '', url);
+  if (addHistory) {
+    window.history.pushState({}, '', url);
+  } else {
+    window.history.replaceState({}, '', url);
+  }
   renderPage();
 }
 
@@ -72,10 +89,8 @@ function createSelectField(labelText, name, options) {
 }
 
 function toggleArrayFilter(key, value, checked) {
-  const current = state[key];
-  const next = checked
-    ? [...new Set([...current, value])]
-    : current.filter((item) => item !== value);
+  let next = state[key].filter((item) => item !== value);
+  if (checked) next.push(value);
   changeFilters({ [key]: next });
 }
 
@@ -169,7 +184,10 @@ function renderFilters() {
   advancedSummary.append(advancedTitle, advancedHint, createIcon('down'));
   const advancedBody = document.createElement('div');
   advancedBody.className = 'explore-advanced__body';
-  const fieldOptions = Object.fromEntries(validFields.map((field) => [field, field]));
+  const fieldOptions = {};
+  for (const field of validFields) {
+    fieldOptions[field] = FIELD_LABELS[field] || field;
+  }
   advancedBody.append(
     createCheckboxGroup('Lĩnh vực', 'fields', fieldOptions),
     createCheckboxGroup('Hạng CCF', 'ccf', CCF_OPTIONS),
@@ -209,10 +227,10 @@ function renderActiveFilters() {
   activeFilters.replaceChildren();
   const entries = [];
   if (state.q) entries.push([`Từ khóa: ${state.q}`, () => changeFilters({ q: '' })]);
-  state.fields.forEach((value) => entries.push([`Lĩnh vực: ${value}`, () => removeArrayValue('fields', value)]));
-  state.ccf.forEach((value) => entries.push([`CCF ${value}`, () => removeArrayValue('ccf', value)]));
-  state.core.forEach((value) => entries.push([`CORE ${value}`, () => removeArrayValue('core', value)]));
-  state.mode.forEach((value) => entries.push([`Hình thức: ${value}`, () => removeArrayValue('mode', value)]));
+  for (const value of state.fields) entries.push([`Lĩnh vực: ${value}`, () => removeArrayValue('fields', value)]);
+  for (const value of state.ccf) entries.push([`CCF ${value}`, () => removeArrayValue('ccf', value)]);
+  for (const value of state.core) entries.push([`CORE ${value}`, () => removeArrayValue('core', value)]);
+  for (const value of state.mode) entries.push([`Hình thức: ${value}`, () => removeArrayValue('mode', value)]);
   if (state.kind !== DEFAULT_STATE.kind) entries.push([`Loại: ${KIND_LABELS[state.kind]}`, () => changeFilters({ kind: DEFAULT_STATE.kind })]);
   if (state.window !== DEFAULT_STATE.window) entries.push([`Hạn: ${WINDOW_LABELS[state.window]}`, () => changeFilters({ window: DEFAULT_STATE.window })]);
   if (state.past) entries.push(['Có hạn đã qua', () => changeFilters({ past: false })]);
@@ -222,7 +240,7 @@ function renderActiveFilters() {
     label.className = 'active-filters__label';
     label.textContent = 'Đang lọc:';
     activeFilters.append(label);
-    entries.forEach(([text, action]) => addActiveChip(text, action));
+    for (const [text, action] of entries) addActiveChip(text, action);
   }
 }
 
@@ -295,9 +313,9 @@ function createConferenceCard(item, now) {
   due.className = 'badge-card__due';
   const dueLabel = document.createElement('span');
   dueLabel.className = 'badge-card__due-label';
-  dueLabel.textContent = submission.deadline?.type === 'abstract'
-    ? 'Hạn abstract'
-    : submission.deadline?.type === 'paper' ? 'Hạn full paper' : 'Hạn nộp';
+  dueLabel.textContent = 'Hạn nộp';
+  if (submission.deadline?.type === 'abstract') dueLabel.textContent = 'Hạn abstract';
+  if (submission.deadline?.type === 'paper') dueLabel.textContent = 'Hạn full paper';
   due.append(dueLabel);
   const deadline = submission.deadline;
   const instant = deadline?.instant ? Date.parse(deadline.instant) : Number.NaN;
@@ -396,9 +414,11 @@ function renderPage() {
     const params = serializeState(state, { validFields });
     window.history.replaceState({}, '', `${window.location.pathname}${params.size ? `?${params}` : ''}`);
   }
-  resultStatus.textContent = pageInfo.total
-    ? `Tìm thấy ${pageInfo.total} hội nghị · đang hiển thị ${pageInfo.start + 1}–${pageInfo.end}`
-    : 'Không tìm thấy hội nghị phù hợp';
+  if (pageInfo.total > 0) {
+    resultStatus.textContent = `Tìm thấy ${pageInfo.total} hội nghị · đang hiển thị ${pageInfo.start + 1}–${pageInfo.end}`;
+  } else {
+    resultStatus.textContent = 'Không tìm thấy hội nghị phù hợp';
+  }
   if (!pageInfo.total) {
     showState(host, {
       title: 'Không có kết quả phù hợp',
@@ -423,7 +443,11 @@ async function initPage() {
   showState(host, { kind: 'loading', title: 'Đang tải dữ liệu', message: 'Vui lòng chờ.' });
   try {
     catalog = await getCatalog();
-    validFields = [...new Set(catalog.editions.flatMap((edition) => edition.fields || []))].sort();
+    const fieldSet = new Set();
+    for (const edition of catalog.editions) {
+      for (const field of edition.fields || []) fieldSet.add(field);
+    }
+    validFields = [...fieldSet].sort();
     const saved = getSavedIds();
     savedIds = saved.ids;
     state = parseState(window.location.search, { validFields });
@@ -439,7 +463,7 @@ window.addEventListener('popstate', () => {
 });
 
 window.addEventListener('saved:changed', (event) => {
-  savedIds = Array.isArray(event.detail?.ids) ? event.detail.ids : savedIds;
+  if (Array.isArray(event.detail?.ids)) savedIds = event.detail.ids;
 });
 
 initPage();
