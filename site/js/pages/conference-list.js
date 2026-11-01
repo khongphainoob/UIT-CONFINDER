@@ -317,6 +317,8 @@ function createConferenceCard(item, now) {
   const { edition, submission } = item;
   const card = document.createElement('article');
   card.className = `badge-card${submission.status === 'closed' ? ' badge-card--closed' : ''}`;
+  const mainField = edition.fields?.[0] || 'MX';
+  card.classList.add(`conference-card--${mainField.toLocaleLowerCase('vi')}`);
 
   const main = document.createElement('div');
   main.className = 'badge-card__main';
@@ -331,6 +333,10 @@ function createConferenceCard(item, now) {
   fullName.textContent = edition.name || 'Chưa có tên đầy đủ';
   const meta = document.createElement('div');
   meta.className = 'badge-card__meta';
+  const fieldTag = document.createElement('span');
+  fieldTag.className = 'conference-card__field';
+  fieldTag.textContent = mainField;
+  fieldTag.title = FIELD_LABELS[mainField] || mainField;
   const ranks = document.createElement('div');
   ranks.className = 'conference-card__rank-list';
   if (edition.ranks?.core) ranks.append(createRibbon('CORE', edition.ranks.core));
@@ -338,7 +344,7 @@ function createConferenceCard(item, now) {
   const place = document.createElement('span');
   place.className = 'badge-card__place';
   place.textContent = [edition.format, edition.place].filter(Boolean).join(' · ') || 'Chưa rõ hình thức';
-  meta.append(ranks, place);
+  meta.append(fieldTag, ranks, place);
   main.append(title, fullName, meta);
 
   const due = document.createElement('div');
@@ -370,15 +376,21 @@ function createConferenceCard(item, now) {
   status.className = 'badge-card__state';
   const targetTime = Number.isFinite(instant) ? instant : Number.NaN;
   const urgency = getUrgencyInfo(targetTime, now);
-  const urgencyBadge = document.createElement('span');
-  urgencyBadge.className = `urgency ${urgency.className}`;
-  urgencyBadge.append(createIcon(urgency.icon), urgency.label);
+  const statusLine = document.createElement('span');
+  statusLine.className = `conference-card__deadline-status ${urgency.className}`;
+  const dot = document.createElement('span');
+  dot.className = 'conference-card__deadline-dot';
+  dot.setAttribute('aria-hidden', 'true');
   const countdown = document.createElement('span');
   countdown.className = 'badge-card__countdown';
-  countdown.textContent = Number.isFinite(targetTime)
-    ? getCountdownText(targetTime, now)
-    : 'Chưa rõ thời gian';
-  status.append(urgencyBadge, countdown);
+  if (Number.isFinite(targetTime)) {
+    const countdownText = getCountdownText(targetTime, now);
+    countdown.textContent = countdownText.charAt(0).toLocaleUpperCase('vi') + countdownText.slice(1);
+  } else {
+    countdown.textContent = 'Chưa rõ thời gian';
+  }
+  statusLine.append(dot, countdown);
+  status.append(statusLine);
 
   card.append(main, due, status, createSaveButton(edition, card));
   return card;
