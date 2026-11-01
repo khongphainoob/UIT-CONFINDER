@@ -78,7 +78,10 @@
 .conference-list .badge-card__full-name { min-height: 3em; white-space: normal; }
 .conference-list .badge-card__due { margin-top: var(--space-2); padding-top: var(--space-3); border-top: 1px solid var(--color-rule); }
 .conference-list .badge-card__state { margin-top: auto; padding-top: var(--space-2); }
-.conference-list .badge-card__countdown { color: inherit; font: 700 1.2rem/1.25 var(--font-mono); }
+.conference-list .badge-card__countdown {
+  color: inherit; font: 700 1.0625rem/1.35 var(--font-ui);
+  letter-spacing: -.01em; white-space: nowrap;
+}
 .conference-list .badge-card__save { color: var(--color-mute); }
 .conference-list .badge-card__save:hover,
 .conference-list .badge-card__save[aria-pressed=true] { color: var(--color-primary); }
@@ -89,7 +92,8 @@
   font-size: var(--text-label); font-weight: 700;
 }
 .conference-card__deadline-status {
-  display: inline-flex; align-items: center; gap: var(--space-2); background: transparent;
+  display: inline-flex; flex-wrap: nowrap; align-items: center; gap: var(--space-2);
+  max-width: 100%; background: transparent; white-space: nowrap;
 }
 .conference-card__deadline-dot { width: 8px; height: 8px; border-radius: 50%; background: currentColor; }
 .conference-card--ai { --card-accent: var(--color-ribbon-core-a-star); }
