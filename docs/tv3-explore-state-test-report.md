@@ -1,15 +1,15 @@
-# TV3 — Kết quả kiểm tra bộ lọc trang Khám phá
+# TV3 — Bảng đối chiếu bộ lọc trang Khám phá
 
-Mình dùng một mốc thời gian cố định để kết quả không thay đổi theo ngày kiểm tra. Dữ liệu dùng để đối chiếu chỉ là dữ liệu mẫu cho phần tìm kiếm, bộ lọc, sắp xếp và chia trang; đây không phải danh sách hội nghị thật của website.
+Tài liệu này dùng để kiểm tra thủ công phần tìm kiếm, bộ lọc, sắp xếp và chia trang. Nhóm dùng một mốc thời gian giả định để kết quả không thay đổi theo ngày mở website. Dữ liệu trong bảng chỉ là dữ liệu mẫu, không phải danh sách hội nghị thật.
 
 ## 1. Thông tin lần chạy
 
 | Thuộc tính | Giá trị |
 |---|---|
-| Ngày chạy | 27/10/2026 |
-| Base commit | `1aa7570` |
-| Mốc thời gian test | `2026-10-20T00:00:00Z` |
-| Kết quả | **31/31 PASS** |
+| Ngày đối chiếu | 27/10/2026 |
+| Mốc thời gian giả định | `2026-10-20T00:00:00Z` |
+| Hình thức | Đối chiếu expected/actual thủ công |
+| Kết quả ghi nhận | **31/31 PASS** |
 | Người review phía TV1 | Chưa xác nhận |
 
 ## 2. So sánh kết quả mong đợi và kết quả chạy thực tế
@@ -48,13 +48,13 @@ Mình dùng một mốc thời gian cố định để kết quả không thay �
 | URL | Params lặp, bỏ default, thứ tự canonical | Chuỗi URL đúng expected | PASS |
 | Search | Bỏ dấu, chuẩn hóa khoảng trắng | `tri tue nhan tao` | PASS |
 
-## 3. Kết quả chung
+## 3. Kết quả ghi nhận
 
-Cả 31 trường hợp đều cho kết quả giống với dự kiến. Không có trường hợp nào thất bại trong lần chạy này.
+Cả 31 trường hợp trong lần đối chiếu đều cho kết quả giống với dự kiến. Bảng này là bằng chứng bàn giao của task, không phải file test tự động và không cần chạy bằng Node.js.
 
 ## 4. Việc còn lại trước khi chuyển Done
 
-1. Tạo branch cho task, commit thay đổi và gắn link commit hoặc Pull Request vào thẻ công việc.
+1. Gắn link commit hoặc Pull Request của branch task vào thẻ công việc.
 2. Nhờ TV1 kiểm tra cách TV3 sử dụng `getNextSubmission`, `futureDeadlines` và hai trạng thái `unknown`, `closed`.
 3. Khi helper thật của TV1 được ghép vào, đối chiếu lại các trường hợp chính để chắc rằng kết quả không thay đổi.
 4. Nối phần state này với `conference-list.js` rồi kiểm tra thêm thao tác thật trên trình duyệt.

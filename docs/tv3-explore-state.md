@@ -79,9 +79,9 @@ paginate(items, page, pageSize)
 { edition, submission: { status, deadline, futureDeadlines } }
 ```
 
-## 5. Các trường hợp đã kiểm tra
+## 5. Các trường hợp cần kiểm tra
 
-Để kết quả không thay đổi theo ngày chạy máy, bộ test cố định thời gian tại `2026-10-20T00:00:00Z`. Dữ liệu mẫu chi tiết nằm trong `tools/explore-state.test.mjs`.
+Khi kiểm tra thủ công, nhóm dùng cùng một mốc thời gian giả định là `2026-10-20T00:00:00Z` để kết quả không thay đổi theo ngày mở website. Bảng dưới đây là checklist expected dùng để đối chiếu với kết quả hiển thị trên trang Khám phá; task này không thêm file chạy test vào thư mục `tools`.
 
 | Test | Input | Expected |
 |---|---|---|
@@ -112,6 +112,6 @@ paginate(items, page, pageSize)
 | T28 | Deadline sau biên 1ms | Không vào window |
 | T29 | URL lỗi hoặc có tham số lạ | Trang không bị lỗi và dùng giá trị mặc định |
 
-## 6. Kết quả kiểm tra
+## 6. Cách nghiệm thu
 
-Các trường hợp trong bảng trên đã được đối chiếu expected/actual và đều cho kết quả đúng. Chi tiết được ghi tại `docs/tv3-explore-state-test-report.md`. Trước khi chuyển task sang Done, nhóm vẫn cần tạo Pull Request và nhờ TV1 xem lại cách dùng helper deadline. Phần phụ thuộc chính là `T1-TV1-01` — model dữ liệu và helper chọn hạn.
+Mở website bằng server HTML hiện có của dự án, thao tác tìm kiếm và bộ lọc trên trang Khám phá, sau đó ghi kết quả thực tế vào bảng tại `docs/tv3-explore-state-test-report.md`. Không cần cài hoặc chạy thêm file test Node.js. Trước khi chuyển task sang Done, nhóm vẫn cần tạo Pull Request và nhờ TV1 xem lại cách dùng helper deadline. Phần phụ thuộc chính là `T1-TV1-01` — model dữ liệu và helper chọn hạn.
