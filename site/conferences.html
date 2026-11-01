@@ -19,16 +19,22 @@
         <p class="page-head__lead">Tìm hạn nộp phù hợp, sắp xếp danh sách và lưu lại hội nghị bạn quan tâm.</p>
       </div>
     </header>
-    <section id="filter-root" aria-label="Bộ tìm và lọc"></section>
-    <div class="result-bar">
-      <div>
-        <h2>Hạn nộp sắp tới</h2>
-        <p id="result-status" role="status" aria-live="polite"></p>
-      </div>
-      <div id="active-filters" class="active-filters" aria-label="Bộ lọc đang áp dụng"></div>
+    <div class="explore-layout">
+      <aside class="explore-sidebar" aria-label="Bộ lọc hội nghị">
+        <section id="filter-root" aria-label="Bộ tìm và lọc"></section>
+      </aside>
+      <section class="explore-results" aria-label="Danh sách hội nghị">
+        <div class="result-bar">
+          <div>
+            <h2>Hạn nộp sắp tới</h2>
+            <p id="result-status" role="status" aria-live="polite"></p>
+          </div>
+          <div id="active-filters" class="active-filters" aria-label="Bộ lọc đang áp dụng"></div>
+        </div>
+        <section id="page-content" class="stack" aria-label="Kết quả hội nghị"></section>
+        <nav id="pagination" aria-label="Phân trang"></nav>
+      </section>
     </div>
-    <section id="page-content" class="stack" aria-label="Kết quả hội nghị"></section>
-    <nav id="pagination" aria-label="Phân trang"></nav>
   </main>
   <footer class="site-footer" data-site-footer></footer>
   <noscript>Hãy bật JavaScript để dùng tra cứu hội nghị.</noscript>
