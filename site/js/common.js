@@ -8,7 +8,7 @@ const navigation = [
   ['home', 'Trang chủ', ROUTES.home],
   ['explore', 'Hội nghị', ROUTES.conferences],
   ['saved', 'Đã lưu', ROUTES.saved],
-  ['about', 'Dữ liệu & hướng dẫn', ROUTES.about],
+  ['about', 'Giới thiệu dữ liệu', ROUTES.about],
 ];
 const footerNote = 'Hãy kiểm tra lại trên trang chính thức của hội nghị trước khi nộp bài.';
 

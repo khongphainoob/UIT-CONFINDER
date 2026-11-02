@@ -1,1 +1,287 @@
-/* CSS riêng trang Trang chủ. Chủ trang tự viết; dùng token từ tokens.css. */
+/* CSS riêng trang Trang chủ (TV2). Landing được phá điều cấm thị giác theo DESIGN.md mục "Landing (Trang chủ)";
+   token riêng của trang khai báo ở đây, còn lại dùng tokens.css.
+   Bố cục tham khảo: hero chia đôi của "Calendar App Hero Section" (Ann Kyrk, Dribbble), hàng kẻ mảnh và mục Journal của
+   "Satz" (Aathif Thajudeen, Dribbble), viết lại bằng CSS thuần, không chép mã. */
+
+:root {
+  --home-night: var(--color-ink);             /* nửa tối của hero */
+  --home-on-night: var(--color-paper);
+  --home-on-night-mute: #b9b2c7;               /* chữ phụ trên nền tối, tương phản ~8:1 */
+  --home-urgent-on-night: #ff8f80;             /* "Gấp" trên nền tối (bản sáng của --color-urgent-fg), ~7.8:1 */
+  --home-lanyard-strong: #b8265a;              /* hồng dây đeo đậm hơn cho hover nút tìm, chữ trắng ~6:1 */
+  --home-week-on-night: #ffb35c;               /* "Trong tuần" trên nền tối (bản sáng của --color-week-fg), ~9.7:1 */
+  --home-loader: var(--color-ribbon-core-a-star);
+  --home-display: clamp(3rem, 13vw, 6.5rem);   /* chữ hero khi xếp dọc (dưới 64rem) */
+  --home-edge: max(var(--gutter), (100vw - var(--container)) / 2); /* lề trái khớp .container */
+  --home-ease: cubic-bezier(.2, .7, .1, 1);
+}
+@media (min-width: 64rem) {
+  :root { --home-display: clamp(4.5rem, 8.5vw, 8rem); }
+}
+
+.home { padding-block: 0; }
+
+/* ---------- màn tải: chỉ hiện khi <html> có .home-loading (script đầu trang bật) ---------- */
+html { scrollbar-gutter: stable; } /* chừa chỗ thanh cuộn kể cả lúc màn tải khoá cuộn, để nửa tối không xê dịch khi màn tải gỡ */
+.home-loader { display: none; }
+.home-loading { overflow: hidden; } /* khoá cuộn trên <html> (không phải body) thì scrollbar-gutter mới giữ rãnh */
+.home-loading .home-loader {
+  position: fixed; inset: 0; z-index: calc(var(--z-skip) + 1);
+  display: block; color: var(--home-on-night);
+}
+/* nền màn tải là một lớp riêng (không chứa chữ) để co lại bằng transform mà không méo gì:
+   nền mực của nửa tối hero, phủ lớp tím mờ dần (::before) và lưới mờ 4x4 (::after) */
+.home-loader__panel { position: absolute; inset: 0; background: var(--home-night); transform-origin: top left; }
+.home-loader__panel::before, .home-loader__panel::after { content: ""; position: absolute; inset: 0; }
+.home-loader__panel::before { background: var(--home-loader); }
+.home-loader__panel::after {
+  background-image: linear-gradient(to right, rgb(255 255 255 / .08) 1px, transparent 1px),
+                    linear-gradient(to bottom, rgb(255 255 255 / .08) 1px, transparent 1px);
+  background-size: 25% 25%;
+}
+/* khi đủ 100: chữ và lưới mờ đi, nền co từ phải sang trái (di động: từ dưới lên) đúng bằng nửa tối của hero
+   (home.js đo và đặt --loader-x/--loader-y), đồng thời tím chuyển sang mực; xong thì màn tải gỡ đi, chỗ đó chính là nửa tối */
+.home-leaving .home-loader > :not(.home-loader__panel), .home-leaving .home-loader__panel::after { opacity: 0; transition: opacity .3s ease; }
+.home-leaving .home-loader__panel { transform: scale(var(--loader-x, 1), var(--loader-y, 1)); transition: transform .8s var(--home-ease) .15s; }
+.home-leaving .home-loader__panel::before { opacity: 0; transition: opacity .8s ease .15s; }
+/* brand góc trên trái, bộ đếm góc dưới phải; cùng lề với .container */
+.home-loader__brand { position: absolute; top: var(--space-6); left: var(--home-edge); font: 600 clamp(1.75rem, 4vw, 2.5rem)/1 var(--font-serif); }
+.home-loader__brand span { color: var(--home-on-night-mute); }
+/* trạng thái tải (số kỳ hội nghị thật) và đồng hồ GMT+7: chữ mono nhỏ */
+.home-loader__status, .home-loader__clock { position: absolute; color: var(--home-on-night-mute); font: 500 var(--text-small)/1.4 var(--font-mono); }
+.home-loader__status { top: calc(var(--space-6) + 3rem); left: var(--home-edge); right: var(--home-edge); }
+.home-loader__clock { bottom: calc(var(--space-6) + .5rem); left: var(--home-edge); }
+@media (min-width: 48rem) {
+  .home-loader__status { top: calc(var(--space-6) + .75rem); left: auto; text-align: right; }
+}
+.home-loader__count {
+  position: absolute; right: var(--home-edge); bottom: var(--space-6);
+  font: 500 clamp(3rem, 12vw, 8rem)/1 var(--font-mono); letter-spacing: -.04em;
+}
+.home-loader__bar { position: absolute; left: 0; right: 0; bottom: 0; height: 4px; background: rgb(255 255 255 / .12); }
+.home-loader__bar span {
+  display: block; height: 100%; background: var(--color-lanyard);
+  transform: scaleX(var(--progress, 0)); transform-origin: left; transition: transform .2s linear;
+}
+
+/* ---------- header trang chủ: ẩn khi đang ở hero, trượt xuống khi cuộn tới "Hạn nộp sắp tới" ----------
+   home.js bật .home-header-auto và .is-shown; không có JS thì header giữ như các trang khác.
+   Khi header đang ẩn mà người dùng Tab vào link trong header thì vẫn hiện (focus-within). */
+.home-header-auto .site-header { position: fixed; inset: 0 0 auto; transform: translateY(-100%); transition: transform .45s var(--home-ease); }
+.home-header-auto .site-header.is-shown, .home-header-auto .site-header:focus-within { transform: none; }
+
+/* ---------- hero ---------- */
+.hero { position: relative; display: grid; overflow: hidden; }
+.hero__dark {
+  display: flex; flex-direction: column; justify-content: center; gap: var(--space-6);
+  padding: var(--space-6) var(--gutter) 3rem;
+  background: var(--home-night); color: var(--home-on-night);
+}
+.hero__title { display: grid; }
+.hero__title, .hero__echo { margin: 0; font: 500 var(--home-display)/1.08 var(--font-ui); letter-spacing: -.045em; text-transform: uppercase; }
+.hero__line { display: block; white-space: nowrap; }
+.hero__echo { display: none; }
+
+/* đoạn dẫn + ô tìm nằm trên nền tối */
+.hero__intro { display: grid; gap: var(--space-5); max-width: 32rem; }
+.hero__lead { color: var(--home-on-night-mute); font-size: 1.0625rem; }
+.hero__search { display: flex; flex-wrap: wrap; gap: var(--space-3); align-items: end; }
+.hero__search .field { flex: 1 1 220px; color: var(--home-on-night); }
+.hero__search .field input { border-color: transparent; color: var(--color-ink); }
+/* nút tìm dùng hồng dây đeo cho nổi trên nền tối (ngoại lệ Landing của The Lanyard Rule); chữ trắng ~4.6:1 */
+.hero__search .button { background: var(--color-lanyard); border-color: var(--color-lanyard); color: var(--color-card); }
+.hero__search .button:hover { background: var(--home-lanyard-strong); border-color: var(--home-lanyard-strong); }
+.hero__search .button:active { transform: translateY(1px); }
+.hero__search :focus-visible { outline-color: var(--home-on-night); }
+
+.hero__light { display: grid; gap: var(--space-3); padding: var(--space-6) var(--gutter); background: var(--color-paper); }
+.hero__cell { display: grid; gap: var(--space-2); align-content: start; padding: var(--space-3); background: var(--color-tint); font-size: var(--text-xs); line-height: 1.45; }
+.hero__cell p { color: var(--color-mute); }
+.hero__cell-title {
+  display: flex; align-items: center; gap: var(--space-2);
+  font: 700 var(--text-label)/1.2 var(--font-ui); letter-spacing: .06em; text-transform: uppercase;
+}
+.hero__cell-title::before { content: ""; width: 8px; height: 8px; background: var(--color-ink); }
+.hero__cell--stale { background: var(--color-card); outline: 1px solid var(--color-ink); outline-offset: -1px; }
+.hero__cell--stale .hero__cell-title .icon { width: 14px; height: 14px; }
+.hero__cell--stale .hero__cell-title::before { display: none; }
+.hero__cell .hero__source-mode { color: var(--color-ink); font-weight: 600; }
+
+/* ô "Hạn gần nhất": nền tối như nửa trái để thành điểm nhìn đầu tiên bên phần sáng */
+.hero__cell--next { gap: var(--space-1); background: var(--home-night); color: var(--home-on-night); }
+.hero__cell--next .hero__cell-title { color: var(--home-on-night); }
+.hero__cell--next p { color: var(--home-on-night-mute); }
+.hero__cell--next :focus-visible { outline-color: var(--home-on-night); }
+/* mức khẩn: ô vuông và chữ sau dấu "·" đổi màu; bản sáng của màu mức khẩn để đạt AA trên nền tối */
+.hero__cell--next { --level: var(--home-on-night); }
+.hero__cell--next[data-level="urgent"] { --level: var(--home-urgent-on-night); }
+.hero__cell--next[data-level="week"] { --level: var(--home-week-on-night); }
+.hero__cell--next .hero__cell-title::before { background: var(--level); }
+.hero__next-level { color: var(--level); }
+.hero__next-name {
+  justify-self: start; display: inline-flex; align-items: center; min-height: var(--control-height);
+  color: inherit; font: 600 clamp(1.375rem, 2vw, 1.75rem)/1.1 var(--font-serif); text-decoration: none;
+}
+.hero__next-name:hover { text-decoration: underline; text-underline-offset: 4px; }
+.hero__next-when { font-family: var(--font-mono); }
+.hero__next-count { font: 500 var(--text-small)/1.2 var(--font-mono); }
+.hero__next-count b { color: var(--home-on-night); font-size: clamp(1.75rem, 2.6vw, 2.5rem); font-weight: 500; letter-spacing: -.04em; }
+.hero__next-count span { white-space: nowrap; } /* số và đơn vị không tách dòng */
+
+@media (min-width: 48rem) {
+  .hero__dark { padding-block: 4rem; }
+  .hero__light { grid-template-columns: repeat(3, minmax(0, 1fr)); }
+  .hero__cell--next { grid-column: 1 / -1; }
+}
+
+/* từ 64rem: chia đôi, lưới 4x4 bên phải, hai dòng chữ lớn chạy ngang và đổi màu khi qua ranh giới */
+@media (min-width: 64rem) {
+  /* chiều cao cố định (không phải min-height): nếu không, 4 hàng 1fr của lưới phải giãn theo ô chữ cao nhất
+     và đẩy dòng "Hạn nộp." xuống dưới mép màn hình. 40rem: mỗi hàng ≥ 160px, đủ cho ô Hạn gần nhất */
+  .hero { grid-template-columns: 1fr 1fr; grid-template-rows: minmax(0, 1fr); height: max(40rem, 100svh); }
+  .hero__dark {
+    padding: calc(var(--space-6) + var(--home-display) * 1.08 + var(--space-4)) var(--space-6)
+             calc(var(--space-5) + var(--home-display) * 1.3 * 1.08 + var(--space-4)) var(--home-edge);
+  }
+  .hero__echo { display: contents; }
+  .hero__line { position: absolute; left: 0; right: 0; z-index: 2; padding-left: var(--home-edge); pointer-events: none; }
+  .hero__line--top { top: var(--space-6); }
+  .hero__line--bottom { bottom: var(--space-5); font-size: calc(var(--home-display) * 1.3); } /* to hơn để chạy qua ranh giới hai nửa */
+  .hero__title .hero__line { clip-path: inset(-.2em 50% -.2em 0); }
+  .hero__echo .hero__line { clip-path: inset(-.2em 0 -.2em 50%); color: var(--color-ink); }
+
+  .hero__light {
+    position: relative; grid-template-columns: repeat(4, minmax(0, 1fr)); grid-template-rows: repeat(4, minmax(0, 1fr));
+    gap: 0; padding: 0;
+  }
+  /* đường lưới vẽ bằng nền, khớp đúng 4 cột x 4 hàng vì vùng lưới không có padding */
+  .hero__light::before {
+    content: ""; position: absolute; inset: 0; transform-origin: top;
+    background-image: linear-gradient(to right, var(--color-rule-strong) 1px, transparent 1px),
+                      linear-gradient(to bottom, var(--color-rule-strong) 1px, transparent 1px);
+    background-size: 25% 25%;
+  }
+  .hero__light > * { position: relative; }
+  .hero__cell { margin: 1px 0 0 1px; }
+  .hero__cell--time { grid-area: 2 / 3; }
+  .hero__cell--source { grid-area: 2 / 4; }
+  .hero__cell--save { grid-area: 3 / 2; }
+  /* hàng 1 và 4 dành cho hai dòng chữ lớn, nhưng "Hạn nộp." chỉ chạy tới ~55% bề ngang nên cột 3-4 hàng 4 còn trống:
+     ô Hạn gần nhất cao 2 hàng, số đếm ngược nằm sát đáy ngang với dòng chữ lớn */
+  .hero__cell--next { grid-area: 3 / 3 / 5 / 5; grid-template-rows: auto auto auto 1fr; }
+  .hero__next-count { align-self: end; }
+  .hero__next-count b { font-size: clamp(2rem, 3.2vw, 3.5rem); }
+}
+/* 1024-1279px: cột lưới chỉ ~130px, ô chữ một cột bị ép thành 8 dòng; cho mỗi ô rộng 2 cột */
+@media (min-width: 64rem) and (max-width: 79.99rem) {
+  .hero__cell--time { grid-area: 2 / 1 / 3 / 3; }
+  .hero__cell--source { grid-area: 2 / 3 / 3 / 5; }
+  .hero__cell--save { grid-area: 3 / 1 / 4 / 3; }
+}
+
+/* ---------- hạn nộp sắp tới: cột tiêu đề dính, hàng kẻ mảnh ---------- */
+.upcoming { display: grid; gap: var(--space-6); padding-block: 4rem; }
+.upcoming__head { display: grid; gap: var(--space-3); align-content: start; }
+.upcoming__head h2 { font-size: clamp(2.25rem, 6vw, 4rem); line-height: 1; letter-spacing: -.02em; }
+.upcoming__head p { max-width: 36ch; color: var(--color-mute); }
+.upcoming__all, .guides__head a { justify-self: start; display: inline-flex; align-items: center; min-height: var(--control-height); font-size: var(--text-small); font-weight: 600; }
+.upcoming__body { display: grid; }
+/* tiêu đề nhóm mức khẩn: icon + chữ màu mức khẩn, không hộp; đường kẻ của hàng đầu nhóm ngay bên dưới */
+.rows__group {
+  display: flex; align-items: center; gap: var(--space-2); padding-block: var(--space-3);
+  font: 600 var(--text-small)/1.3 var(--font-ui);
+}
+.rows__group:not(:first-child) { margin-top: var(--space-6); }
+.rows__group .icon { width: 16px; height: 16px; }
+.rows__group--urgent { color: var(--color-urgent-fg); }
+.rows__group--week { color: var(--color-week-fg); }
+.rows__group--month { color: var(--color-month-fg); }
+.rows__group--open { color: var(--color-open-fg); }
+
+.rows { padding: 0; list-style: none; counter-reset: row; border-bottom: 1px solid var(--color-ink); }
+.rows > li { border-top: 1px solid var(--color-ink); }
+.row summary {
+  display: grid; grid-template-columns: 2.25rem minmax(0, 1fr) auto; grid-template-areas: "num name plus" "num due due";
+  gap: var(--space-1) var(--space-3); align-items: center; padding: var(--space-4) var(--space-2);
+  cursor: pointer; list-style: none; transition: background-color .2s;
+}
+.row summary::-webkit-details-marker { display: none; }
+.row summary:hover { background: var(--color-hover); }
+.row__num { grid-area: num; align-self: start; color: var(--color-mute); font: 500 var(--text-small)/1.6 var(--font-mono); }
+.row__name {
+  grid-area: name; display: flex; flex-wrap: wrap; align-items: center; gap: var(--space-1) var(--space-3); min-width: 0;
+  transition: transform .3s var(--home-ease);
+}
+.row summary:hover .row__name { transform: translateX(.375rem); }
+.row__acronym { font: 600 clamp(1.25rem, 3vw, 1.75rem)/1.1 var(--font-serif); }
+.row__due { grid-area: due; display: flex; flex-wrap: wrap; gap: 0 var(--space-3); font-family: var(--font-mono); font-size: var(--text-small); }
+.row__when { font-weight: 600; }
+.row__tick { font-size: var(--text-xs); white-space: nowrap; } /* 33 ký tự mono vừa 360px khi cỡ 13px */
+.row__when small { font-size: inherit; }
+.row__tick { color: var(--color-mute); }
+.row__plus { grid-area: plus; position: relative; width: var(--control-height); height: var(--control-height); }
+.row__plus::before, .row__plus::after {
+  content: ""; position: absolute; top: 50%; left: 50%; width: 14px; height: 2px; margin: -1px 0 0 -7px;
+  background: currentColor; transition: transform .3s var(--home-ease);
+}
+.row__plus::after { transform: rotate(90deg); }
+.row[open] .row__plus::before { transform: rotate(45deg); }
+.row[open] .row__plus::after { transform: rotate(135deg); }
+.row__body {
+  display: grid; gap: var(--space-3); padding: 0 var(--space-2) var(--space-5) calc(2.25rem + var(--space-3) + var(--space-2));
+  font-size: var(--text-small);
+}
+.row__full-name { color: var(--color-mute); }
+.row__facts { display: grid; gap: var(--space-2); margin: 0; }
+.row__facts div { display: flex; flex-wrap: wrap; gap: 0 var(--space-3); }
+.row__facts dt { min-width: 9rem; color: var(--color-mute); }
+.row__facts dd { margin: 0; font-family: var(--font-mono); }
+.row__badges { display: flex; flex-wrap: wrap; gap: var(--space-2); }
+.row__link { justify-self: start; display: inline-flex; align-items: center; gap: var(--space-1); min-height: var(--control-height); font-weight: 600; }
+
+@media (min-width: 48rem) {
+  .row summary { grid-template-columns: 3rem minmax(0, 1fr) auto auto; grid-template-areas: "num name due plus"; }
+  .row__due { flex-direction: column; align-items: flex-end; text-align: right; }
+  .row__tick { font-size: inherit; }
+  .row__body { padding-left: calc(3rem + var(--space-3) + var(--space-2)); }
+}
+@media (min-width: 64rem) {
+  .upcoming { grid-template-columns: minmax(0, 1fr) minmax(0, 2fr); gap: var(--space-6) 4rem; padding-block: 6rem; }
+  .guides__head { border-top: 1px solid var(--color-ink); } /* dưới 64rem bỏ, vì đường kẻ cuối danh sách đã ngăn hai mục */
+  .upcoming__head { position: sticky; top: calc(53px + var(--space-6)); align-self: start; } /* chừa chỗ header đã hiện (cao 53px) */
+}
+
+/* ---------- hướng dẫn: mục lục 2 cột kẻ mảnh, không ảnh bìa; dẫn sang trang Giới thiệu dữ liệu ---------- */
+.guides { display: grid; gap: var(--space-5); padding-block: 0 5rem; }
+.guides__head { display: flex; flex-wrap: wrap; align-items: baseline; justify-content: space-between; gap: var(--space-2) var(--space-4); padding-top: var(--space-5); }
+.guides__head h2 { font-size: clamp(1.75rem, 4vw, 2.5rem); letter-spacing: -.01em; }
+.guides__list { display: grid; padding: 0; list-style: none; }
+.guides__list > li { border-top: 1px solid var(--color-rule-strong); }
+.guides__list > li:last-child { border-bottom: 1px solid var(--color-rule-strong); }
+.guide { display: grid; gap: var(--space-2); padding-block: var(--space-5); color: var(--color-ink); text-decoration: none; }
+.guide__title { font: 600 clamp(1.375rem, 2.4vw, 1.75rem)/1.2 var(--font-serif); text-wrap: balance; }
+.guide__summary { max-width: 46ch; color: var(--color-mute); }
+.guide__meta { display: flex; align-items: center; justify-content: space-between; gap: var(--space-3); margin-top: var(--space-2); color: var(--color-mute); font-size: var(--text-small); }
+.guide__meta .icon { width: 20px; height: 20px; color: var(--color-primary); transition: transform .3s var(--home-ease); }
+.guide:hover .guide__title { text-decoration: underline; text-underline-offset: 4px; text-decoration-thickness: 1px; }
+.guide:hover .guide__meta .icon { transform: translateX(.375rem); }
+/* từ 48rem: 2 cột cách nhau 4rem, mỗi cột tự kẻ đường; hàng cuối của cả hai cột đều có đường đáy */
+@media (min-width: 48rem) {
+  .guides__list { grid-template-columns: repeat(2, minmax(0, 1fr)); column-gap: 4rem; }
+  .guides__list > li:nth-last-child(2):nth-child(odd) { border-bottom: 1px solid var(--color-rule-strong); }
+}
+
+/* ---------- chuyển động: chỉ khi home.js bật .home-motion (không bật khi giảm chuyển động) ----------
+   .home-ready bật sau khi màn tải trượt lên; các khối [data-reveal] nhận .is-visible khi cuộn tới. */
+.home-motion .hero__line { opacity: 0; transform: translateY(.4em); }
+.home-motion.home-ready .hero__line { opacity: 1; transform: none; transition: opacity .9s var(--home-ease), transform 1.1s var(--home-ease); }
+.home-motion.home-ready .hero__line--bottom { transition-delay: .15s; }
+.home-motion [data-reveal] { opacity: 0; transform: translateY(1.5rem); }
+.home-motion [data-reveal].is-visible {
+  opacity: 1; transform: none;
+  transition: opacity .8s var(--home-ease), transform .9s var(--home-ease); transition-delay: calc(var(--i, 0) * 90ms);
+}
+@media (min-width: 64rem) {
+  .home-motion .hero__light::before { transform: scaleY(0); }
+  .home-motion.home-ready .hero__light::before { transform: none; transition: transform 1.4s var(--home-ease); }
+}

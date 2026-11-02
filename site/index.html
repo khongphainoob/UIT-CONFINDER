@@ -8,19 +8,112 @@
   <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Be+Vietnam+Pro:wght@400;500;600;700&family=JetBrains+Mono:wght@400;500;700&family=Newsreader:opsz,wght@6..72,400;6..72,500;6..72,600&display=swap">
   <link rel="stylesheet" href="css/tokens.css"><link rel="stylesheet" href="css/base.css">
   <link rel="stylesheet" href="css/components.css"><link rel="stylesheet" href="css/pages/home.css">
+  <!-- Bật màn tải ngay khi trang mở (trước khi module chạy) để không nháy nội dung.
+       Chỉ lần đầu mỗi phiên (cờ trong sessionStorage): quay lại Trang chủ thì vào thẳng nội dung.
+       Không có JS, giảm chuyển động hoặc trình duyệt chặn sessionStorage thì không có màn tải; 5s vẫn chưa xong thì tự gỡ. -->
+  <script>
+    try {
+      if (!matchMedia('(prefers-reduced-motion: reduce)').matches && !sessionStorage.getItem('home-loader-seen')) {
+        document.documentElement.classList.add('home-loading');
+        setTimeout(() => document.documentElement.classList.remove('home-loading'), 5000);
+        sessionStorage.setItem('home-loader-seen', '1');
+      }
+    } catch { /* bỏ màn tải, trang vẫn hiện bình thường */ }
+  </script>
   <script type="module" src="js/pages/home.js"></script>
 </head>
 <body>
+  <div class="home-loader" aria-hidden="true">
+    <span class="home-loader__panel"></span>
+    <p class="home-loader__brand">UIT <span>Con</span>Finder</p>
+    <p class="home-loader__status" data-loader-status>Đang tải dữ liệu từ CCFDDL…</p>
+    <p class="home-loader__clock" data-loader-clock></p>
+    <p class="home-loader__count"><span data-loader-count>000</span></p>
+    <span class="home-loader__bar"><span data-loader-bar></span></span>
+  </div>
   <a class="skip-link" href="#main">Đến nội dung chính</a>
   <header class="site-header" data-site-header></header>
-  <main id="main" class="container stack"><h1>Trang chủ</h1>
-    <!-- Chủ trang tự xây HTML layout, CSS responsive và JavaScript nghiệp vụ tại đây. -->
-    <form class="inline" action="conferences.html" method="get">
-      <label class="field">Tên hội nghị hoặc acronym<input name="q" type="search" placeholder="Ví dụ: tên hội nghị" maxlength="200"></label>
-      <button class="button" type="submit">Khám phá</button>
-    </form><section id="page-content" class="stack" aria-label="Hội nghị sắp tới"></section>
+  <main id="main" class="home">
+    <!-- Hero chia đôi: trái nền tối có đoạn dẫn và ô tìm, phải nền giấy kẻ lưới với 3 ô thông tin -->
+    <section class="hero" aria-labelledby="home-title">
+      <div class="hero__dark">
+        <h1 id="home-title" class="hero__title">
+          <span class="hero__line hero__line--top">Đừng lỡ</span>
+          <span class="hero__line hero__line--bottom">hạn nộp.</span>
+        </h1>
+        <div class="hero__intro" data-reveal>
+          <p class="hero__lead">Hạn nộp bài của các hội nghị khoa học, quy đổi sẵn sang giờ Việt Nam (GMT+7). Đối chiếu trang chính thức trước khi nộp.</p>
+          <!-- Form gửi thẳng sang trang Hội nghị, trình duyệt tự mã hoá q; không cần JavaScript -->
+          <form class="hero__search" action="conferences.html" method="get" role="search">
+            <label class="field">Tìm theo tên hoặc tên viết tắt<input name="q" type="search" placeholder="Ví dụ: CVPR, ICSE" maxlength="200"></label>
+            <button class="button" type="submit">Tìm hội nghị</button>
+          </form>
+        </div>
+      </div>
+      <!-- Bản sao hai dòng chữ lớn chỉ để đổi màu khi chữ chạy sang nửa sáng; trình đọc màn hình bỏ qua -->
+      <p class="hero__echo" aria-hidden="true">
+        <span class="hero__line hero__line--top">Đừng lỡ</span>
+        <span class="hero__line hero__line--bottom">hạn nộp.</span>
+      </p>
+      <div class="hero__light">
+        <!-- Hạn gần nhất: home.js điền khi có dữ liệu; không có JS hoặc không còn hạn nào thì giữ ẩn, không để ô trống -->
+        <div class="hero__cell hero__cell--next" id="hero-next" data-reveal hidden></div>
+        <div class="hero__cell hero__cell--time" data-reveal>
+          <p class="hero__cell-title">Giờ GMT+7</p>
+          <p>Mỗi hạn được quy đổi từ giờ gốc của hội nghị (AoE, PT…) sang giờ Việt Nam.</p>
+        </div>
+        <div class="hero__cell hero__cell--source" id="hero-source" data-reveal>
+          <p class="hero__cell-title">Nguồn dữ liệu</p>
+          <p>Lấy từ CCFDDL và trang chính thức của từng hội nghị.</p>
+        </div>
+        <div class="hero__cell hero__cell--save" data-reveal>
+          <p class="hero__cell-title">Lưu &amp; lịch</p>
+          <p>Lưu hội nghị ngay trên trình duyệt, thêm hạn vào Google Calendar hoặc tệp .ics.</p>
+        </div>
+      </div>
+    </section>
+
+    <!-- Danh sách 6 hạn gần nhất: cột tiêu đề dính bên trái, hàng kẻ mảnh mở rộng bằng <details> -->
+    <section class="container upcoming" aria-labelledby="upcoming-title">
+      <div class="upcoming__head" data-reveal>
+        <h2 id="upcoming-title">Hạn nộp<br>sắp tới.</h2>
+        <p>Sáu mốc nộp bài gần nhất còn hạn, xếp theo thời điểm. Bấm vào một dòng để xem giờ gốc và độ tin cậy của dữ liệu.</p>
+        <a class="upcoming__all" href="conferences.html">Xem tất cả hội nghị</a>
+      </div>
+      <div id="page-content" class="upcoming__body"></div>
+    </section>
+
+    <!-- Hướng dẫn: mục lục 2 cột, không ảnh bìa; mỗi mục dẫn sang một phần của trang Giới thiệu dữ liệu -->
+    <section class="container guides" aria-labelledby="guides-title">
+      <div class="guides__head" data-reveal>
+        <h2 id="guides-title">Đọc dữ liệu cho đúng</h2>
+        <a href="about.html">Xem toàn bộ hướng dẫn</a>
+      </div>
+      <ul class="guides__list">
+        <li data-reveal><a class="guide" href="about.html#mui-gio">
+          <span class="guide__title">Đọc hạn AoE và quy đổi sang GMT+7</span>
+          <span class="guide__summary">AoE (Anywhere on Earth) là UTC−12. Hạn 23:59 AoE tức 18:59 giờ Việt Nam ngày hôm sau.</span>
+          <span class="guide__meta">Múi giờ<svg class="icon" aria-hidden="true" focusable="false"><use href="#i-right"></use></svg></span>
+        </a></li>
+        <li data-reveal><a class="guide" href="about.html#xep-hang">
+          <span class="guide__title">CORE và CCF khác nhau thế nào</span>
+          <span class="guide__summary">CORE xếp A*, A, B, C; CCF xếp A, B, C. Hai bảng độc lập nên cùng chữ cái chưa chắc cùng mức.</span>
+          <span class="guide__meta">Xếp hạng<svg class="icon" aria-hidden="true" focusable="false"><use href="#i-right"></use></svg></span>
+        </a></li>
+        <li data-reveal><a class="guide" href="about.html#chat-luong">
+          <span class="guide__title">Verified, Estimated, TBA nghĩa là gì</span>
+          <span class="guide__summary">Mỗi mốc ghi rõ đã đối chiếu trang chính thức hay chưa, hoặc hội nghị chưa công bố ngày.</span>
+          <span class="guide__meta">Chất lượng dữ liệu<svg class="icon" aria-hidden="true" focusable="false"><use href="#i-right"></use></svg></span>
+        </a></li>
+        <li data-reveal><a class="guide" href="about.html#cach-dung">
+          <span class="guide__title">Lưu hội nghị và thêm hạn vào lịch</span>
+          <span class="guide__summary">Lưu hội nghị ngay trên trình duyệt, rồi thêm hạn vào Google Calendar hoặc tải tệp .ics.</span>
+          <span class="guide__meta">Cách dùng<svg class="icon" aria-hidden="true" focusable="false"><use href="#i-right"></use></svg></span>
+        </a></li>
+      </ul>
+    </section>
   </main>
   <footer class="site-footer" data-site-footer></footer>
-  <noscript>Hãy bật JavaScript để dùng tra cứu hội nghị.</noscript>
+  <noscript>Hãy bật JavaScript để xem hạn nộp sắp tới.</noscript>
 </body>
 </html>
