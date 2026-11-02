@@ -5,7 +5,8 @@
 .saved-card__title { margin: 0; font-size: 1.25rem; }
 .saved-card__meta { margin: 0; color: var(--color-muted); }
 .saved-card__actions { display: flex; flex-wrap: wrap; gap: var(--space-3); }
-.button--danger { border-color: var(--color-danger); background: var(--color-danger); }
+.button--danger { border-color: var(--color-danger); background: var(--color-danger); color: var(--color-card); }
+.button--danger:hover { background: var(--color-ink-hover); border-color: var(--color-ink-hover); color: var(--color-card); }
 .notice--warning { border-left-color: var(--color-danger); background: #fff1f1; }
 @media (min-width: 768px) {
   .saved-list { grid-template-columns: repeat(2, minmax(0, 1fr)); }
