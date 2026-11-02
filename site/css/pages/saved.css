@@ -1,3 +1,4 @@
+.saved-page { align-content: start; }
 .saved-page__intro { max-width: 720px; color: var(--color-muted); }
 .saved-summary { margin: 0; color: var(--color-muted); font-weight: 650; }
 .saved-list { display: grid; gap: var(--space-4); }
