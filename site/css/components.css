@@ -6,10 +6,10 @@
 /* ---------- icon (SVG sprite do common.js chèn, dùng <use href="#i-...">) ---------- */
 .icon { flex: none; width: 1.25em; height: 1.25em; vertical-align: middle; fill: none; stroke: currentColor; stroke-width: 2; stroke-linecap: round; stroke-linejoin: round; }
 
-/* ---------- header: dải dây hồng 4px, brand, nav, nút menu ---------- */
+/* ---------- header: brand, nav, nút menu (đã bỏ dải hồng 4px ở đỉnh, xem decision-log 02/11) ---------- */
 .site-header {
   position: sticky; top: 0; z-index: var(--z-header);
-  background: var(--color-card); border-top: 4px solid var(--color-lanyard); border-bottom: 1px solid var(--color-rule);
+  background: var(--color-card); border-bottom: 1px solid var(--color-rule);
 }
 .header-row { display: flex; flex-wrap: wrap; align-items: center; gap: var(--space-1) var(--space-2); min-height: 52px; }
 .brand { display: inline-block; margin-right: auto; font: 600 1.3125rem/var(--control-height) var(--font-serif); /* inline-flex sẽ nuốt dấu cách giữa "UIT" và "ConFinder" */ color: var(--color-ink); text-decoration: none; white-space: nowrap; }
