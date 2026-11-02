@@ -154,7 +154,13 @@ function createRow({ edition, deadline }, index, now) {
   const urgency = getUrgencyInfo(deadline.targetTime, now); // mức khẩn hiện ở tiêu đề nhóm, hàng chỉ đưa vào tên đọc
 
   const name = createText('span', 'row__name', '');
-  name.append(createText('span', 'row__acronym', title), ...ribbons);
+  name.append(createText('span', 'row__acronym', title));
+  // gói ruy-băng thành một cụm để khi hẹp cả cụm xuống dòng, không tách CORE một dòng CCF một dòng
+  if (ribbons.length) {
+    const ranks = createText('span', 'row__ranks', '');
+    ranks.append(...ribbons);
+    name.append(ranks);
+  }
   const when = createText('span', 'row__when', '');
   when.append(createDate('row__date', deadline), ` ${time}`); // formatTimeGMT7 đã kèm "GMT+7"
   const due = createText('span', 'row__due', '');
