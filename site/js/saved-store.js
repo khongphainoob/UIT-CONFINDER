@@ -4,8 +4,8 @@ export const STORAGE_VERSION = 1;
 function getStorage() {
   try {
     return window.localStorage;
-  } catch (error) {
-    return { error };
+  } catch {
+    return null;
   }
 }
 
@@ -17,7 +17,7 @@ function normalizeIds(value) {
 
 function readStorage() {
   const storage = getStorage();
-  if (storage.error) {
+  if (!storage) {
     return { ok: false, ids: [], error: 'Không thể truy cập danh sách đã lưu trên trình duyệt.' };
   }
   try {
@@ -54,6 +54,9 @@ export function toggleSaved(editionId) {
     ? [...current.ids, editionId]
     : current.ids.filter((id) => id !== editionId);
   const storage = getStorage();
+  if (!storage) {
+    return { ok: false, saved: false, ids: current.ids, error: 'Không thể truy cập danh sách đã lưu trên trình duyệt.' };
+  }
   try {
     storage.setItem(STORAGE_KEY, JSON.stringify({ version: STORAGE_VERSION, ids }));
     emitSavedChanged(ids);
