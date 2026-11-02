@@ -222,25 +222,25 @@ function renderHero(edition) {
         } else {
           saveBtn.replaceChildren(createIcon('star'), ' Lưu hội nghị');
         }
-      } catch {
+      } catch (error) {
         saveBtn.replaceChildren(createIcon('star'), ' Lưu hội nghị');
+        console.error('Không đọc được trạng thái lưu hội nghị:', error);
       }
 
       saveBtn.addEventListener('click', () => {
-        try {
-          const res = toggleSaved(edition.id);
-          if (res?.ok) {
-            const isSaved = res.saved;
-            saveBtn.setAttribute('aria-pressed', isSaved ? 'true' : 'false');
-            saveBtn.replaceChildren(createIcon('star'), isSaved ? ' Đã lưu' : ' Lưu hội nghị');
-          }
-        } catch (err) {
-          console.info('Module lưu hội nghị đang được hoàn thiện:', err.message);
+        const res = toggleSaved(edition.id);
+        if (!res?.ok) {
+          console.error('Không cập nhật được trạng thái lưu hội nghị:', res?.error);
+          return;
         }
+        const isSaved = res.saved;
+        saveBtn.setAttribute('aria-pressed', isSaved ? 'true' : 'false');
+        saveBtn.replaceChildren(createIcon('star'), isSaved ? ' Đã lưu' : ' Lưu hội nghị');
       });
     })
-    .catch(() => {
+    .catch((error) => {
       saveBtn.replaceChildren(createIcon('star'), ' Lưu hội nghị');
+      console.error('Không tải được module lưu hội nghị:', error);
     });
 
   actionsRow.append(saveBtn);

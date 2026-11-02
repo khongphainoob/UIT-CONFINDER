@@ -9,12 +9,12 @@ initCommonUI('saved');
 const host = document.querySelector('#page-content');
 let currentCatalog = { editions: [] };
 
-function renderWarning(message) {
+function createWarning(message) {
   const warning = document.createElement('p');
   warning.className = 'notice notice--warning';
   warning.setAttribute('role', 'alert');
   warning.textContent = message;
-  host.prepend(warning);
+  return warning;
 }
 
 function createEditionCard(edition) {
@@ -37,7 +37,7 @@ function createEditionCard(edition) {
   remove.addEventListener('click', () => {
     const result = toggleSaved(edition.id);
     if (!result.ok) {
-      renderWarning(result.error);
+      host.prepend(createWarning(result.error));
       return;
     }
     renderSaved(result.ids, currentCatalog);
@@ -50,8 +50,10 @@ function createEditionCard(edition) {
 }
 
 function renderSaved(ids, catalog) {
-  const savedEditions = catalog.editions.filter((edition) => ids.includes(edition.id));
-  const missingCount = ids.length - savedEditions.length;
+  const validIds = Array.isArray(ids) ? ids : [];
+  const editions = Array.isArray(catalog?.editions) ? catalog.editions : [];
+  const savedEditions = editions.filter((edition) => validIds.includes(edition.id));
+  const missingCount = validIds.length - savedEditions.length;
   const content = document.createDocumentFragment();
   const summary = document.createElement('p');
   summary.className = 'saved-summary';
@@ -88,14 +90,15 @@ async function initPage() {
   try {
     currentCatalog = await getCatalog();
     renderSaved(saved.ids, currentCatalog);
-    if (!saved.ok) renderWarning(saved.error);
+    if (!saved.ok) host.prepend(createWarning(saved.error));
   } catch (error) {
     showState(host, { kind: 'error', title: 'Không tải được dữ liệu', message: error.message });
   }
 }
 
 window.addEventListener('saved:changed', (event) => {
-  renderSaved(event.detail.ids, currentCatalog);
+  const ids = event.detail?.ids;
+  if (Array.isArray(ids)) renderSaved(ids, currentCatalog);
 });
 
 initPage();

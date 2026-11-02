@@ -1,1 +1,9 @@
 /* CSS riêng trang Khám phá hội nghị. Chủ trang tự viết; dùng token từ tokens.css. */
+.edition-grid { display: grid; gap: var(--space-4); }
+.edition-card { display: grid; gap: var(--space-2); }
+.edition-card__title { margin: 0; font-size: 1.25rem; }
+.edition-card__title a { color: inherit; }
+.edition-card__name, .edition-card__meta, .edition-card__deadline { margin: 0; color: var(--color-muted); }
+@media (min-width: 768px) {
+  .edition-grid { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+}
