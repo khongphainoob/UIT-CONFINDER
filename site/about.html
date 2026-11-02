@@ -3,6 +3,7 @@
 <head>
   <meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
   <title>Giới thiệu dữ liệu · UIT ConFinder</title>
+  <meta name="description" content="Nguồn dữ liệu, cách đọc hạn AoE và GMT+7, rank CORE/CCF, nhãn chất lượng dữ liệu và cách dùng UIT ConFinder.">
   <link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 32 32'%3E%3Crect width='32' height='32' rx='6' fill='%235b2d9b'/%3E%3Ctext x='16' y='23' font-size='20' text-anchor='middle' fill='%23ffffff' font-family='system-ui,sans-serif' font-weight='700'%3EC%3C/text%3E%3C/svg%3E">
   <link rel="preconnect" href="https://fonts.googleapis.com"><link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Be+Vietnam+Pro:wght@400;500;600;700&family=JetBrains+Mono:wght@400;500;700&family=Newsreader:opsz,wght@6..72,400;6..72,500;6..72,600&display=swap">
@@ -13,12 +14,222 @@
 <body>
   <a class="skip-link" href="#main">Đến nội dung chính</a>
   <header class="site-header" data-site-header></header>
-  <main id="main" class="container stack"><h1>Dữ liệu & hướng dẫn</h1>
-    <!-- Chủ trang tự xây HTML layout, CSS responsive và JavaScript nghiệp vụ tại đây. -->
-    <section class="card"><h2>UIT ConFinder</h2><p>Tra cứu hội nghị khoa học theo lĩnh vực, xếp hạng và hạn nộp.</p><p>Đối chiếu CFP trên nguồn chính thức trước khi nộp bài.</p></section>
-    <!-- TV2: bổ sung nhóm/liên hệ thật, nguồn/cách cập nhật, rank/AoE và giới hạn lưu cục bộ. -->
+  <main id="main" class="container about">
+    <div class="page-head about__head">
+      <h1>Giới thiệu dữ liệu</h1>
+      <p class="page-head__lead">Dữ liệu trên UIT ConFinder lấy từ đâu và đọc thế nào cho đúng. Đọc trước khi dựa vào một hạn để nộp bài.</p>
+      <!-- about.js điền số kỳ hội nghị, số mốc còn hạn và nguồn đang dùng; đếm từ catalog thật -->
+      <p class="about-stats" id="about-stats"><span>Đang tải dữ liệu…</span></p>
+    </div>
+
+    <!-- Giải phẫu thẻ đeo: thẻ là mốc thật do about.js dựng; chú thích là HTML tĩnh, trỏ/Tab vào để làm nổi phần tương ứng -->
+    <section class="anatomy" aria-labelledby="anatomy-title">
+      <h2 id="anatomy-title">Đọc một thẻ đeo</h2>
+      <p class="anatomy__lead">Thẻ dưới đây là mốc nộp gần nhất còn hạn trong dữ liệu đang dùng. Trỏ chuột hoặc Tab vào một chú thích để thấy phần đó trên thẻ; bấm để đọc giải thích.</p>
+      <div class="anatomy__frame">
+        <div class="anatomy__card" id="anatomy-card"></div>
+        <ul class="anatomy__keys">
+          <li class="anatomy__group anatomy__group--main">
+            <a class="anatomy__key" href="#xep-hang" data-part="rank"><strong>Ruy-băng hạng</strong><span>Hạng CORE hoặc CCF, lấy nguyên từ nguồn.</span></a>
+          </li>
+          <li class="anatomy__group anatomy__group--due">
+            <a class="anatomy__key" href="#mui-gio" data-part="gmt7"><strong>Hạn nộp, giờ Việt Nam</strong><span>Ngày và giờ đã đổi sang GMT+7.</span></a>
+            <a class="anatomy__key" href="#mui-gio" data-part="source"><strong>Giờ nguồn</strong><span>Giờ đúng như nguồn ghi, kèm múi giờ.</span></a>
+            <a class="anatomy__key" href="#chat-luong" data-part="quality"><strong>Nhãn chất lượng</strong><span>Ngày này tin được đến đâu.</span></a>
+          </li>
+          <li class="anatomy__group anatomy__group--state">
+            <a class="anatomy__key" href="#muc-khan" data-part="urgency"><strong>Mức khẩn, đếm ngược</strong><span>Còn bao lâu, tính lúc mở trang.</span></a>
+          </li>
+        </ul>
+      </div>
+    </section>
+
+    <div class="ledger">
+      <section class="ledger__row" id="nguon-du-lieu" aria-labelledby="nguon-title">
+        <h2 class="ledger__title" id="nguon-title">Dữ liệu lấy từ CCFDDL</h2>
+        <div class="ledger__body">
+          <p>Tên hội nghị, các kỳ tổ chức, hạn nộp và rank lấy từ <a href="https://ccfddl.com/" rel="noopener">CCFDDL</a>, một dự án mã nguồn mở tổng hợp hạn nộp bài hội nghị khoa học máy tính. Site không có máy chủ riêng và không tự thu thập dữ liệu, nên dữ liệu chỉ mới bằng lần CCFDDL cập nhật gần nhất.</p>
+          <ol class="source-path">
+            <li><strong>Tải trực tiếp</strong><span>Mỗi lần mở trang, trình duyệt lấy danh sách từ CCFDDL.</span><code>live</code><svg class="icon source-path__arrow" aria-hidden="true" focusable="false"><use href="#i-right"></use></svg></li>
+            <li><strong>Bản lưu sẵn</strong><span>Lỗi mạng, bị chặn hoặc quá 8 giây thì dùng bản nhóm lưu kèm website. Bản này có thể cũ hơn.</span><code>snapshot</code><svg class="icon source-path__arrow" aria-hidden="true" focusable="false"><use href="#i-right"></use></svg></li>
+            <li><strong>Ghi rõ nguồn</strong><span>Trang chủ và dòng đầu trang này cho biết đang dùng bản nào, tải lúc nào.</span></li>
+          </ol>
+          <p class="about-note"><svg class="icon" aria-hidden="true" focusable="false"><use href="#i-alert"></use></svg><span>Luôn mở trang chính thức của hội nghị (có link ở trang chi tiết) để kiểm tra lại hạn và yêu cầu nộp bài trước khi nộp.</span></p>
+        </div>
+      </section>
+
+      <section class="ledger__row" id="xep-hang" aria-labelledby="xep-hang-title">
+        <h2 class="ledger__title" id="xep-hang-title">Rank lấy nguyên từ CORE và CCF</h2>
+        <div class="ledger__body">
+          <p>UIT ConFinder không tự xếp hạng. CORE và CCF là hai bảng độc lập, nên cùng một chữ cái chưa chắc cùng một mức.</p>
+          <div class="rank-ladders">
+            <div class="rank-ladder">
+              <h3>CORE <span>Úc và New Zealand</span></h3>
+              <dl>
+                <div><dt><span class="ribbon ribbon--core-a-star">CORE A*</span></dt><dd>Hội nghị hàng đầu của lĩnh vực.</dd></div>
+                <div><dt><span class="ribbon ribbon--a">CORE A</span></dt><dd>Xuất sắc, được giới chuyên môn đánh giá cao.</dd></div>
+                <div><dt><span class="ribbon ribbon--b">CORE B</span></dt><dd>Tốt đến rất tốt.</dd></div>
+                <div><dt><span class="ribbon ribbon--c">CORE C</span></dt><dd>Đạt tiêu chuẩn tối thiểu để được xếp hạng.</dd></div>
+              </dl>
+              <a class="rank-ladder__source" href="https://portal.core.edu.au/conf-ranks/" rel="noopener">Bảng xếp hạng CORE <svg class="icon" aria-hidden="true" focusable="false"><use href="#i-ext"></use></svg></a>
+            </div>
+            <div class="rank-ladder">
+              <h3>CCF <span>Hiệp hội Máy tính Trung Quốc</span></h3>
+              <dl>
+                <div><dt><span class="ribbon ribbon--a">CCF A</span></dt><dd>Mức cao nhất trong danh mục khuyến nghị.</dd></div>
+                <div><dt><span class="ribbon ribbon--b">CCF B</span></dt><dd>Mức thứ hai.</dd></div>
+                <div><dt><span class="ribbon ribbon--c">CCF C</span></dt><dd>Mức thứ ba.</dd></div>
+              </dl>
+              <a class="rank-ladder__source" href="https://www.ccf.org.cn/" rel="noopener">Trang CCF <svg class="icon" aria-hidden="true" focusable="false"><use href="#i-ext"></use></svg></a>
+            </div>
+          </div>
+          <p>Thẻ không có ruy-băng nghĩa là nguồn không ghi hạng, không có nghĩa hội nghị kém. Rank chỉ để tham khảo; yêu cầu của khoa, trường hay quỹ tài trợ nơi bạn làm việc mới là tiêu chí quyết định.</p>
+        </div>
+      </section>
+
+      <section class="ledger__row" id="mui-gio" aria-labelledby="mui-gio-title">
+        <h2 class="ledger__title" id="mui-gio-title">Một thời điểm, hai cách ghi giờ</h2>
+        <div class="ledger__body">
+          <p>Mỗi hạn nộp là một thời điểm. Thẻ ghi giờ Việt Nam (GMT+7) ở dòng chính và giờ nguồn đúng như CCFDDL ghi ở dòng phụ.</p>
+          <div class="ledger__pair">
+            <p><strong>AoE</strong> (Anywhere on Earth) là UTC−12, múi giờ muộn nhất trên Trái Đất: hạn chỉ hết khi ngày đó đã qua ở mọi nơi. Việt Nam đi trước AoE 19 giờ, nên hạn 23:59 AoE rơi vào 18:59 hôm sau theo giờ Việt Nam. Site chỉ ghi AoE khi nguồn ghi rõ.</p>
+            <table class="tz-examples">
+              <caption class="visually-hidden">Ví dụ quy đổi giờ nguồn sang giờ Việt Nam</caption>
+              <thead><tr><th scope="col">Giờ nguồn</th><th scope="col">Giờ Việt Nam</th></tr></thead>
+              <tbody>
+                <tr><td>23:59 ngày 10, AoE</td><td>18:59 ngày 11</td></tr>
+                <tr><td>23:59 ngày 10, UTC</td><td>06:59 ngày 11</td></tr>
+                <tr><td>23:59 ngày 10, UTC+8</td><td>22:59 ngày 10</td></tr>
+              </tbody>
+            </table>
+          </div>
+          <!-- Trục 48 giờ (00:00 UTC ngày 10 đến 24:00 UTC ngày 11); vị trí % tính theo giờ UTC, xem about.css -->
+          <figure class="tz-band">
+            <div class="tz-band__track" role="img" aria-label="Hạn 23:59 ngày 10 theo AoE trùng 18:59 ngày 11 theo giờ Việt Nam.">
+              <div class="tz-band__row tz-band__row--aoe">
+                <span class="tz-band__zone">AoE</span>
+                <span class="tz-band__day" style="--from: 0; --to: 12">ngày 9</span>
+                <span class="tz-band__day" style="--from: 12; --to: 36">ngày 10</span>
+                <span class="tz-band__day" style="--from: 36; --to: 48">ngày 11</span>
+              </div>
+              <div class="tz-band__row tz-band__row--vn">
+                <span class="tz-band__zone">GMT+7</span>
+                <span class="tz-band__day" style="--from: 0; --to: 17">ngày 10</span>
+                <span class="tz-band__day" style="--from: 17; --to: 41">ngày 11</span>
+                <span class="tz-band__day" style="--from: 41; --to: 48">12</span>
+              </div>
+              <div class="tz-band__mark" style="--at: 35.98">
+                <span class="tz-band__time tz-band__time--aoe">23:59 AoE</span>
+                <span class="tz-band__time tz-band__time--vn">18:59 GMT+7</span>
+              </div>
+            </div>
+            <figcaption>Cùng một vạch hạn nộp: theo AoE vẫn là ngày 10, ở Việt Nam đã sang ngày 11.</figcaption>
+          </figure>
+          <p>Nguồn chỉ ghi ngày mà không có giờ, hoặc không ghi múi giờ, thì site không tự đoán giờ và không đếm ngược cho mốc đó. Hãy xem giờ chính xác trên trang chính thức.</p>
+        </div>
+      </section>
+
+      <section class="ledger__row" id="chat-luong" aria-labelledby="chat-luong-title">
+        <h2 class="ledger__title" id="chat-luong-title">Nhãn đi theo nguồn, không theo lần tải</h2>
+        <div class="ledger__body">
+          <p>Mỗi mốc hạn có một nhãn cho biết ngày đó tin được đến đâu. Site không nâng một mốc thành Verified chỉ vì tải được dữ liệu.</p>
+          <div class="trust-scale">
+            <p class="trust-scale__ends" aria-hidden="true"><span>Ít chắc chắn</span><span>Chắc chắn nhất</span></p>
+            <ol>
+              <li><span class="quality quality--tba"><svg class="icon" aria-hidden="true" focusable="false"><use href="#i-pause"></use></svg>TBA</span><p>Hội nghị chưa công bố ngày; nguồn ghi TBA, TBD hoặc để trống.</p></li>
+              <li><span class="quality quality--estimated"><svg class="icon" aria-hidden="true" focusable="false"><use href="#i-approx"></use></svg>Estimated</span><p>Ngày ước tính, chưa phải hạn chính thức. Không đếm ngược, không vào danh sách sắp tới.</p></li>
+              <li class="trust-scale__current"><span class="quality quality--unverified"><svg class="icon" aria-hidden="true" focusable="false"><use href="#i-help"></use></svg>Chưa đối chiếu</span><p>Có ngày từ CCFDDL nhưng chưa được so với trang chính thức.</p><p class="trust-scale__now">Hiện mọi mốc có ngày đều ở mức này.</p></li>
+              <li><span class="quality quality--verified"><svg class="icon" aria-hidden="true" focusable="false"><use href="#i-check"></use></svg>Verified</span><p>Đã đối chiếu với trang chính thức của hội nghị.</p></li>
+            </ol>
+          </div>
+          <dl class="about-terms">
+            <div><dt>Chưa có lần kiểm chứng</dt><dd>Ghi ở khung nguồn dữ liệu khi kỳ hội nghị chưa từng được đối chiếu. Thời điểm tải dữ liệu không phải thời điểm kiểm chứng.</dd></div>
+            <div><dt>Cảnh báo dữ liệu cũ</dt><dd>Khi trang phải dùng bản lưu sẵn, khung nguồn dữ liệu chuyển sang kiểu cảnh báo, vì bản này có thể chưa có thay đổi mới trên CCFDDL.</dd></div>
+          </dl>
+        </div>
+      </section>
+
+      <section class="ledger__row" id="muc-khan" aria-labelledby="muc-khan-title">
+        <h2 class="ledger__title" id="muc-khan-title">Mức khẩn theo thời gian còn lại</h2>
+        <div class="ledger__body">
+          <p>Mức khẩn tính từ lúc bạn mở trang đến hạn nộp. Mỗi mức có cả biểu tượng và chữ, nên vẫn đọc được khi không phân biệt màu.</p>
+          <ol class="urgency-scale">
+            <li><span class="urgency urgency--expired"><svg class="icon" aria-hidden="true" focusable="false"><use href="#i-x-circle"></use></svg>Đã hết hạn</span><span class="urgency-scale__range">đã qua hạn</span></li>
+            <li><span class="urgency urgency--urgent"><svg class="icon" aria-hidden="true" focusable="false"><use href="#i-alert"></use></svg>Gấp</span><span class="urgency-scale__range">dưới 3 ngày</span></li>
+            <li><span class="urgency urgency--week"><svg class="icon" aria-hidden="true" focusable="false"><use href="#i-clock"></use></svg>Trong tuần</span><span class="urgency-scale__range">3 đến dưới 7 ngày</span></li>
+            <li><span class="urgency urgency--month"><svg class="icon" aria-hidden="true" focusable="false"><use href="#i-calendar"></use></svg>Trong tháng</span><span class="urgency-scale__range">7 đến dưới 30 ngày</span></li>
+            <li><span class="urgency urgency--open"><svg class="icon" aria-hidden="true" focusable="false"><use href="#i-check-circle"></use></svg>Còn rộng</span><span class="urgency-scale__range">từ 30 ngày</span></li>
+          </ol>
+        </div>
+      </section>
+
+      <section class="ledger__row" id="luu-cuc-bo" aria-labelledby="luu-title">
+        <h2 class="ledger__title" id="luu-title">Danh sách đã lưu chỉ nằm trên trình duyệt này</h2>
+        <div class="ledger__body">
+          <div class="ledger__pair">
+            <p>Site không có tài khoản. Hội nghị bạn lưu được ghi vào LocalStorage của trình duyệt đang dùng và không gửi đi đâu.</p>
+            <ul class="about-list">
+              <li>Mở bằng máy khác hay trình duyệt khác sẽ không thấy danh sách.</li>
+              <li>Xoá dữ liệu duyệt web, hoặc đóng cửa sổ ẩn danh, là mất danh sách.</li>
+              <li>Mỗi lần lưu là một kỳ tổ chức cụ thể; kỳ năm sau là một mục khác, cần lưu lại.</li>
+            </ul>
+          </div>
+        </div>
+      </section>
+
+      <section class="ledger__row" id="cach-dung" aria-labelledby="cach-dung-title">
+        <h2 class="ledger__title" id="cach-dung-title">Từ một hạn nộp đến lịch của bạn</h2>
+        <div class="ledger__body">
+          <ol class="route">
+            <li><a href="index.html">Trang chủ</a><p>Xem sáu mốc nộp gần nhất còn hạn, hoặc gõ tên, acronym hội nghị vào ô tìm.</p></li>
+            <li><a href="conferences.html">Hội nghị</a><p>Tìm và lọc theo lĩnh vực, rank, hình thức tham dự; địa chỉ trang giữ bộ lọc để gửi cho người khác.</p></li>
+            <li><strong>Trang chi tiết</strong><p>Xem từng vòng và loại hạn (tóm tắt, toàn văn), hai dòng giờ, nhãn chất lượng; mở trang chính thức để kiểm tra.</p></li>
+            <li><a href="saved.html">Đã lưu</a><p>Bấm <strong>Lưu hội nghị</strong> ở trang chi tiết, rồi xem lại tất cả ở đây.</p></li>
+            <li><strong>Lịch</strong><p>Thêm một mốc vào Google Calendar hoặc tải tệp .ics. Mốc TBA, chỉ có ngày hoặc Estimated không thêm được vì chưa có giờ chính xác.</p></li>
+          </ol>
+        </div>
+      </section>
+
+      <section class="ledger__row" id="lien-he" aria-labelledby="lien-he-title">
+        <h2 class="ledger__title" id="lien-he-title">Thấy sai thì báo cho nhóm</h2>
+        <div class="ledger__body">
+          <!-- mailto có sẵn tiêu đề và mẫu thư 3 dòng; site không tự gửi, không giả lập "đã gửi" -->
+          <div class="report">
+            <div class="report__text">
+              <p class="report__lead">Hạn sai, thiếu hội nghị hay link hỏng? Gửi email cho nhóm, kèm:</p>
+              <ul class="report__checklist">
+                <li><svg class="icon" aria-hidden="true" focusable="false"><use href="#i-check"></use></svg>Tên hội nghị và năm</li>
+                <li><svg class="icon" aria-hidden="true" focusable="false"><use href="#i-check"></use></svg>Link trang chính thức có ngày đúng</li>
+                <li><svg class="icon" aria-hidden="true" focusable="false"><use href="#i-check"></use></svg>Chỗ bạn thấy sai trên UIT ConFinder</li>
+              </ul>
+            </div>
+            <div class="report__action">
+              <a class="button" href="mailto:24520574@gm.uit.edu.vn?subject=B%C3%A1o%20d%E1%BB%AF%20li%E1%BB%87u%20sai%20-%20UIT%20ConFinder&amp;body=H%E1%BB%99i%20ngh%E1%BB%8B%20v%C3%A0%20n%C4%83m%3A%0ALink%20trang%20ch%C3%ADnh%20th%E1%BB%A9c%3A%0ACh%E1%BB%97%20sai%20tr%C3%AAn%20UIT%20ConFinder%3A%0A">Gửi email báo lỗi</a>
+              <p class="report__address mono">24520574@gm.uit.edu.vn</p>
+              <p class="report__hint">Mở ứng dụng email trên máy bạn, có sẵn mẫu thư. Site không tự gửi thư.</p>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      <section class="ledger__row" id="muc-tieu" aria-labelledby="muc-tieu-title">
+        <h2 class="ledger__title" id="muc-tieu-title">Mục tiêu và nhóm thực hiện</h2>
+        <div class="ledger__body">
+          <div class="ledger__pair">
+            <p>UIT ConFinder giúp sinh viên, học viên và nhà nghiên cứu CNTT biết hội nghị nào còn nhận bài, còn bao lâu, hạn chót mấy giờ theo giờ Việt Nam, và ngày đó tin được đến đâu.</p>
+            <p>Đồ án môn IE104 (Internet và Công nghệ Web), Trường Đại học Công nghệ Thông tin, ĐHQG TP.HCM. Giảng viên hướng dẫn: TS Võ Tấn Khoa. Nhóm 2:</p>
+          </div>
+          <ul class="team">
+            <li><strong>Lê Phạm Gia Huy</strong><span class="mono">24520668</span><span>Dữ liệu, API, hạn nộp, trang chi tiết</span></li>
+            <li><strong>Nguyễn Huy Hoàng</strong><span class="mono">24520555</span><span>Giao diện chung, trang chủ, trang này</span></li>
+            <li><strong>Phạm Nguyễn Nhật Huy</strong><span class="mono">24520691</span><span>Trang hội nghị: tìm, lọc, sắp xếp, phân trang</span></li>
+            <li><strong>Trương Huy Hoàng</strong><span class="mono">24520574</span><span>Nhóm trưởng; đã lưu, Calendar/ICS, tích hợp</span></li>
+          </ul>
+        </div>
+      </section>
+    </div>
   </main>
   <footer class="site-footer" data-site-footer></footer>
-  <noscript>Hãy bật JavaScript để dùng tra cứu hội nghị.</noscript>
+  <noscript>Hãy bật JavaScript để xem thẻ ví dụ, thanh điều hướng và chân trang.</noscript>
 </body>
 </html>
