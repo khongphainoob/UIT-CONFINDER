@@ -1,7 +1,8 @@
 /* TV2: reset, chữ, focus, khung trang dùng chung. Chỉ dùng token trong tokens.css.
    Tham khảo phần base của Hoagjaxz/uit-confinder, site/css/site.css. */
 * { box-sizing: border-box; }
-html { scroll-padding-top: 72px; scrollbar-color: var(--color-rule-strong) var(--color-paper); }
+/* chừa sẵn chỗ thanh cuộn để header không xê dịch giữa trang dài và trang ngắn */
+html { scroll-padding-top: 72px; scrollbar-color: var(--color-rule-strong) var(--color-paper); scrollbar-gutter: stable; }
 body {
   margin: 0; min-height: 100vh; display: flex; flex-direction: column;
   color: var(--color-ink); background: var(--color-paper); caret-color: var(--color-primary);

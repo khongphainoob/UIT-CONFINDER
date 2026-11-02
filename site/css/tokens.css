@@ -15,6 +15,10 @@
   --color-field: #ffffff;
   --color-mute: #625c70;
   --color-dim: #8a8399;
+  /* chữ trên nền mực (footer, hero Trang chủ): phụ ~8:1, tím sáng thay tím mận vì mận trên mực chỉ ~2:1 */
+  --color-on-ink: var(--color-paper);
+  --color-on-ink-mute: #b9b2c7;
+  --color-on-ink-accent: #c4a8f0;
 
   /* đường kẻ và tầng nền (thay cho bóng đổ) */
   --color-rule: #dcd8e4;
@@ -68,6 +72,8 @@
   --space-4: 16px;
   --space-5: 24px;
   --space-6: 32px;
+  --space-7: 48px;             /* khoảng giữa các khối lớn (footer, mục) */
+  --space-8: 64px;
 
   /* bố cục; breakpoint dùng trong media query: 48rem (768px) và 64rem (1024px) */
   --container: 1200px;

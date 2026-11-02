@@ -5,21 +5,29 @@
 
 :root {
   --home-night: var(--color-ink);             /* nửa tối của hero */
-  --home-on-night: var(--color-paper);
-  --home-on-night-mute: #b9b2c7;               /* chữ phụ trên nền tối, tương phản ~8:1 */
+  --home-on-night: var(--color-on-ink);
+  --home-on-night-mute: var(--color-on-ink-mute); /* chữ phụ trên nền tối, tương phản ~8:1 */
   --home-urgent-on-night: #ff8f80;             /* "Gấp" trên nền tối (bản sáng của --color-urgent-fg), ~7.8:1 */
   --home-lanyard-strong: #b8265a;              /* hồng dây đeo đậm hơn cho hover nút tìm, chữ trắng ~6:1 */
   --home-week-on-night: #ffb35c;               /* "Trong tuần" trên nền tối (bản sáng của --color-week-fg), ~9.7:1 */
   --home-loader: var(--color-ribbon-core-a-star);
   --home-display: clamp(3rem, 13vw, 6.5rem);   /* chữ hero khi xếp dọc (dưới 64rem) */
-  --home-edge: max(var(--gutter), (100vw - var(--container)) / 2); /* lề trái khớp .container */
+  /* lề trái hero/màn tải: khớp .container tới ~1364px; rộng hơn thì chỉ 6vw, vì hero tràn hết màn hình
+     mà lề theo container (1920px -> 360px) để trống cả mảng bên trái */
+  --home-edge: max(var(--gutter), min((100vw - var(--container)) / 2, 6vw));
   --home-ease: cubic-bezier(.2, .7, .1, 1);
 }
 @media (min-width: 64rem) {
-  :root { --home-display: clamp(4.5rem, 8.5vw, 8rem); }
+  /* chữ lớn lớn theo bề ngang để vẫn chạy qua ranh giới hai nửa ở màn rộng; 17svh chặn khi màn thấp */
+  :root { --home-display: clamp(4.5rem, min(8.5vw, 17svh), 14rem); }
 }
 
 .home { padding-block: 0; }
+/* từ ~1364px lề hero (--home-edge) nhỏ hơn lề .container: các mục của Trang chủ dùng cùng lề để thẳng mép với hero.
+   Header/footer giữ khung chung để không xê dịch khi chuyển trang */
+@media (min-width: 85.25rem) {
+  .home .container { width: auto; margin-inline: var(--home-edge); }
+}
 
 /* ---------- màn tải: chỉ hiện khi <html> có .home-loading (script đầu trang bật) ---------- */
 html { scrollbar-gutter: stable; } /* chừa chỗ thanh cuộn kể cả lúc màn tải khoá cuộn, để nửa tối không xê dịch khi màn tải gỡ */
@@ -214,6 +222,8 @@ html { scrollbar-gutter: stable; } /* chừa chỗ thanh cuộn kể cả lúc m
 }
 .row summary:hover .row__name { transform: translateX(.375rem); }
 .row__acronym { font: 600 clamp(1.25rem, 3vw, 1.75rem)/1.1 var(--font-serif); }
+/* cụm ruy-băng luôn nằm dòng riêng dưới tên: tên dài ngắn khác nhau thì mọi hàng vẫn cùng một kiểu */
+.row__ranks { display: flex; flex-basis: 100%; gap: var(--space-2); }
 .row__due { grid-area: due; display: flex; flex-wrap: wrap; gap: 0 var(--space-3); font-family: var(--font-mono); font-size: var(--text-small); }
 .row__when { font-weight: 600; }
 .row__tick { font-size: var(--text-xs); white-space: nowrap; } /* 33 ký tự mono vừa 360px khi cỡ 13px */
