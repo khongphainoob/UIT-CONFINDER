@@ -81,7 +81,7 @@ paginate(items, page, pageSize)
 
 ## 5. Các trường hợp cần kiểm tra
 
-Khi kiểm tra thủ công, nhóm dùng cùng một mốc thời gian giả định là `2026-10-20T00:00:00Z` để kết quả không thay đổi theo ngày mở website. Bảng dưới đây là checklist expected dùng để đối chiếu với kết quả hiển thị trên trang Khám phá; task này không thêm file chạy test vào thư mục `tools`.
+Khi kiểm tra thủ công, nhóm dùng cùng một mốc thời gian giả định là `2026-10-20T00:00:00Z` để kết quả không thay đổi theo ngày mở website. Bảng dưới đây là checklist dùng để đối chiếu với kết quả hiển thị trên trang Khám phá; task này không thêm file chạy test vào thư mục `tools`. Kết quả mong đợi và thực tế được lưu trong `docs/tv3-explore-state-test-report.md`.
 
 | Test | Input | Expected |
 |---|---|---|

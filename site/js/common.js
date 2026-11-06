@@ -8,9 +8,20 @@ const navigation = [
   ['home', 'Trang chủ', ROUTES.home],
   ['explore', 'Hội nghị', ROUTES.conferences],
   ['saved', 'Đã lưu', ROUTES.saved],
-  ['about', 'Dữ liệu & hướng dẫn', ROUTES.about],
+  ['about', 'Giới thiệu dữ liệu', ROUTES.about],
 ];
 const footerNote = 'Hãy kiểm tra lại trên trang chính thức của hội nghị trước khi nộp bài.';
+// Cột "Dữ liệu" của footer: [nhãn, đường dẫn, là link ra ngoài]. Cùng các link nguồn đã có trên trang Giới thiệu dữ liệu.
+const dataLinks = [
+  ['CCFDDL', 'https://ccfddl.com/', true],
+  ['Xếp hạng CORE', 'https://portal.core.edu.au/conf-ranks/', true],
+  ['Trang CCF', 'https://www.ccf.org.cn/', true],
+  ['Báo dữ liệu sai', `${ROUTES.about}#lien-he`, false],
+];
+const projectLinks = [
+  ['Mã nguồn', 'https://github.com/khongphainoob/UIT-CONFINDER', true],
+  ['Nhóm thực hiện', `${ROUTES.about}#muc-tieu`, false],
+];
 
 // Sprite icon: chuỗi hằng do TV2 viết (không chứa dữ liệu nên được dùng insertAdjacentHTML).
 // Path lấy từ sprite trong site/index.html của repo mẫu (nét giống bộ Lucide, giấy phép ISC);
@@ -122,14 +133,65 @@ export function initCommonUI(pageKey) {
 
   const footer = document.querySelector('[data-site-footer]');
   if (footer) {
-    const row = document.createElement('div');
-    row.className = 'container footer-row';
-    // footer có thêm Trang chủ (nav trên đầu đã bỏ mục này vì brand dẫn về); không đánh dấu trang hiện tại
-    const links = createNav('footer-nav', 'Liên kết chân trang', navigation, null);
+    const grid = document.createElement('div');
+    grid.className = 'container footer-grid';
+
+    const intro = document.createElement('div');
+    intro.className = 'footer-intro';
+    const tagline = document.createElement('p');
+    tagline.className = 'footer-intro__text';
+    tagline.textContent = 'Hạn nộp bài hội nghị khoa học máy tính, hiển thị theo giờ GMT+7.';
+    intro.append(createBrand(), tagline);
+
+    // không đánh dấu trang hiện tại ở footer
+    const pages = createNav('footer-links', 'Các trang', navigation, null);
+    const project = footerColumn('Dự án', createLinkList(projectLinks));
+    project.classList.add('footer-col--wide'); // chỉ 2 link: trên điện thoại trải cả hàng, link nằm ngang
+    grid.append(intro, footerColumn('Trang', pages), footerColumn('Dữ liệu', createLinkList(dataLinks)), project);
+
+    const legal = document.createElement('div');
+    legal.className = 'container footer-legal';
+    // câu nhắc là nguyên tắc chính của site (luôn kiểm tra nguồn chính thức) nên sáng hơn và có icon
     const note = document.createElement('p');
-    note.className = 'footer-note';
-    note.textContent = `${footerNote} Đồ án IE104 · UIT · Nhóm 2.`;
-    row.append(createBrand(), links, note);
-    footer.replaceChildren(row);
+    note.className = 'footer-legal__note';
+    note.append(createIcon('check-circle'), footerNote);
+    const team = document.createElement('p');
+    team.textContent = 'Đồ án IE104, UIT · Nhóm 2';
+    legal.append(note, team);
+
+    footer.replaceChildren(grid, legal);
   }
+}
+
+// Dựng <ul> từ [nhãn, đường dẫn, là link ra ngoài]; link ngoài có icon và chữ ẩn "(trang ngoài)" cho trình đọc màn hình.
+// Dùng danh sách thường, không <nav>: đây là link tham khảo, không phải điều hướng trong site (tránh thừa landmark)
+function createLinkList(items) {
+  const list = document.createElement('ul');
+  list.className = 'footer-links';
+  for (const [text, href, external] of items) {
+    const link = document.createElement('a');
+    link.href = href;
+    link.textContent = text;
+    if (external) {
+      link.rel = 'noopener';
+      const hint = document.createElement('span');
+      hint.className = 'visually-hidden';
+      hint.textContent = ' (trang ngoài)';
+      link.append(createIcon('ext'), hint);
+    }
+    const item = document.createElement('li');
+    item.append(link);
+    list.append(item);
+  }
+  return list;
+}
+
+// Một cột footer: tiêu đề + danh sách link dọc
+function footerColumn(title, links) {
+  const column = document.createElement('div');
+  const heading = document.createElement('h2');
+  heading.className = 'footer-title';
+  heading.textContent = title;
+  column.append(heading, links);
+  return column;
 }

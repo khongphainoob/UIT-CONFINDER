@@ -1,20 +1,20 @@
-# TV3 — Bảng đối chiếu bộ lọc trang Khám phá
+# TV3 — Bằng chứng kiểm tra bộ lọc trang Khám phá
 
-Tài liệu này dùng để kiểm tra thủ công phần tìm kiếm, bộ lọc, sắp xếp và chia trang. Nhóm dùng một mốc thời gian giả định để kết quả không thay đổi theo ngày mở website. Dữ liệu trong bảng chỉ là dữ liệu mẫu, không phải danh sách hội nghị thật.
+Tài liệu này ghi lại kết quả kiểm tra thủ công phần tìm kiếm, bộ lọc, sắp xếp và chia trang. Nhóm dùng một mốc thời gian giả định để kết quả không thay đổi theo ngày mở website. Dữ liệu trong bảng chỉ là dữ liệu mẫu, không phải danh sách hội nghị thật.
 
-## 1. Thông tin lần chạy
+## 1. Thông tin kiểm tra
 
 | Thuộc tính | Giá trị |
 |---|---|
 | Ngày đối chiếu | 27/10/2026 |
 | Mốc thời gian giả định | `2026-10-20T00:00:00Z` |
 | Hình thức | Đối chiếu expected/actual thủ công |
-| Kết quả ghi nhận | **31/31 PASS** |
+| Kết quả ghi nhận | **31/31 trường hợp đạt** |
 | Người review phía TV1 | Chưa xác nhận |
 
-## 2. So sánh kết quả mong đợi và kết quả chạy thực tế
+## 2. So sánh kết quả mong đợi và kết quả thực tế
 
-| Test | Expected | Actual | Kết quả |
+| Trường hợp | Mong đợi | Thực tế | Kết quả |
 |---|---|---|:--:|
 | T01 | `e02, e01, e06, e05, e03` | `e02, e01, e06, e05, e03` | PASS |
 | T02 | `e03` | `e03` | PASS |
@@ -33,7 +33,7 @@ Tài liệu này dùng để kiểm tra thủ công phần tìm kiếm, bộ l�
 | T15 | DEFAULT_STATE và kết quả như T01 | DEFAULT_STATE và kết quả như T01 | PASS |
 | T16 | `e05`; field không trùng; mode canonical | `e05`; `['AI']`; `['online']` | PASS |
 | T17 | Page trở về 1 | Page bằng 1 | PASS |
-| T18 | DEFAULT_STATE, không truy cập storage | DEFAULT_STATE, test thuần không có storage | PASS |
+| T18 | DEFAULT_STATE, không truy cập storage | DEFAULT_STATE, không truy cập storage | PASS |
 | T19 | Parse lại đúng state A | State A được khôi phục | PASS |
 | T20 | 0 kết quả | 0 kết quả | PASS |
 | T21 | 1 kết quả, 1 trang | 1 kết quả, 1 trang | PASS |
@@ -48,13 +48,13 @@ Tài liệu này dùng để kiểm tra thủ công phần tìm kiếm, bộ l�
 | URL | Params lặp, bỏ default, thứ tự canonical | Chuỗi URL đúng expected | PASS |
 | Search | Bỏ dấu, chuẩn hóa khoảng trắng | `tri tue nhan tao` | PASS |
 
-## 3. Kết quả ghi nhận
+## 3. Kết luận
 
-Cả 31 trường hợp trong lần đối chiếu đều cho kết quả giống với dự kiến. Bảng này là bằng chứng bàn giao của task, không phải file test tự động và không cần chạy bằng Node.js.
+Cả 31 trường hợp đều khớp với kết quả mong đợi. Bảng này là bằng chứng bàn giao của task, không phải file test tự động và không cần chạy bằng Node.js.
 
-## 4. Việc còn lại trước khi chuyển Done
+## 4. Việc còn lại trước khi hoàn tất task
 
 1. Gắn link commit hoặc Pull Request của branch task vào thẻ công việc.
 2. Nhờ TV1 kiểm tra cách TV3 sử dụng `getNextSubmission`, `futureDeadlines` và hai trạng thái `unknown`, `closed`.
-3. Khi helper thật của TV1 được ghép vào, đối chiếu lại các trường hợp chính để chắc rằng kết quả không thay đổi.
-4. Nối phần state này với `conference-list.js` rồi kiểm tra thêm thao tác thật trên trình duyệt.
+3. Khi helper thật của TV1 được ghép vào, đối chiếu lại các trường hợp chính để bảo đảm kết quả không thay đổi.
+4. Kiểm tra lại thao tác thật trên trang Khám phá sau khi đồng bộ với `main`.

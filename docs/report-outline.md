@@ -16,7 +16,7 @@
 | TV1 | Catalog/detail | ... | ... | ... |
 | TV2 | UI foundation/home | ... | ... | ... |
 | TV3 | Explore/filter | ... | ... | ... |
-| TV4 | Saved/calendar/integration | ... | ... | ... |
+| TV4 | Saved/calendar/integration | `site/js/saved-store.js`, `site/js/pages/saved.js` | Đã xử lý storage lỗi, ID stale và responsive/focus; test tự động/smoke PASS; chờ reviewer TV2 | [1e5042b](https://github.com/khongphainoob/UIT-CONFINDER/commit/1e5042b) |
 
 ## 3. Kiến trúc và contract
 
