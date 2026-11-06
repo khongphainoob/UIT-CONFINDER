@@ -210,12 +210,23 @@ function renderHero(edition) {
   saveBtn.type = 'button';
   saveBtn.className = 'button button--outline';
   saveBtn.setAttribute('aria-pressed', 'false');
+  let saveWarning = null;
+  const showSaveWarning = (message) => {
+    if (!saveWarning) {
+      saveWarning = document.createElement('p');
+      saveWarning.className = 'save-warning';
+      saveWarning.setAttribute('role', 'alert');
+      actionsRow.append(saveWarning);
+    }
+    saveWarning.textContent = message;
+  };
 
   // Thử kiểm tra trạng thái lưu nếu TV4 đã có saved-store
   import('../saved-store.js')
     .then(({ getSavedIds, toggleSaved }) => {
       try {
-        const { ok, ids } = getSavedIds();
+        const { ok, ids, error } = getSavedIds();
+        if (!ok) showSaveWarning(error);
         if (ok && Array.isArray(ids) && ids.includes(edition.id)) {
           saveBtn.setAttribute('aria-pressed', 'true');
           saveBtn.replaceChildren(createIcon('star'), ' Đã lưu');
@@ -230,9 +241,12 @@ function renderHero(edition) {
       saveBtn.addEventListener('click', () => {
         const res = toggleSaved(edition.id);
         if (!res?.ok) {
+          showSaveWarning(res?.error || 'Không cập nhật được danh sách đã lưu.');
           console.error('Không cập nhật được trạng thái lưu hội nghị:', res?.error);
           return;
         }
+        if (saveWarning) saveWarning.remove();
+        saveWarning = null;
         const isSaved = res.saved;
         saveBtn.setAttribute('aria-pressed', isSaved ? 'true' : 'false');
         saveBtn.replaceChildren(createIcon('star'), isSaved ? ' Đã lưu' : ' Lưu hội nghị');
@@ -240,6 +254,7 @@ function renderHero(edition) {
     })
     .catch((error) => {
       saveBtn.replaceChildren(createIcon('star'), ' Lưu hội nghị');
+      showSaveWarning('Không tải được chức năng lưu hội nghị.');
       console.error('Không tải được module lưu hội nghị:', error);
     });
 

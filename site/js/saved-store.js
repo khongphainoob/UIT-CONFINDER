@@ -39,6 +39,20 @@ function emitSavedChanged(ids) {
   window.dispatchEvent(new CustomEvent('saved:changed', { detail: { ids } }));
 }
 
+function writeStorage(ids) {
+  const storage = getStorage();
+  if (!storage) {
+    return { ok: false, ids, error: 'Không thể truy cập danh sách đã lưu trên trình duyệt.' };
+  }
+  try {
+    storage.setItem(STORAGE_KEY, JSON.stringify({ version: STORAGE_VERSION, ids }));
+    emitSavedChanged(ids);
+    return { ok: true, ids, error: null };
+  } catch (error) {
+    return { ok: false, ids, error: 'Không lưu được thay đổi vào trình duyệt.' };
+  }
+}
+
 export function getSavedIds() {
   return readStorage();
 }
@@ -53,15 +67,26 @@ export function toggleSaved(editionId) {
   const ids = saved
     ? [...current.ids, editionId]
     : current.ids.filter((id) => id !== editionId);
-  const storage = getStorage();
-  if (!storage) {
-    return { ok: false, saved: false, ids: current.ids, error: 'Không thể truy cập danh sách đã lưu trên trình duyệt.' };
+  const result = writeStorage(ids);
+  return {
+    ok: result.ok,
+    saved: result.ok && saved,
+    ids: result.ok ? result.ids : current.ids,
+    error: result.error,
+  };
+}
+
+export function removeSavedIds(idsToRemove) {
+  const current = readStorage();
+  if (!current.ok) return { ok: false, ids: current.ids, error: current.error };
+  if (!Array.isArray(idsToRemove)) {
+    return { ok: false, ids: current.ids, error: 'Danh sách ID cần xóa không hợp lệ.' };
   }
-  try {
-    storage.setItem(STORAGE_KEY, JSON.stringify({ version: STORAGE_VERSION, ids }));
-    emitSavedChanged(ids);
-    return { ok: true, saved, ids, error: null };
-  } catch (error) {
-    return { ok: false, saved: false, ids: current.ids, error: 'Không lưu được thay đổi vào trình duyệt.' };
-  }
+  const ids = current.ids.filter((id) => !idsToRemove.includes(id));
+  const result = writeStorage(ids);
+  return {
+    ok: result.ok,
+    ids: result.ok ? result.ids : current.ids,
+    error: result.error,
+  };
 }
