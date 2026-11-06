@@ -52,3 +52,9 @@ Explore đang dùng state/query contract hiện có và giới hạn 12 card m�
 - `git diff --check` — PASS.
 - Smoke test HTTP cho `index.html`, `conferences.html`, `conference.html`, `saved.html`, `about.html` tại `127.0.0.1:5500` — cả 5 route trả `200`.
 - Chưa có browser automation trong starter; kiểm tra click thực tế, keyboard và viewport cần reviewer TV2 chạy lại trên trình duyệt.
+
+## Trạng thái task và handoff
+
+- **Trạng thái:** Code và test đã hoàn tất; chưa đánh dấu Done cuối cùng vì còn chờ reviewer TV2 kiểm tra browser.
+- **Commit:** [1e5042b](https://github.com/khongphainoob/UIT-CONFINDER/commit/1e5042b).
+- **Handoff:** Reviewer mở `http://127.0.0.1:5500/saved.html`, kiểm tra thêm/bỏ/trùng/reload, JSON lỗi, ID cũ, keyboard focus và viewport 360/768/1366px.
