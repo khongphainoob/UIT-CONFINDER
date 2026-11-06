@@ -285,9 +285,8 @@ function renderHero(edition) {
   return hero;
 }
 
-function renderHighlightBox(edition, selectedDeadline, defaultNextDeadline, now) {
-  const isDefaultUpcoming = defaultNextDeadline && selectedDeadline?.id === defaultNextDeadline.id;
-  const isClosed = !selectedDeadline && !defaultNextDeadline;
+function renderHighlightBox(edition, selectedDeadline, nextInfo, isUserSelected, now) {
+  const isClosed = nextInfo.status === 'closed';
 
   const box = document.createElement('section');
   box.id = 'highlight-box';
@@ -301,16 +300,22 @@ function renderHighlightBox(edition, selectedDeadline, defaultNextDeadline, now)
   label.id = 'highlight-title';
   label.className = 'detail-highlight__label';
 
-  if (selectedDeadline) {
+  if (isClosed) {
+    if (isUserSelected && selectedDeadline) {
+      const typeName = DEADLINE_TYPE_LABELS[selectedDeadline.type] || selectedDeadline.type || 'Hạn nộp';
+      const roundPrefix = selectedDeadline.roundLabel ? `[${selectedDeadline.roundLabel}] ` : '';
+      label.textContent = `Mốc đã kết thúc · ${roundPrefix}${typeName}`;
+    } else {
+      label.textContent = 'Tất cả các mốc nộp bài đã kết thúc';
+    }
+  } else if (selectedDeadline) {
     const typeName = DEADLINE_TYPE_LABELS[selectedDeadline.type] || selectedDeadline.type || 'Hạn nộp';
-    if (isDefaultUpcoming) {
+    if (!isUserSelected) {
       label.textContent = `Mốc tiếp theo · ${typeName}`;
     } else {
       const roundPrefix = selectedDeadline.roundLabel ? `[${selectedDeadline.roundLabel}] ` : '';
       label.textContent = `Mốc đang theo dõi · ${roundPrefix}${typeName}`;
     }
-  } else if (isClosed) {
-    label.textContent = 'Tất cả các mốc nộp bài đã kết thúc';
   } else {
     label.textContent = 'Mốc nộp bài cần đối chiếu';
   }
@@ -391,7 +396,11 @@ function renderHighlightBox(edition, selectedDeadline, defaultNextDeadline, now)
   const calActions = document.createElement('div');
   calActions.className = 'detail-highlight__calendar-actions';
 
+  const targetTime = selectedDeadline?.instant ? Date.parse(selectedDeadline.instant) : null;
+  const isExpired = targetTime !== null && !Number.isNaN(targetTime) && targetTime <= now;
+
   const canExport = Boolean(
+    !isExpired &&
     selectedDeadline?.instant &&
     selectedDeadline.precision === 'instant' &&
     selectedDeadline.quality !== 'estimated' &&
@@ -407,7 +416,9 @@ function renderHighlightBox(edition, selectedDeadline, defaultNextDeadline, now)
   if (!canExport) {
     gcalBtn.disabled = true;
     gcalBtn.setAttribute('aria-disabled', 'true');
-    gcalBtn.title = 'Mốc này chưa có ngày giờ chính xác hoặc là TBA/ước tính, không hỗ trợ xuất lịch.';
+    gcalBtn.title = isExpired
+      ? 'Mốc nộp bài này đã kết thúc, không thể xuất lịch nhắc hẹn.'
+      : 'Mốc này chưa có ngày giờ chính xác hoặc là TBA/ước tính, không hỗ trợ xuất lịch.';
   } else {
     gcalBtn.addEventListener('click', () => {
       try {
@@ -432,7 +443,9 @@ function renderHighlightBox(edition, selectedDeadline, defaultNextDeadline, now)
   if (!canExport) {
     icsBtn.disabled = true;
     icsBtn.setAttribute('aria-disabled', 'true');
-    icsBtn.title = 'Mốc này chưa có ngày giờ chính xác hoặc là TBA/ước tính, không hỗ trợ xuất lịch.';
+    icsBtn.title = isExpired
+      ? 'Mốc nộp bài này đã kết thúc, không thể xuất lịch nhắc hẹn.'
+      : 'Mốc này chưa có ngày giờ chính xác hoặc là TBA/ước tính, không hỗ trợ xuất lịch.';
   } else {
     icsBtn.addEventListener('click', () => {
       try {
@@ -460,7 +473,11 @@ function renderHighlightBox(edition, selectedDeadline, defaultNextDeadline, now)
   if (!canExport && selectedDeadline) {
     const note = document.createElement('span');
     note.className = 'detail-calendar-note';
-    note.textContent = 'Lưu ý: Mốc này là TBA hoặc thời gian ước tính, không hỗ trợ xuất lịch (chỉ hỗ trợ mốc có ngày giờ chính xác).';
+    if (isExpired) {
+      note.textContent = 'Lưu ý: Mốc nộp bài này đã kết thúc, không hỗ trợ xuất lịch nhắc hẹn.';
+    } else {
+      note.textContent = 'Lưu ý: Mốc này là TBA hoặc thời gian ước tính, không hỗ trợ xuất lịch (chỉ hỗ trợ mốc có ngày giờ chính xác).';
+    }
     calActions.append(note);
   }
 
@@ -796,16 +813,27 @@ async function initPage() {
     // Xác định mốc deadline được chọn ban đầu:
     // Ưu tiên mốc từ URL query param deadlineId -> nếu không có thì lấy mốc tiếp theo -> nếu không thì lấy mốc đầu tiên
     let selectedDeadline = null;
+    let isUserSelected = false;
+
     if (urlDeadlineId) {
       selectedDeadline = allDeadlines.find((d) => d.id === urlDeadlineId) || null;
+      if (selectedDeadline) isUserSelected = true;
     }
     if (!selectedDeadline) {
       selectedDeadline = nextInfo.deadline || allDeadlines[0] || null;
+      isUserSelected = false;
     }
+
+    // Khi hội nghị đã kết thúc (closed) và người dùng chưa chủ động click chọn mốc nào,
+    // ta không highlight mặc định mốc cuối cùng để tránh gây hiểu lầm là danh sách xếp ngược.
+    const initialActiveId = (nextInfo.status === 'closed' && !isUserSelected)
+      ? null
+      : (selectedDeadline?.id || null);
 
     // Callback khi người dùng click chọn 1 mốc deadline
     const handleSelectDeadline = (newDeadline) => {
       selectedDeadline = newDeadline;
+      isUserSelected = true;
 
       // Cập nhật tham số deadlineId trên URL mà không reload trang
       const currentUrl = new URL(location.href);
@@ -818,7 +846,7 @@ async function initPage() {
 
       // Cập nhật lại Highlight Box và Rounds Section với mốc mới
       const oldHighlight = host.querySelector('#highlight-box');
-      const newHighlight = renderHighlightBox(edition, selectedDeadline, nextInfo.deadline, now);
+      const newHighlight = renderHighlightBox(edition, selectedDeadline, nextInfo, true, now);
       if (oldHighlight) {
         oldHighlight.replaceWith(newHighlight);
       }
@@ -835,8 +863,8 @@ async function initPage() {
     // Dựng toàn bộ trang
     host.replaceChildren(
       renderHero(edition),
-      renderHighlightBox(edition, selectedDeadline, nextInfo.deadline, now),
-      renderRoundsSection(edition, selectedDeadline?.id || null, handleSelectDeadline, now),
+      renderHighlightBox(edition, selectedDeadline, nextInfo, isUserSelected, now),
+      renderRoundsSection(edition, initialActiveId, handleSelectDeadline, now),
       renderLinksSection(edition),
       renderDataNotice(catalog.meta, edition)
     );

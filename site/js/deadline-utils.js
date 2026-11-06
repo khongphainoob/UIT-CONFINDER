@@ -28,6 +28,7 @@ export function getNextSubmission(edition, { kind = 'any', now = Date.now() } = 
     }
   }
 
+  // Nếu không có mốc nào đúng loại kind (ví dụ kind='abstract' nhưng chỉ có mốc paper)
   if (allSubmissions.length === 0) {
     return { status: 'unknown', deadline: null, futureDeadlines: [] };
   }
@@ -46,6 +47,7 @@ export function getNextSubmission(edition, { kind = 'any', now = Date.now() } = 
 
     if (isPreciseInstant) {
       const time = Date.parse(item.instant);
+      // Deadline đúng bằng now thì coi như đã hết hạn, không được đưa vào futureDeadlines (theo test case T26)
       if (time > now) {
         futureDeadlines.push({ ...item, targetTime: time });
       } else {
@@ -56,10 +58,21 @@ export function getNextSubmission(edition, { kind = 'any', now = Date.now() } = 
     }
   }
 
-  futureDeadlines.sort((a, b) => a.targetTime - b.targetTime);
+  // Sắp xếp tương lai: sớm nhất đến muộn nhất; tie-breaker: abstract ưu tiên trước paper
+  futureDeadlines.sort((a, b) => {
+    if (a.targetTime !== b.targetTime) return a.targetTime - b.targetTime;
+    if (a.type !== b.type) return a.type === 'abstract' ? -1 : 1;
+    return 0;
+  });
 
-  pastDeadlines.sort((a, b) => b.targetTime - a.targetTime);
+  // Sắp xếp quá khứ: gần nhất đến xa nhất (giảm dần)
+  pastDeadlines.sort((a, b) => {
+    if (b.targetTime !== a.targetTime) return b.targetTime - a.targetTime;
+    if (a.type !== b.type) return a.type === 'paper' ? -1 : 1;
+    return 0;
+  });
 
+  // 1. Còn mốc tương lai hợp lệ
   if (futureDeadlines.length > 0) {
     return {
       status: 'upcoming',
@@ -68,6 +81,7 @@ export function getNextSubmission(edition, { kind = 'any', now = Date.now() } = 
     };
   }
 
+  // 2. Tất cả mốc đều đã qua (và không còn mốc TBA/date-only/ước lượng nào)
   if (undeterminedDeadlines.length === 0 && pastDeadlines.length > 0) {
     return {
       status: 'closed',
@@ -76,6 +90,7 @@ export function getNextSubmission(edition, { kind = 'any', now = Date.now() } = 
     };
   }
 
+  // 3. Có mốc chưa xác định rõ (TBA/ước lượng/date-only)
   return {
     status: 'unknown',
     deadline: undeterminedDeadlines[0] || (pastDeadlines.length > 0 ? pastDeadlines[0] : null),
@@ -84,11 +99,16 @@ export function getNextSubmission(edition, { kind = 'any', now = Date.now() } = 
 }
 
 export function getUrgencyInfo(targetTime, now = Date.now()) {
-  if (targetTime === null || Number.isNaN(targetTime)) {
+  let timeMs = targetTime;
+  if (typeof timeMs === 'string') {
+    timeMs = Date.parse(timeMs);
+  }
+
+  if (timeMs === null || timeMs === undefined || Number.isNaN(timeMs)) {
     return { level: 'unknown', label: 'Chưa rõ', className: 'urgency--unknown', icon: 'help' };
   }
 
-  const diffMs = targetTime - now;
+  const diffMs = timeMs - now;
   if (diffMs <= 0) {
     return { level: 'expired', label: 'Đã hết hạn', className: 'urgency--expired', icon: 'x-circle' };
   }
@@ -107,23 +127,41 @@ export function getUrgencyInfo(targetTime, now = Date.now()) {
 }
 
 export function getCountdownText(targetTime, now = Date.now()) {
-  const diffMs = targetTime - now;
-  if (diffMs <= 0) return 'Đã hết hạn';
+  let timeMs = targetTime;
+  if (typeof timeMs === 'string') {
+    timeMs = Date.parse(timeMs);
+  }
 
-  const totalHours = Math.floor(diffMs / (1000 * 60 * 60));
+  if (timeMs === null || timeMs === undefined || Number.isNaN(timeMs)) {
+    return 'Chưa rõ';
+  }
+
+  const diffMs = timeMs - now;
+  if (diffMs <= 0) {
+    return 'Đã hết hạn';
+  }
+
+  const totalMinutes = Math.floor(diffMs / (1000 * 60));
+  const totalHours = Math.floor(totalMinutes / 60);
   const days = Math.floor(totalHours / 24);
   const hours = totalHours % 24;
+  const minutes = totalMinutes % 60;
 
   if (days > 0) {
-    return `còn ${days} ngày ${hours} giờ`;
+    return hours > 0 ? `còn ${days} ngày ${hours} giờ` : `còn ${days} ngày`;
   }
-  const minutes = Math.floor((diffMs % (1000 * 60 * 60)) / (1000 * 60));
-  return `còn ${hours} giờ ${minutes} phút`;
+  if (hours > 0) {
+    return minutes > 0 ? `còn ${hours} giờ ${minutes} phút` : `còn ${hours} giờ`;
+  }
+  if (minutes > 0) {
+    return `còn ${minutes} phút`;
+  }
+  return 'còn dưới 1 phút';
 }
 
-export function formatTimeGMT7(isoString) {
-  if (!isoString) return '';
-  const date = new Date(isoString);
+export function formatTimeGMT7(input) {
+  if (!input && input !== 0) return '';
+  const date = input instanceof Date ? input : new Date(input);
   if (Number.isNaN(date.getTime())) return '';
 
   return new Intl.DateTimeFormat('vi-VN', {
@@ -134,9 +172,9 @@ export function formatTimeGMT7(isoString) {
   }).format(date) + ' GMT+7';
 }
 
-export function formatDateGMT7(isoString) {
-  if (!isoString) return '';
-  const date = new Date(isoString);
+export function formatDateGMT7(input) {
+  if (!input && input !== 0) return '';
+  const date = input instanceof Date ? input : new Date(input);
   if (Number.isNaN(date.getTime())) return '';
 
   return new Intl.DateTimeFormat('vi-VN', {
