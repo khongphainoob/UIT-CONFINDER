@@ -206,6 +206,7 @@ export function applyFilters(editions, inputState, {
 
   const state = normalizeState(inputState, { validFields });
   const query = normalizeSearchText(state.q);
+  const queryTokens = query ? query.split(' ') : [];
   const selectedFields = new Set(state.fields.map(normalizeSearchText));
   const selectedCcf = new Set(state.ccf);
   const selectedCore = new Set(state.core);
@@ -216,9 +217,10 @@ export function applyFilters(editions, inputState, {
   const output = [];
   for (const edition of editions) {
     if (!edition || typeof edition !== 'object') continue;
-    if (query) {
+    if (queryTokens.length) {
       const haystack = normalizeSearchText(`${edition.acronym ?? ''} ${edition.name ?? ''}`);
-      if (!haystack.includes(query)) continue;
+      // Mỗi từ người dùng nhập phải xuất hiện, nhưng không cần đứng sát nhau.
+      if (!queryTokens.every((token) => haystack.includes(token))) continue;
     }
     // Nhiều lựa chọn trong cùng nhóm là OR; các khối if khác nhau tạo thành AND.
     if (selectedFields.size) {

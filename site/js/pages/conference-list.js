@@ -13,6 +13,7 @@ import { showState } from '../ui/state.js';
 import {
   DEFAULT_STATE,
   applyFilters,
+  normalizeState,
   paginate,
   parseState,
   serializeState,
@@ -31,6 +32,7 @@ let catalog = { editions: [] };
 let state = { ...DEFAULT_STATE, fields: [], ccf: [], core: [], mode: [] };
 let validFields = [];
 let savedIds = [];
+let searchTimer = null;
 
 // Các nhãn này nằm gần phần giao diện để người đọc dễ sửa chữ hiển thị.
 const KIND_LABELS = { any: 'Mọi hạn nộp', abstract: 'Abstract', paper: 'Full paper' };
@@ -56,20 +58,33 @@ function copyDefaultState() {
   return { ...DEFAULT_STATE, fields: [], ccf: [], core: [], mode: [] };
 }
 
-function setState(nextState, { addHistory = true } = {}) {
-  state = { ...nextState, page: Number(nextState.page) || 1 };
-  const params = serializeState(state, { validFields });
-  const url = `${window.location.pathname}${params.size ? `?${params}` : ''}`;
+function getStateUrl(nextState = state) {
+  const params = serializeState(nextState, { validFields });
+  const query = params.size ? `?${params}` : '';
+  return `${window.location.pathname}${query}${window.location.hash}`;
+}
+
+function writeStateUrl({ addHistory = true } = {}) {
+  const url = getStateUrl();
   if (addHistory) {
     window.history.pushState({}, '', url);
   } else {
     window.history.replaceState({}, '', url);
   }
-  renderPage();
 }
 
-function changeFilters(patch) {
-  setState({ ...state, ...patch, page: 1 });
+function setState(nextState, { addHistory = true, refreshFilters = true } = {}) {
+  clearTimeout(searchTimer);
+  searchTimer = null;
+  state = normalizeState(nextState, { validFields });
+  writeStateUrl({ addHistory });
+  renderPage({ refreshFilters });
+}
+
+function changeFilters(patch, options = {}) {
+  const search = document.querySelector('#conference-query');
+  const query = Object.hasOwn(patch, 'q') ? patch.q : (search?.value ?? state.q);
+  setState({ ...state, ...patch, q: query, page: 1 }, options);
 }
 
 function createSelectField(labelText, name, options) {
@@ -229,9 +244,22 @@ function renderFilters() {
   advanced.append(advancedSummary, advancedBody);
   form.append(searchRow, quickFilters, controls, advanced);
 
+  function updateSearch() {
+    changeFilters(
+      { q: search.value.trim() },
+      { addHistory: false, refreshFilters: false },
+    );
+  }
+
+  search.addEventListener('input', () => {
+    clearTimeout(searchTimer);
+    searchTimer = setTimeout(updateSearch, 250);
+  });
+
   form.addEventListener('submit', (event) => {
     event.preventDefault();
-    changeFilters({ q: search.value.trim() });
+    clearTimeout(searchTimer);
+    updateSearch();
   });
   kind.select.addEventListener('change', () => changeFilters({ kind: kind.select.value }));
   windowField.select.addEventListener('change', () => changeFilters({ window: windowField.select.value }));
@@ -397,8 +425,7 @@ function createConferenceCard(item, now) {
 }
 
 function stateUrl(page) {
-  const params = serializeState({ ...state, page }, { validFields });
-  return `${window.location.pathname}${params.size ? `?${params}` : ''}`;
+  return getStateUrl({ ...state, page });
 }
 
 function createPageButton(label, page, { current = false, disabled = false } = {}) {
@@ -411,7 +438,8 @@ function createPageButton(label, page, { current = false, disabled = false } = {
   if (!disabled && !current) {
     link.addEventListener('click', (event) => {
       event.preventDefault();
-      setState({ ...state, page });
+      const search = document.querySelector('#conference-query');
+      setState({ ...state, q: search?.value ?? state.q, page });
       document.querySelector('#result-status')?.scrollIntoView({ behavior: 'smooth', block: 'start' });
     });
   }
@@ -441,8 +469,7 @@ function renderPagination(pageInfo) {
   paginationRoot.replaceChildren(pager);
 }
 
-function renderPage() {
-  renderFilters();
+function renderResults() {
   renderActiveFilters();
   // Chốt một mốc now cho toàn bộ lượt lọc, sort, render để các card không lệch nhau.
   const now = Date.now();
@@ -455,13 +482,12 @@ function renderPage() {
   const pageInfo = paginate(sorted, state.page);
   if (pageInfo.page !== state.page) {
     state = { ...state, page: pageInfo.page };
-    const params = serializeState(state, { validFields });
-    window.history.replaceState({}, '', `${window.location.pathname}${params.size ? `?${params}` : ''}`);
+    writeStateUrl({ addHistory: false });
   }
   if (pageInfo.total > 0) {
     resultStatus.textContent = `Tìm thấy ${pageInfo.total} hội nghị · đang hiển thị ${pageInfo.start + 1}–${pageInfo.end}`;
   } else {
-    resultStatus.textContent = 'Không tìm thấy hội nghị phù hợp';
+    resultStatus.textContent = 'Tìm thấy 0 hội nghị · đang hiển thị 0–0';
   }
   if (!pageInfo.total) {
     showState(host, {
@@ -483,6 +509,11 @@ function renderPage() {
   renderPagination(pageInfo);
 }
 
+function renderPage({ refreshFilters = true } = {}) {
+  if (refreshFilters) renderFilters();
+  renderResults();
+}
+
 async function initPage() {
   showState(host, { kind: 'loading', title: 'Đang tải dữ liệu', message: 'Vui lòng chờ.' });
   try {
@@ -495,6 +526,7 @@ async function initPage() {
     const saved = getSavedIds();
     savedIds = saved.ids;
     state = parseState(window.location.search, { validFields });
+    writeStateUrl({ addHistory: false });
     renderPage();
   } catch (error) {
     showState(host, { kind: 'error', title: 'Không tải được dữ liệu', message: error.message });
@@ -502,7 +534,10 @@ async function initPage() {
 }
 
 window.addEventListener('popstate', () => {
+  clearTimeout(searchTimer);
+  searchTimer = null;
   state = parseState(window.location.search, { validFields });
+  writeStateUrl({ addHistory: false });
   renderPage();
 });
 
