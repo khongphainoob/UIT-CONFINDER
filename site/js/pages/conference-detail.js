@@ -242,6 +242,16 @@ function renderHero(edition) {
   saveBtn.type = 'button';
   saveBtn.className = 'button button--outline';
   saveBtn.setAttribute('aria-pressed', 'false');
+  let saveWarning = null;
+  const showSaveWarning = (message) => {
+    if (!saveWarning) {
+      saveWarning = document.createElement('p');
+      saveWarning.className = 'save-warning';
+      saveWarning.setAttribute('role', 'alert');
+      actionsRow.append(saveWarning);
+    }
+    saveWarning.textContent = message;
+  };
 
   try {
     const { ok, ids } = getSavedIds();
