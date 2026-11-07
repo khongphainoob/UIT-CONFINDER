@@ -3,11 +3,26 @@
 export function parseTimezoneOffset(tz) {
   if (!tz || typeof tz !== 'string') return null;
   const clean = tz.trim();
-  if (clean === 'AoE' || clean === 'UTC-12') return '-12:00';
-  if (clean === 'UTC' || clean === 'UTC+0' || clean === 'UTC-0') return '+00:00';
-  if (clean === 'PT') return '-08:00'; 
+  const upper = clean.toUpperCase();
 
-  const match = clean.match(/^UTC([+-])(\d{1,2})(?::?(\d{2}))?$/i);
+  // AoE = UTC-12 (Anywhere on Earth) khi nguồn chỉ rõ
+  if (upper === 'AOE' || upper === 'UTC-12' || upper === 'GMT-12' || upper === 'UTC-12:00' || upper === 'GMT-12:00') {
+    return '-12:00';
+  }
+  if (upper === 'UTC' || upper === 'GMT' || upper === 'UTC+0' || upper === 'UTC-0' || upper === 'Z') {
+    return '+00:00';
+  }
+  if (upper === 'PT' || upper === 'PST') return '-08:00';
+  if (upper === 'PDT') return '-07:00';
+  if (upper === 'EST') return '-05:00';
+  if (upper === 'EDT') return '-04:00';
+  if (upper === 'CST') return '-06:00';
+  if (upper === 'CDT') return '-05:00';
+  if (upper === 'MST') return '-07:00';
+  if (upper === 'MDT') return '-06:00';
+
+  // Khớp định dạng: UTC+7, UTC-5, GMT+07:00, +07:00, -12:00, etc.
+  const match = clean.match(/^(?:UTC|GMT)?([+-])(\d{1,2})(?::?(\d{2}))?$/i);
   if (match) {
     const sign = match[1];
     const hours = match[2].padStart(2, '0');
@@ -35,9 +50,47 @@ export function parseDeadlineItem(id, type, dateStr, timezone) {
     };
   }
 
+  // 1. Date-only (YYYY-MM-DD): Giữ nguyên precision, tuyệt đối không tự gán giờ thành timestamp chính xác
+  const isDateOnly = /^\d{4}-\d{2}-\d{2}$/.test(rawText);
+  if (isDateOnly) {
+    return {
+      id,
+      type,
+      instant: null,
+      sourceText: rawText,
+      timezone: timezone || null,
+      precision: 'date',
+      quality: 'unverified',
+      sourceUrl: null,
+      checkedAt: null,
+      verifiedAt: null,
+    };
+  }
+
+  // 2. Chuỗi ISO 8601 đã có offset hoặc Z (ví dụ: 2026-11-10T23:59:59-12:00 hoặc 2026-11-10T23:59:59Z)
+  const isIsoWithTz = /^\d{4}-\d{2}-\d{2}T\d{2}:\d{2}:\d{2}(?:[+-]\d{2}:?\d{2}|Z)$/i.test(rawText);
+  if (isIsoWithTz) {
+    const timestamp = Date.parse(rawText);
+    if (!Number.isNaN(timestamp)) {
+      return {
+        id,
+        type,
+        instant: rawText,
+        sourceText: rawText,
+        timezone: timezone || null,
+        precision: 'instant',
+        quality: 'unverified',
+        sourceUrl: null,
+        checkedAt: null,
+        verifiedAt: null,
+      };
+    }
+  }
+
+  // 3. Chuỗi có ngày và giờ nhưng cần ghép offset múi giờ (YYYY-MM-DD HH:mm:ss hoặc YYYY-MM-DDTHH:mm:ss)
+  const isDateTime = /^\d{4}-\d{2}-\d{2}[ T]\d{2}:\d{2}:\d{2}$/.test(rawText);
   const tzOffset = parseTimezoneOffset(timezone);
 
-  const isDateTime = /^\d{4}-\d{2}-\d{2} \d{2}:\d{2}:\d{2}$/.test(rawText);
   if (isDateTime && tzOffset) {
     const isoWithOffset = `${rawText.replace(' ', 'T')}${tzOffset}`;
     const timestamp = Date.parse(isoWithOffset);
@@ -55,22 +108,6 @@ export function parseDeadlineItem(id, type, dateStr, timezone) {
         verifiedAt: null,
       };
     }
-  }
-
-  const isDateOnly = /^\d{4}-\d{2}-\d{2}$/.test(rawText);
-  if (isDateOnly) {
-    return {
-      id,
-      type,
-      instant: null,
-      sourceText: rawText,
-      timezone: timezone || null,
-      precision: 'date',
-      quality: 'unverified',
-      sourceUrl: null,
-      checkedAt: null,
-      verifiedAt: null,
-    };
   }
 
   return {
