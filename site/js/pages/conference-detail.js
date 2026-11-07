@@ -8,6 +8,8 @@ import {
   formatDateGMT7,
 } from '../deadline-utils.js';
 import { showState } from '../ui/state.js';
+import { buildGoogleCalendarUrl, createIcs } from '../calendar-export.js';
+import { getSavedIds, toggleSaved } from '../saved-store.js';
 
 // Khởi tạo shell giao diện chung (header, footer, nav)
 initCommonUI('detail');
@@ -52,12 +54,40 @@ const DEADLINE_TYPE_ICONS = {
   opening: 'clock',
 };
 
-/**
- * Tạo phần tử ruy-băng xếp hạng CORE/CCF
- * @param {'ccf'|'core'} system
- * @param {string} val
- * @returns {HTMLElement}
- */
+function showToast(message) {
+  let toast = document.querySelector('.detail-toast');
+  if (!toast) {
+    toast = document.createElement('div');
+    toast.className = 'detail-toast';
+    toast.setAttribute('role', 'status');
+    toast.setAttribute('aria-live', 'polite');
+    document.body.append(toast);
+  }
+  toast.textContent = message;
+  toast.classList.add('detail-toast--visible');
+  clearTimeout(toast._timeout);
+  toast._timeout = setTimeout(() => {
+    toast.classList.remove('detail-toast--visible');
+  }, 3200);
+}
+
+function getAllDeadlines(edition) {
+  const list = [];
+  if (!edition || !Array.isArray(edition.rounds)) return list;
+  for (const round of edition.rounds) {
+    if (!round || !Array.isArray(round.deadlines)) continue;
+    for (const d of round.deadlines) {
+      if (!d) continue;
+      list.push({
+        ...d,
+        roundId: round.id,
+        roundLabel: round.label,
+      });
+    }
+  }
+  return list;
+}
+
 function createRibbonBadge(system, val) {
   const span = document.createElement('span');
   const upper = String(val).toUpperCase();
@@ -92,11 +122,7 @@ function createRibbonBadge(system, val) {
   return span;
 }
 
-/**
- * Tạo nhãn chất lượng dữ liệu (Verified, Unverified, Estimated, TBA)
- * @param {'verified'|'unverified'|'estimated'|'tba'} quality
- * @returns {HTMLElement}
- */
+
 function createQualityBadge(quality) {
   const span = document.createElement('span');
   span.className = `quality quality--${quality || 'unverified'}`;
@@ -119,11 +145,6 @@ function createQualityBadge(quality) {
   return span;
 }
 
-/**
- * Tạo khối hero tổng quan hội nghị
- * @param {object} edition
- * @returns {HTMLElement}
- */
 function renderHero(edition) {
   const hero = document.createElement('article');
   hero.className = 'detail-hero';
@@ -190,7 +211,7 @@ function renderHero(edition) {
   header.append(metaRow);
   hero.append(header);
 
-  // Hàng hành động CTA: Website, Lưu, Lịch
+  // Hàng hành động CTA: Website chính thức, Nguồn dữ liệu đối chiếu, Nút Lưu
   const actionsRow = document.createElement('div');
   actionsRow.className = 'detail-hero__actions';
 
@@ -205,7 +226,18 @@ function renderHero(edition) {
     actionsRow.append(siteLink);
   }
 
-  // 2. Nút Lưu hội nghị (kết nối SavedStore hoặc thông báo sẵn sàng)
+  // 2. Link nguồn dữ liệu đối chiếu (CCFDDL / portal)
+  if (edition.sourceUrl && (edition.sourceUrl.startsWith('http://') || edition.sourceUrl.startsWith('https://'))) {
+    const sourceLink = document.createElement('a');
+    sourceLink.className = 'button button--outline';
+    sourceLink.href = edition.sourceUrl;
+    sourceLink.target = '_blank';
+    sourceLink.rel = 'noopener noreferrer';
+    sourceLink.append('Nguồn đối chiếu ', createIcon('ext'));
+    actionsRow.append(sourceLink);
+  }
+
+  // 3. Nút Lưu hội nghị (kết nối SavedStore theo API TV4)
   const saveBtn = document.createElement('button');
   saveBtn.type = 'button';
   saveBtn.className = 'button button--outline';
@@ -221,42 +253,41 @@ function renderHero(edition) {
     saveWarning.textContent = message;
   };
 
-  // Thử kiểm tra trạng thái lưu nếu TV4 đã có saved-store
-  import('../saved-store.js')
-    .then(({ getSavedIds, toggleSaved }) => {
-      try {
-        const { ok, ids, error } = getSavedIds();
-        if (!ok) showSaveWarning(error);
-        if (ok && Array.isArray(ids) && ids.includes(edition.id)) {
-          saveBtn.setAttribute('aria-pressed', 'true');
-          saveBtn.replaceChildren(createIcon('star'), ' Đã lưu');
-        } else {
-          saveBtn.replaceChildren(createIcon('star'), ' Lưu hội nghị');
-        }
-      } catch (error) {
-        saveBtn.replaceChildren(createIcon('star'), ' Lưu hội nghị');
-        console.error('Không đọc được trạng thái lưu hội nghị:', error);
-      }
-
-      saveBtn.addEventListener('click', () => {
-        const res = toggleSaved(edition.id);
-        if (!res?.ok) {
-          showSaveWarning(res?.error || 'Không cập nhật được danh sách đã lưu.');
-          console.error('Không cập nhật được trạng thái lưu hội nghị:', res?.error);
-          return;
-        }
-        if (saveWarning) saveWarning.remove();
-        saveWarning = null;
-        const isSaved = res.saved;
-        saveBtn.setAttribute('aria-pressed', isSaved ? 'true' : 'false');
-        saveBtn.replaceChildren(createIcon('star'), isSaved ? ' Đã lưu' : ' Lưu hội nghị');
-      });
-    })
-    .catch((error) => {
+  try {
+    const { ok, ids } = getSavedIds();
+    if (ok && Array.isArray(ids) && ids.includes(edition.id)) {
+      saveBtn.setAttribute('aria-pressed', 'true');
+      saveBtn.replaceChildren(createIcon('star'), ' Đã lưu');
+    } else {
       saveBtn.replaceChildren(createIcon('star'), ' Lưu hội nghị');
-      showSaveWarning('Không tải được chức năng lưu hội nghị.');
-      console.error('Không tải được module lưu hội nghị:', error);
-    });
+    }
+  } catch (error) {
+    saveBtn.replaceChildren(createIcon('star'), ' Lưu hội nghị');
+    console.error('Không đọc được trạng thái lưu hội nghị:', error);
+  }
+
+  saveBtn.addEventListener('click', () => {
+    const res = toggleSaved(edition.id);
+    if (!res?.ok) {
+      console.error('Không cập nhật được trạng thái lưu hội nghị:', res?.error);
+      showToast(res?.error || 'Không cập nhật được trạng thái lưu.');
+      return;
+    }
+    const isSaved = res.saved;
+    saveBtn.setAttribute('aria-pressed', isSaved ? 'true' : 'false');
+    saveBtn.replaceChildren(createIcon('star'), isSaved ? ' Đã lưu' : ' Lưu hội nghị');
+    showToast(isSaved ? 'Đã lưu hội nghị thành công.' : 'Đã bỏ lưu hội nghị.');
+  });
+
+  // Lắng nghe sự kiện saved:changed từ TV4 contract để đồng bộ giữa các tab hoặc nút
+  window.addEventListener('saved:changed', (e) => {
+    const ids = e.detail?.ids;
+    if (Array.isArray(ids)) {
+      const isSaved = ids.includes(edition.id);
+      saveBtn.setAttribute('aria-pressed', isSaved ? 'true' : 'false');
+      saveBtn.replaceChildren(createIcon('star'), isSaved ? ' Đã lưu' : ' Lưu hội nghị');
+    }
+  });
 
   actionsRow.append(saveBtn);
   hero.append(actionsRow);
@@ -264,18 +295,13 @@ function renderHero(edition) {
   return hero;
 }
 
-/**
- * Tạo khối hạn nộp tiếp theo nổi bật
- * @param {object} edition
- * @param {object} nextInfo
- * @param {number} now
- * @returns {HTMLElement}
- */
-function renderNextSubmissionBox(edition, nextInfo, now) {
-  const { status, deadline } = nextInfo;
+function renderHighlightBox(edition, selectedDeadline, defaultNextDeadline, now) {
+  const isDefaultUpcoming = defaultNextDeadline && selectedDeadline?.id === defaultNextDeadline.id;
+  const isClosed = !selectedDeadline && !defaultNextDeadline;
 
   const box = document.createElement('section');
-  box.className = `detail-highlight ${status === 'closed' ? 'detail-highlight--closed' : ''}`;
+  box.id = 'highlight-box';
+  box.className = `detail-highlight ${isClosed ? 'detail-highlight--closed' : ''}`;
   box.setAttribute('aria-labelledby', 'highlight-title');
 
   const head = document.createElement('div');
@@ -285,9 +311,15 @@ function renderNextSubmissionBox(edition, nextInfo, now) {
   label.id = 'highlight-title';
   label.className = 'detail-highlight__label';
 
-  if (status === 'upcoming') {
-    label.textContent = `Mốc tiếp theo · ${DEADLINE_TYPE_LABELS[deadline?.type] || 'Hạn nộp bài'}`;
-  } else if (status === 'closed') {
+  if (selectedDeadline) {
+    const typeName = DEADLINE_TYPE_LABELS[selectedDeadline.type] || selectedDeadline.type || 'Hạn nộp';
+    if (isDefaultUpcoming) {
+      label.textContent = `Mốc tiếp theo · ${typeName}`;
+    } else {
+      const roundPrefix = selectedDeadline.roundLabel ? `[${selectedDeadline.roundLabel}] ` : '';
+      label.textContent = `Mốc đang theo dõi · ${roundPrefix}${typeName}`;
+    }
+  } else if (isClosed) {
     label.textContent = 'Tất cả các mốc nộp bài đã kết thúc';
   } else {
     label.textContent = 'Mốc nộp bài cần đối chiếu';
@@ -295,8 +327,8 @@ function renderNextSubmissionBox(edition, nextInfo, now) {
   head.append(label);
 
   // Nhãn chất lượng dữ liệu
-  if (deadline?.quality) {
-    head.append(createQualityBadge(deadline.quality));
+  if (selectedDeadline?.quality) {
+    head.append(createQualityBadge(selectedDeadline.quality));
   }
   box.append(head);
 
@@ -307,8 +339,8 @@ function renderNextSubmissionBox(edition, nextInfo, now) {
   const countdownWrap = document.createElement('div');
   countdownWrap.className = 'detail-highlight__countdown-wrap';
 
-  if (deadline?.instant) {
-    const targetTime = Date.parse(deadline.instant);
+  if (selectedDeadline?.instant) {
+    const targetTime = Date.parse(selectedDeadline.instant);
     const urgency = getUrgencyInfo(targetTime, now);
 
     const urgencyBadge = document.createElement('span');
@@ -323,7 +355,7 @@ function renderNextSubmissionBox(edition, nextInfo, now) {
   } else {
     const urgencyBadge = document.createElement('span');
     urgencyBadge.className = 'urgency urgency--open';
-    urgencyBadge.append(createIcon('pause'), deadline?.sourceText || 'Chưa công bố');
+    urgencyBadge.append(createIcon('pause'), selectedDeadline?.sourceText || 'Chưa công bố ngày giờ');
     countdownWrap.append(urgencyBadge);
   }
   body.append(countdownWrap);
@@ -341,8 +373,8 @@ function renderNextSubmissionBox(edition, nextInfo, now) {
   const gmtVal = document.createElement('span');
   gmtVal.className = 'detail-time-col__value';
 
-  if (deadline?.instant) {
-    gmtVal.textContent = `${formatTimeGMT7(deadline.instant)} · ${formatDateGMT7(deadline.instant)}`;
+  if (selectedDeadline?.instant) {
+    gmtVal.textContent = `${formatTimeGMT7(selectedDeadline.instant)} · ${formatDateGMT7(selectedDeadline.instant)}`;
   } else {
     gmtVal.textContent = 'Chưa có giờ quy đổi chính xác';
   }
@@ -358,25 +390,99 @@ function renderNextSubmissionBox(edition, nextInfo, now) {
   const srcVal = document.createElement('span');
   srcVal.className = 'detail-time-col__value';
 
-  const tzSuffix = deadline?.timezone ? ` (${deadline.timezone})` : '';
-  srcVal.textContent = `${deadline?.sourceText || 'TBA'}${tzSuffix}`;
+  const tzSuffix = selectedDeadline?.timezone ? ` (${selectedDeadline.timezone})` : '';
+  srcVal.textContent = `${selectedDeadline?.sourceText || 'TBA'}${tzSuffix}`;
   srcCol.append(srcLabel, srcVal);
   timesGrid.append(srcCol);
 
   body.append(timesGrid);
+
+  // Hàng nút tích hợp xuất lịch Calendar theo API TV4 (Google Calendar & ICS)
+  const calActions = document.createElement('div');
+  calActions.className = 'detail-highlight__calendar-actions';
+
+  const canExport = Boolean(
+    selectedDeadline?.instant &&
+    selectedDeadline.precision === 'instant' &&
+    selectedDeadline.quality !== 'estimated' &&
+    selectedDeadline.quality !== 'tba'
+  );
+
+  // Nút 1: Thêm vào Google Calendar
+  const gcalBtn = document.createElement('button');
+  gcalBtn.type = 'button';
+  gcalBtn.className = 'button button--outline button--sm';
+  gcalBtn.append(createIcon('calendar'), ' Thêm vào Google Calendar');
+
+  if (!canExport) {
+    gcalBtn.disabled = true;
+    gcalBtn.setAttribute('aria-disabled', 'true');
+    gcalBtn.title = 'Mốc này chưa có ngày giờ chính xác hoặc là TBA/ước tính, không hỗ trợ xuất lịch.';
+  } else {
+    gcalBtn.addEventListener('click', () => {
+      try {
+        const url = buildGoogleCalendarUrl(edition, selectedDeadline);
+        if (url && typeof url === 'string') {
+          window.open(url, '_blank', 'noopener,noreferrer');
+        }
+      } catch (err) {
+        console.warn('Lỗi khi gọi API Google Calendar của TV4:', err);
+        showToast('Chức năng Google Calendar đang chờ hoàn thiện từ module TV4.');
+      }
+    });
+  }
+  calActions.append(gcalBtn);
+
+  // Nút 2: Tải file .ics
+  const icsBtn = document.createElement('button');
+  icsBtn.type = 'button';
+  icsBtn.className = 'button button--outline button--sm';
+  icsBtn.append(createIcon('calendar'), ' Tải file .ics');
+
+  if (!canExport) {
+    icsBtn.disabled = true;
+    icsBtn.setAttribute('aria-disabled', 'true');
+    icsBtn.title = 'Mốc này chưa có ngày giờ chính xác hoặc là TBA/ước tính, không hỗ trợ xuất lịch.';
+  } else {
+    icsBtn.addEventListener('click', () => {
+      try {
+        const icsContent = createIcs(edition, selectedDeadline);
+        if (icsContent && typeof icsContent === 'string') {
+          const blob = new Blob([icsContent], { type: 'text/calendar;charset=utf-8' });
+          const downloadUrl = URL.createObjectURL(blob);
+          const a = document.createElement('a');
+          a.href = downloadUrl;
+          a.download = `${edition.acronym || 'conference'}-${selectedDeadline.id || 'deadline'}.ics`;
+          document.body.append(a);
+          a.click();
+          a.remove();
+          URL.revokeObjectURL(downloadUrl);
+          showToast('Đã tạo và tải file lịch .ics thành công.');
+        }
+      } catch (err) {
+        console.warn('Lỗi khi gọi API xuất file ICS của TV4:', err);
+        showToast('Chức năng tải file .ics đang chờ hoàn thiện từ module TV4.');
+      }
+    });
+  }
+  calActions.append(icsBtn);
+
+  if (!canExport && selectedDeadline) {
+    const note = document.createElement('span');
+    note.className = 'detail-calendar-note';
+    note.textContent = 'Lưu ý: Mốc này là TBA hoặc thời gian ước tính, không hỗ trợ xuất lịch (chỉ hỗ trợ mốc có ngày giờ chính xác).';
+    calActions.append(note);
+  }
+
+  body.append(calActions);
   box.append(body);
 
   return box;
 }
 
-/**
- * Tạo danh sách các vòng (Rounds & Timeline)
- * @param {object} edition
- * @param {number} now
- * @returns {HTMLElement}
- */
-function renderRoundsSection(edition, now) {
+function renderRoundsSection(edition, selectedDeadlineId, onSelectDeadline, now) {
   const section = document.createElement('section');
+  section.id = 'rounds-section';
   section.className = 'detail-rounds';
   section.setAttribute('aria-labelledby', 'rounds-title');
 
@@ -423,8 +529,30 @@ function renderRoundsSection(edition, now) {
       list.append(li);
     } else {
       for (const d of deadlines) {
+        const itemData = {
+          ...d,
+          roundId: round.id,
+          roundLabel: round.label,
+        };
+
+        const isSelected = itemData.id === selectedDeadlineId;
         const li = document.createElement('li');
-        li.className = 'deadline-row';
+        li.className = `deadline-row deadline-row--interactive ${isSelected ? 'deadline-row--selected' : ''}`;
+        li.setAttribute('role', 'button');
+        li.setAttribute('tabindex', '0');
+        li.setAttribute('aria-pressed', isSelected ? 'true' : 'false');
+
+        // Bấm vào hàng hoặc gõ phím Enter/Space để chọn mốc deadline này
+        const handleSelect = () => {
+          onSelectDeadline(itemData);
+        };
+        li.addEventListener('click', handleSelect);
+        li.addEventListener('keydown', (e) => {
+          if (e.key === 'Enter' || e.key === ' ') {
+            e.preventDefault();
+            handleSelect();
+          }
+        });
 
         // 1. Loại deadline
         const typeCol = document.createElement('div');
@@ -434,7 +562,7 @@ function renderRoundsSection(edition, now) {
         typeCol.append(createIcon(iconName), typeLabel);
         li.append(typeCol);
 
-        // 2. Thời gian (GMT+7 & Giờ nguồn)
+        // 2. Thời gian (GMT+7 & Giờ nguồn) kèm link nguồn và ngày kiểm chứng
         const timeCol = document.createElement('div');
         timeCol.className = 'deadline-row__time';
 
@@ -450,12 +578,29 @@ function renderRoundsSection(edition, now) {
         const sourceSub = document.createElement('span');
         sourceSub.className = 'deadline-row__source';
         const tzText = d.timezone ? ` [${d.timezone}]` : '';
-        sourceSub.textContent = `Nguồn: ${d.sourceText || 'TBA'}${tzText}`;
-        timeCol.append(sourceSub);
+        sourceSub.append(`Nguồn: ${d.sourceText || 'TBA'}${tzText}`);
 
+        // Link nguồn đối chiếu riêng của mốc (nếu có)
+        if (d.sourceUrl && (d.sourceUrl.startsWith('http://') || d.sourceUrl.startsWith('https://'))) {
+          const srcLink = document.createElement('a');
+          srcLink.className = 'deadline-source-link';
+          srcLink.href = d.sourceUrl;
+          srcLink.target = '_blank';
+          srcLink.rel = 'noopener noreferrer';
+          srcLink.append(' [Nguồn]');
+          srcLink.addEventListener('click', (e) => e.stopPropagation());
+          sourceSub.append(srcLink);
+        }
+
+        // Ngày kiểm chứng của mốc (nếu có)
+        if (d.checkedAt) {
+          sourceSub.append(` · Đã đối chiếu: ${formatDateGMT7(d.checkedAt)}`);
+        }
+
+        timeCol.append(sourceSub);
         li.append(timeCol);
 
-        // 3. Trạng thái & Chất lượng
+        // 3. Trạng thái, Chất lượng & Nút chọn mốc
         const statusCol = document.createElement('div');
         statusCol.className = 'deadline-row__status';
 
@@ -472,6 +617,28 @@ function renderRoundsSection(edition, now) {
           statusCol.append(createQualityBadge(d.quality));
         }
 
+        // Nút chọn / Huy hiệu Đang chọn
+        const actionsCol = document.createElement('div');
+        actionsCol.className = 'deadline-row__actions';
+
+        if (isSelected) {
+          const pill = document.createElement('span');
+          pill.className = 'deadline-selected-pill';
+          pill.append(createIcon('check'), ' Đang chọn');
+          actionsCol.append(pill);
+        } else {
+          const selectBtn = document.createElement('button');
+          selectBtn.type = 'button';
+          selectBtn.className = 'button button--ghost button--sm';
+          selectBtn.textContent = 'Chọn theo dõi';
+          selectBtn.addEventListener('click', (e) => {
+            e.stopPropagation();
+            handleSelect();
+          });
+          actionsCol.append(selectBtn);
+        }
+        statusCol.append(actionsCol);
+
         li.append(statusCol);
         list.append(li);
       }
@@ -484,11 +651,6 @@ function renderRoundsSection(edition, now) {
   return section;
 }
 
-/**
- * Tạo khối liên kết tài liệu hội nghị (CFP, Hướng dẫn tác giả, Template)
- * @param {object} edition
- * @returns {HTMLElement}
- */
 function renderLinksSection(edition) {
   const card = document.createElement('section');
   card.className = 'detail-links-card';
@@ -548,12 +710,7 @@ function renderLinksSection(edition) {
   return card;
 }
 
-/**
- * Tạo thông báo nguồn dữ liệu theo đặc tả F38
- * @param {object} meta - Catalog metadata
- * @returns {HTMLElement}
- */
-function renderDataNotice(meta) {
+function renderDataNotice(meta, edition) {
   const notice = document.createElement('aside');
   const isStale = meta.mode === 'snapshot';
   notice.className = `data-notice ${isStale ? 'data-notice--stale' : ''}`;
@@ -577,9 +734,24 @@ function renderDataNotice(meta) {
   metaP.className = 'data-notice__meta';
 
   const loadedDateText = meta.loadedAt ? new Date(meta.loadedAt).toLocaleString('vi-VN') : 'vừa xong';
-  metaP.textContent = `Tải lúc ${loadedDateText} · Kiểm chứng gần nhất: Chưa có lần kiểm chứng.`;
-  body.append(metaP);
+  const checkedAtTime = edition?.checkedAt || meta?.checkedAt;
+  const checkedDateText = checkedAtTime ? formatDateGMT7(checkedAtTime) : 'Chưa có lần kiểm chứng';
 
+  metaP.append(`Tải lúc ${loadedDateText} · Kiểm chứng gần nhất: ${checkedDateText}. `);
+
+  // Hiển thị liên kết nguồn dữ liệu gốc
+  const sourceUrl = edition?.sourceUrl || meta?.sourceUrl;
+  if (sourceUrl && (sourceUrl.startsWith('http://') || sourceUrl.startsWith('https://'))) {
+    const srcA = document.createElement('a');
+    srcA.className = 'data-notice__source-link';
+    srcA.href = sourceUrl;
+    srcA.target = '_blank';
+    srcA.rel = 'noopener noreferrer';
+    srcA.append('Xem nguồn dữ liệu gốc CCFDDL ', createIcon('ext'));
+    metaP.append(srcA);
+  }
+
+  body.append(metaP);
   notice.append(body);
   return notice;
 }
@@ -596,8 +768,11 @@ async function initPage() {
 
   try {
     const catalog = await getCatalog();
-    const editionId = new URLSearchParams(location.search).get('id');
+    const searchParams = new URLSearchParams(location.search);
+    const editionId = searchParams.get('id');
+    const urlDeadlineId = searchParams.get('deadlineId');
 
+    // 1. Kiểm tra thiếu editionId (missing ID)
     if (!editionId) {
       showState(host, {
         kind: 'empty',
@@ -608,8 +783,9 @@ async function initPage() {
       return;
     }
 
-    const edition = catalog.editions.find(item => item.id === editionId);
+    const edition = catalog.editions.find((item) => item.id === editionId);
 
+    // 2. Kiểm tra không tìm thấy kỳ hội nghị (invalid ID)
     if (!edition) {
       showState(host, {
         kind: 'empty',
@@ -625,14 +801,54 @@ async function initPage() {
 
     const now = Date.now();
     const nextInfo = getNextSubmission(edition, { now });
+    const allDeadlines = getAllDeadlines(edition);
 
-    // Xóa trạng thái loading và dựng các khối giao diện
+    // Xác định mốc deadline được chọn ban đầu:
+    // Ưu tiên mốc từ URL query param deadlineId -> nếu không có thì lấy mốc tiếp theo -> nếu không thì lấy mốc đầu tiên
+    let selectedDeadline = null;
+    if (urlDeadlineId) {
+      selectedDeadline = allDeadlines.find((d) => d.id === urlDeadlineId) || null;
+    }
+    if (!selectedDeadline) {
+      selectedDeadline = nextInfo.deadline || allDeadlines[0] || null;
+    }
+
+    // Callback khi người dùng click chọn 1 mốc deadline
+    const handleSelectDeadline = (newDeadline) => {
+      selectedDeadline = newDeadline;
+
+      // Cập nhật tham số deadlineId trên URL mà không reload trang
+      const currentUrl = new URL(location.href);
+      if (newDeadline?.id) {
+        currentUrl.searchParams.set('deadlineId', newDeadline.id);
+      } else {
+        currentUrl.searchParams.delete('deadlineId');
+      }
+      history.replaceState(null, '', currentUrl.toString());
+
+      // Cập nhật lại Highlight Box và Rounds Section với mốc mới
+      const oldHighlight = host.querySelector('#highlight-box');
+      const newHighlight = renderHighlightBox(edition, selectedDeadline, nextInfo.deadline, now);
+      if (oldHighlight) {
+        oldHighlight.replaceWith(newHighlight);
+      }
+
+      const oldRounds = host.querySelector('#rounds-section');
+      const newRounds = renderRoundsSection(edition, selectedDeadline?.id || null, handleSelectDeadline, now);
+      if (oldRounds) {
+        oldRounds.replaceWith(newRounds);
+      }
+
+      showToast(`Đã chọn mốc: ${DEADLINE_TYPE_LABELS[newDeadline?.type] || newDeadline?.type || 'Hạn nộp'}`);
+    };
+
+    // Dựng toàn bộ trang
     host.replaceChildren(
       renderHero(edition),
-      renderNextSubmissionBox(edition, nextInfo, now),
-      renderRoundsSection(edition, now),
+      renderHighlightBox(edition, selectedDeadline, nextInfo.deadline, now),
+      renderRoundsSection(edition, selectedDeadline?.id || null, handleSelectDeadline, now),
       renderLinksSection(edition),
-      renderDataNotice(catalog.meta)
+      renderDataNotice(catalog.meta, edition)
     );
   } catch (error) {
     showState(host, {
