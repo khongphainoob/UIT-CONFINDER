@@ -13,6 +13,7 @@ import { showState } from '../ui/state.js';
 import {
   DEFAULT_STATE,
   applyFilters,
+  findNextDeadlineTime,
   normalizeState,
   paginate,
   parseState,
@@ -33,6 +34,9 @@ let state = { ...DEFAULT_STATE, fields: [], ccf: [], core: [], mode: [] };
 let validFields = [];
 let savedIds = [];
 let searchTimer = null;
+let deadlineTimer = null;
+
+const MAX_TIMEOUT = 2_147_000_000;
 
 // Các nhãn này nằm gần phần giao diện để người đọc dễ sửa chữ hiển thị.
 const KIND_LABELS = { any: 'Mọi hạn nộp', abstract: 'Abstract', paper: 'Full paper' };
@@ -85,6 +89,21 @@ function changeFilters(patch, options = {}) {
   const search = document.querySelector('#conference-query');
   const query = Object.hasOwn(patch, 'q') ? patch.q : (search?.value ?? state.q);
   setState({ ...state, ...patch, q: query, page: 1 }, options);
+}
+
+function scheduleDeadlineRefresh(now) {
+  clearTimeout(deadlineTimer);
+  deadlineTimer = null;
+
+  const nextTime = findNextDeadlineTime(catalog.editions, state, {
+    now,
+    getNextSubmission,
+  });
+  if (nextTime == null) return;
+
+  // Chỉ render lại đúng lúc deadline đổi trạng thái, không chạy timer mỗi giây.
+  const delay = Math.min(Math.max(nextTime - now + 100, 100), MAX_TIMEOUT);
+  deadlineTimer = setTimeout(renderResults, delay);
 }
 
 function createSelectField(labelText, name, options) {
@@ -480,6 +499,7 @@ function renderResults() {
   });
   const sorted = sortEditions(filtered, state);
   const pageInfo = paginate(sorted, state.page);
+  scheduleDeadlineRefresh(now);
   if (pageInfo.page !== state.page) {
     state = { ...state, page: pageInfo.page };
     writeStateUrl({ addHistory: false });
@@ -515,6 +535,8 @@ function renderPage({ refreshFilters = true } = {}) {
 }
 
 async function initPage() {
+  clearTimeout(deadlineTimer);
+  deadlineTimer = null;
   showState(host, { kind: 'loading', title: 'Đang tải dữ liệu', message: 'Vui lòng chờ.' });
   try {
     catalog = await getCatalog();
@@ -529,7 +551,12 @@ async function initPage() {
     writeStateUrl({ addHistory: false });
     renderPage();
   } catch (error) {
-    showState(host, { kind: 'error', title: 'Không tải được dữ liệu', message: error.message });
+    showState(host, {
+      kind: 'error',
+      title: 'Không tải được dữ liệu',
+      message: error.message,
+      action: { label: 'Thử lại', onClick: initPage },
+    });
   }
 }
 

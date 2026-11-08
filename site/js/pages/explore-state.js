@@ -265,6 +265,30 @@ export function sortEditions(items, inputState = DEFAULT_STATE) {
   return sorted.sort((left, right) => comparator(left, right) || compareId(left, right));
 }
 
+export function findNextDeadlineTime(editions, inputState, {
+  now = Date.now(),
+  getNextSubmission,
+} = {}) {
+  if (!Array.isArray(editions) || typeof getNextSubmission !== 'function') return null;
+
+  const state = normalizeState(inputState);
+  let nearestTime = Number.POSITIVE_INFINITY;
+
+  for (const edition of editions) {
+    const submission = getNextSubmission(edition, { kind: state.kind, now });
+    for (const deadline of submission?.futureDeadlines || []) {
+      const targetTime = Number.isFinite(deadline?.targetTime)
+        ? deadline.targetTime
+        : Date.parse(deadline?.instant);
+      if (Number.isFinite(targetTime) && targetTime > now && targetTime < nearestTime) {
+        nearestTime = targetTime;
+      }
+    }
+  }
+
+  return Number.isFinite(nearestTime) ? nearestTime : null;
+}
+
 export function paginate(items, page, pageSize = PAGE_SIZE) {
   // Trang vượt giới hạn sẽ tự quay về trang cuối đang có dữ liệu.
   const source = Array.isArray(items) ? items : [];
