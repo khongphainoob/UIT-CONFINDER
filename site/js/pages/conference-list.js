@@ -95,14 +95,18 @@ function scheduleDeadlineRefresh(now) {
   clearTimeout(deadlineTimer);
   deadlineTimer = null;
 
-  const nextTime = findNextDeadlineTime(catalog.editions, state, {
+  const nextTime = findNextDeadlineTime(
+    catalog.editions,
+    state.kind,
     now,
     getNextSubmission,
-  });
+  );
   if (nextTime == null) return;
 
   // Chỉ render lại đúng lúc deadline đổi trạng thái, không chạy timer mỗi giây.
-  const delay = Math.min(Math.max(nextTime - now + 100, 100), MAX_TIMEOUT);
+  let delay = nextTime - now + 100;
+  if (delay < 100) delay = 100;
+  if (delay > MAX_TIMEOUT) delay = MAX_TIMEOUT;
   deadlineTimer = setTimeout(renderResults, delay);
 }
 

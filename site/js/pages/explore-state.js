@@ -265,28 +265,26 @@ export function sortEditions(items, inputState = DEFAULT_STATE) {
   return sorted.sort((left, right) => comparator(left, right) || compareId(left, right));
 }
 
-export function findNextDeadlineTime(editions, inputState, {
-  now = Date.now(),
-  getNextSubmission,
-} = {}) {
+export function findNextDeadlineTime(editions, kind, now, getNextSubmission) {
   if (!Array.isArray(editions) || typeof getNextSubmission !== 'function') return null;
 
-  const state = normalizeState(inputState);
-  let nearestTime = Number.POSITIVE_INFINITY;
+  let nearestTime = null;
 
   for (const edition of editions) {
-    const submission = getNextSubmission(edition, { kind: state.kind, now });
+    const submission = getNextSubmission(edition, { kind, now });
     for (const deadline of submission?.futureDeadlines || []) {
-      const targetTime = Number.isFinite(deadline?.targetTime)
+      const targetTime = Number.isFinite(deadline.targetTime)
         ? deadline.targetTime
-        : Date.parse(deadline?.instant);
-      if (Number.isFinite(targetTime) && targetTime > now && targetTime < nearestTime) {
+        : Date.parse(deadline.instant);
+
+      const isNearer = nearestTime === null || targetTime < nearestTime;
+      if (Number.isFinite(targetTime) && targetTime > now && isNearer) {
         nearestTime = targetTime;
       }
     }
   }
 
-  return Number.isFinite(nearestTime) ? nearestTime : null;
+  return nearestTime;
 }
 
 export function paginate(items, page, pageSize = PAGE_SIZE) {
