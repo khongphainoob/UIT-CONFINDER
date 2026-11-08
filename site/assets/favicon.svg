@@ -1,0 +1,10 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 32 32" width="32" height="32">
+  <title>UIT ConFinder</title>
+  <!-- Như logo-mark.svg nhưng có ô nền giấy và bỏ vòng tím nhạt (16px không thấy) -->
+  <rect width="32" height="32" rx="6" fill="#f1eff5"/>
+  <g fill="#5b2d9b">
+    <path d="M25.38 23.48 A12 12 0 1 1 21.07 5.12 L19.38 8.75 A8 8 0 1 0 22.17 21.1 A1.4 1.4 0 0 1 23.97 20.79 L25.01 21.41 A1.4 1.4 0 0 1 25.38 23.48Z"/>
+    <path d="M24.49 7.51 A12 12 0 0 1 26.82 10.82 A1.4 1.4 0 0 1 25.99 12.75 L24.84 13.13 A1.4 1.4 0 0 1 23.16 12.42 A8 8 0 0 0 21.66 10.34Z"/>
+  </g>
+  <line x1="21.45" y1="8.22" x2="24.6" y2="3.71" stroke="#d6336c" stroke-width="2.2" stroke-linecap="round"/>
+</svg>

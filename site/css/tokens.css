@@ -43,6 +43,7 @@
 
   /* nút phá huỷ (vd. xoá khỏi Đã lưu) và lỗi nhập liệu */
   --color-danger: #a8200f;
+  --color-danger-bg: #fff1f1; /* nền khối cảnh báo; Chi tiết và Đã lưu đang viết thẳng mã màu này */
 
   /* chữ: font tải từ Google Fonts, luôn có stack hệ thống dự phòng */
   --font-ui: "Be Vietnam Pro", system-ui, "Segoe UI", Roboto, Arial, sans-serif;
