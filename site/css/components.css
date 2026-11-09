@@ -14,6 +14,7 @@
 .header-row { display: flex; flex-wrap: wrap; align-items: center; gap: var(--space-1) var(--space-2); min-height: 52px; }
 .brand { display: inline-block; margin-right: auto; font: 600 1.3125rem/var(--control-height) var(--font-serif); /* inline-flex sẽ nuốt dấu cách giữa "UIT" và "ConFinder" */ color: var(--color-ink); text-decoration: none; white-space: nowrap; }
 .brand__accent { color: var(--color-primary); }
+.brand__logo { display: inline-block; /* base.css cho img là block */ margin-right: var(--space-2); vertical-align: middle; vertical-align: calc((1cap - 28px) / 2); /* tâm logo (28px, theo width/height trong common.js) ngang tâm chữ hoa; middle canh theo chữ thường nên thấp ~2,5px */ }
 .menu-toggle {
   display: inline-grid; place-items: center; width: var(--control-height); height: var(--control-height);
   padding: 0; border: 0; border-radius: 50%; background: none; color: var(--color-ink);
@@ -73,7 +74,8 @@
   display: inline-flex; align-items: center; justify-content: center; gap: var(--space-2);
   min-height: var(--control-height); padding: 0 18px; border: 1px solid var(--color-ink); border-radius: var(--radius);
   background: var(--color-ink); color: var(--color-paper); font-size: var(--text-small); font-weight: 600;
-  text-decoration: none; white-space: nowrap; transition: background-color .15s, color .15s;
+  text-align: center; text-decoration: none; transition: background-color .15s, color .15s;
+  /* không nowrap: nhãn dài ("Truy cập trang chính thức để xem CFP") ở 360px đẩy cả lưới trang Chi tiết tràn ngang */
 }
 .button:hover { background: var(--color-ink-hover); border-color: var(--color-ink-hover); } /* không dùng opacity để giữ tương phản */
 .button--outline { background: var(--color-card); color: var(--color-primary); border-color: var(--color-primary); }

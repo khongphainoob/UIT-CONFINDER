@@ -86,7 +86,7 @@ html { scrollbar-gutter: stable; } /* chừa chỗ thanh cuộn kể cả lúc m
   background: var(--home-night); color: var(--home-on-night);
 }
 .hero__title { display: grid; }
-.hero__title, .hero__echo { margin: 0; font: 500 var(--home-display)/1.08 var(--font-ui); letter-spacing: -.045em; text-transform: uppercase; }
+.hero__title, .hero__echo { margin: 0; font: 800 var(--home-display)/1.08 var(--font-serif); letter-spacing: -.035em; text-transform: uppercase; }
 .hero__line { display: block; white-space: nowrap; }
 .hero__echo { display: none; }
 
@@ -128,7 +128,7 @@ html { scrollbar-gutter: stable; } /* chừa chỗ thanh cuộn kể cả lúc m
 .hero__next-level { color: var(--level); }
 .hero__next-name {
   justify-self: start; display: inline-flex; align-items: center; min-height: var(--control-height);
-  color: inherit; font: 600 clamp(1.375rem, 2vw, 1.75rem)/1.1 var(--font-serif); text-decoration: none;
+  color: inherit; font: 600 clamp(1.375rem, 2vw, 1.75rem)/1.15 var(--font-serif); text-decoration: none;
 }
 .hero__next-name:hover { text-decoration: underline; text-underline-offset: 4px; }
 .hero__next-when { font-family: var(--font-mono); }
@@ -149,12 +149,12 @@ html { scrollbar-gutter: stable; } /* chừa chỗ thanh cuộn kể cả lúc m
   .hero { grid-template-columns: 1fr 1fr; grid-template-rows: minmax(0, 1fr); height: max(40rem, 100svh); }
   .hero__dark {
     padding: calc(var(--space-6) + var(--home-display) * 1.08 + var(--space-4)) var(--space-6)
-             calc(var(--space-5) + var(--home-display) * 1.3 * 1.08 + var(--space-4)) var(--home-edge);
+             calc(var(--space-5) + var(--home-display) * 1.45 * 1.08 + var(--space-4)) var(--home-edge);
   }
   .hero__echo { display: contents; }
   .hero__line { position: absolute; left: 0; right: 0; z-index: 2; padding-left: var(--home-edge); pointer-events: none; }
   .hero__line--top { top: var(--space-6); }
-  .hero__line--bottom { bottom: var(--space-5); font-size: calc(var(--home-display) * 1.3); } /* to hơn để chạy qua ranh giới hai nửa */
+  .hero__line--bottom { bottom: var(--space-5); font-size: calc(var(--home-display) * 1.45); } /* to hơn để chạy qua ranh giới hai nửa; 1.45 theo bề rộng Bricolage, đổi font thì đo lại */
   .hero__title .hero__line { clip-path: inset(-.2em 50% -.2em 0); }
   .hero__echo .hero__line { clip-path: inset(-.2em 0 -.2em 50%); color: var(--color-ink); }
 
@@ -190,7 +190,7 @@ html { scrollbar-gutter: stable; } /* chừa chỗ thanh cuộn kể cả lúc m
 /* ---------- hạn nộp sắp tới: cột tiêu đề dính, hàng kẻ mảnh ---------- */
 .upcoming { display: grid; gap: var(--space-6); padding-block: 4rem; }
 .upcoming__head { display: grid; gap: var(--space-3); align-content: start; }
-.upcoming__head h2 { font-size: clamp(2.25rem, 6vw, 4rem); line-height: 1; letter-spacing: -.02em; }
+.upcoming__head h2 { font-size: clamp(2.25rem, 6vw, 4rem); line-height: 1.15; letter-spacing: -.02em; } /* dấu ắ/ổ + đuôi p/g của Bricolage cao ~1.08em: dưới 1.1 là dính dòng */
 .upcoming__head p { max-width: 36ch; color: var(--color-mute); }
 .upcoming__all, .guides__head a { justify-self: start; display: inline-flex; align-items: center; min-height: var(--control-height); font-size: var(--text-small); font-weight: 600; }
 .upcoming__body { display: grid; }

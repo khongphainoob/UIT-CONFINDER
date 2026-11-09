@@ -60,10 +60,20 @@ export function createIcon(name, className = 'icon') {
   return svg;
 }
 
-function createBrand() {
+function createBrand({ withLogo = false } = {}) {
   const brand = document.createElement('a');
   brand.className = 'brand';
   brand.href = ROUTES.home;
+  if (withLogo) {
+    // alt rỗng: chữ "UIT ConFinder" ngay sau đã là tên link, logo chỉ trang trí
+    const logo = document.createElement('img');
+    logo.className = 'brand__logo';
+    logo.src = 'assets/logo-mark.svg';
+    logo.alt = '';
+    logo.width = 28;
+    logo.height = 28;
+    brand.append(logo);
+  }
   const accent = document.createElement('span');
   accent.className = 'brand__accent';
   accent.textContent = 'ConFinder';
@@ -127,7 +137,8 @@ export function initCommonUI(pageKey) {
       }
     });
 
-    row.append(createBrand(), toggle, nav);
+    // footer nền mực không gắn logo: chữ C tím chìm trên nền tối
+    row.append(createBrand({ withLogo: true }), toggle, nav);
     host.replaceChildren(row);
   }
 
