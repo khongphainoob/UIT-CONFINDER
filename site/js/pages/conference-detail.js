@@ -437,8 +437,8 @@ function renderHighlightBox(edition, selectedDeadline, nextInfo, isUserSelected,
           window.open(url, '_blank', 'noopener,noreferrer');
         }
       } catch (err) {
-        console.warn('Lỗi khi gọi API Google Calendar của TV4:', err);
-        showToast('Chức năng Google Calendar đang chờ hoàn thiện từ module TV4.');
+        console.warn('Lỗi khi tạo liên kết Google Calendar:', err);
+        showToast(err.message || 'Không thể tạo liên kết Google Calendar.');
       }
     });
   }
@@ -473,8 +473,8 @@ function renderHighlightBox(edition, selectedDeadline, nextInfo, isUserSelected,
           showToast('Đã tạo và tải file lịch .ics thành công.');
         }
       } catch (err) {
-        console.warn('Lỗi khi gọi API xuất file ICS của TV4:', err);
-        showToast('Chức năng tải file .ics đang chờ hoàn thiện từ module TV4.');
+        console.warn('Lỗi khi tạo file ICS:', err);
+        showToast(err.message || 'Không thể tạo file .ics.');
       }
     });
   }
@@ -486,7 +486,7 @@ function renderHighlightBox(edition, selectedDeadline, nextInfo, isUserSelected,
     if (isExpired) {
       note.textContent = 'Lưu ý: Mốc nộp bài này đã kết thúc, không hỗ trợ xuất lịch nhắc hẹn.';
     } else {
-      note.textContent = 'Lưu ý: Mốc này là TBA hoặc thời gian ước tính, không hỗ trợ xuất lịch (chỉ hỗ trợ mốc có ngày giờ chính xác).';
+      note.textContent = 'Lưu ý: Mốc này chưa có giờ chính xác (TBA, chỉ có ngày hoặc Estimated), không hỗ trợ xuất lịch.';
     }
     calActions.append(note);
   }
