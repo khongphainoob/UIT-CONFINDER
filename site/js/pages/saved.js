@@ -110,7 +110,13 @@ async function initPage() {
     renderSaved(saved.ids, currentCatalog);
     if (!saved.ok) host.prepend(createWarning(saved.error));
   } catch (error) {
-    showState(host, { kind: 'error', title: 'Không tải được dữ liệu', message: error.message });
+    console.error(error);
+    showState(host, {
+      kind: 'error',
+      title: 'Không tải được dữ liệu',
+      message: 'Kiểm tra kết nối mạng rồi thử lại.',
+      action: { label: 'Thử lại', onClick: initPage },
+    });
   }
 }
 
