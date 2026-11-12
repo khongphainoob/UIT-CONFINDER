@@ -6,6 +6,8 @@ import {
   getCountdownText,
   formatTimeGMT7,
   formatDateGMT7,
+  getStaleInfo,
+  resolveDeadlineQuality,
 } from '../deadline-utils.js';
 import { showState } from '../ui/state.js';
 import { buildGoogleCalendarUrl, createIcs } from '../calendar-export.js';
@@ -123,20 +125,29 @@ function createRibbonBadge(system, val) {
 }
 
 
-function createQualityBadge(quality) {
+function createQualityBadge(quality, verifiedAt = null) {
+  let effectiveQuality = quality;
+  // Quy tắc TV1: Verified CHỈ KHI đối chiếu nguồn chính thức có verifiedAt
+  if (effectiveQuality === 'verified' && !verifiedAt) {
+    effectiveQuality = 'unverified';
+  }
+  if (!effectiveQuality) {
+    effectiveQuality = 'unverified';
+  }
+
   const span = document.createElement('span');
-  span.className = `quality quality--${quality || 'unverified'}`;
+  span.className = `quality quality--${effectiveQuality}`;
 
   let iconName = 'help';
   let text = 'Chưa đối chiếu';
 
-  if (quality === 'verified') {
+  if (effectiveQuality === 'verified') {
     iconName = 'check';
     text = 'Verified';
-  } else if (quality === 'estimated') {
+  } else if (effectiveQuality === 'estimated') {
     iconName = 'approx';
     text = 'Estimated';
-  } else if (quality === 'tba') {
+  } else if (effectiveQuality === 'tba') {
     iconName = 'pause';
     text = 'TBA';
   }
@@ -331,9 +342,11 @@ function renderHighlightBox(edition, selectedDeadline, nextInfo, isUserSelected,
   }
   head.append(label);
 
-  // Nhãn chất lượng dữ liệu
-  if (selectedDeadline?.quality) {
-    head.append(createQualityBadge(selectedDeadline.quality));
+  // Nhãn chất lượng dữ liệu: Verified chỉ khi có verifiedAt, phân biệt rõ Estimated/TBA/Chưa đối chiếu
+  if (selectedDeadline) {
+    const verifiedDate = selectedDeadline.verifiedAt || edition.verifiedAt;
+    const resolvedQuality = resolveDeadlineQuality(selectedDeadline, edition);
+    head.append(createQualityBadge(resolvedQuality, verifiedDate));
   }
   box.append(head);
 
@@ -609,9 +622,13 @@ function renderRoundsSection(edition, selectedDeadlineId, onSelectDeadline, now)
           sourceSub.append(srcLink);
         }
 
-        // Ngày kiểm chứng của mốc (nếu có)
-        if (d.checkedAt) {
-          sourceSub.append(` · Đã đối chiếu: ${formatDateGMT7(d.checkedAt)}`);
+        // Ngày kiểm chứng nguồn chính thức (verifiedAt) hoặc kiểm tra nguồn (checkedAt)
+        if (d.verifiedAt) {
+          sourceSub.append(` · Đã xác minh nguồn chính thức: ${formatDateGMT7(d.verifiedAt)}`);
+        } else if (d.checkedAt) {
+          sourceSub.append(` · Đã kiểm tra nguồn: ${formatDateGMT7(d.checkedAt)}`);
+        } else {
+          sourceSub.append(' · Chưa có ngày kiểm nguồn');
         }
 
         timeCol.append(sourceSub);
@@ -630,9 +647,9 @@ function renderRoundsSection(edition, selectedDeadlineId, onSelectDeadline, now)
           statusCol.append(urgSpan);
         }
 
-        if (d.quality) {
-          statusCol.append(createQualityBadge(d.quality));
-        }
+        const verifiedDate = d.verifiedAt || edition.verifiedAt;
+        const resolvedQuality = resolveDeadlineQuality(d, edition);
+        statusCol.append(createQualityBadge(resolvedQuality, verifiedDate));
 
         // Nút chọn / Huy hiệu Đang chọn
         const actionsCol = document.createElement('div');
@@ -727,34 +744,52 @@ function renderLinksSection(edition) {
   return card;
 }
 
-function renderDataNotice(meta, edition) {
+function renderDataNotice(meta, edition, now = Date.now()) {
+  const checkedAtTime = edition?.checkedAt || meta?.checkedAt;
+  const staleInfo = getStaleInfo(checkedAtTime, now);
+  const isStale = staleInfo.isStale;
+
   const notice = document.createElement('aside');
-  const isStale = meta.mode === 'snapshot';
   notice.className = `data-notice ${isStale ? 'data-notice--stale' : ''}`;
   notice.setAttribute('role', 'status');
 
-  const iconName = isStale ? 'alert' : 'check';
+  const iconName = isStale ? 'alert' : (staleInfo.status === 'fresh' ? 'check' : 'help');
   notice.append(createIcon(iconName));
 
   const body = document.createElement('div');
   body.className = 'data-notice__body';
 
+  const titleRow = document.createElement('div');
+  titleRow.className = 'data-notice__header';
+
+  const chip = document.createElement('span');
+  chip.className = `data-notice__chip data-notice__chip--${staleInfo.status}`;
+
   const titleP = document.createElement('p');
-  if (isStale) {
-    titleP.textContent = 'Dữ liệu được nạp từ bản chụp snapshot dự phòng.';
+  titleP.className = 'data-notice__title';
+
+  if (staleInfo.status === 'unverified-source') {
+    chip.textContent = 'Chưa kiểm chứng nguồn thật';
+    titleP.textContent = 'Hội nghị chưa có ngày kiểm chứng nguồn thực tế. Vui lòng đối chiếu website chính thức trước khi nộp bài.';
+  } else if (staleInfo.status === 'stale') {
+    chip.textContent = `Nguồn đã cũ (>${staleInfo.days} ngày)`;
+    titleP.textContent = `Dữ liệu đã cũ (đã ${staleInfo.days} ngày kể từ lần kiểm nguồn thật gần nhất). Cần đối chiếu lại với trang chính thức.`;
   } else {
-    titleP.textContent = 'Dữ liệu trực tiếp từ nguồn CCFDDL.';
+    chip.textContent = staleInfo.days <= 0 ? 'Đã kiểm nguồn hôm nay' : `Đã kiểm nguồn ${staleInfo.days} ngày trước`;
+    titleP.textContent = 'Dữ liệu nguồn đã được đối chiếu trong vòng 30 ngày.';
   }
-  body.append(titleP);
+
+  titleRow.append(chip, titleP);
+  body.append(titleRow);
 
   const metaP = document.createElement('p');
   metaP.className = 'data-notice__meta';
 
   const loadedDateText = meta.loadedAt ? new Date(meta.loadedAt).toLocaleString('vi-VN') : 'vừa xong';
-  const checkedAtTime = edition?.checkedAt || meta?.checkedAt;
-  const checkedDateText = checkedAtTime ? formatDateGMT7(checkedAtTime) : 'Chưa có lần kiểm chứng';
+  const checkedDateText = staleInfo.hasCheckedDate ? formatDateGMT7(checkedAtTime) : 'Chưa có ngày kiểm';
+  const modeText = meta.mode === 'live' ? 'Trực tiếp (CCFDDL)' : 'Snapshot dự phòng';
 
-  metaP.append(`Tải lúc ${loadedDateText} · Kiểm chứng gần nhất: ${checkedDateText}. `);
+  metaP.append(`Chế độ: ${modeText} · Nạp lúc ${loadedDateText} · Kiểm nguồn: ${checkedDateText}. `);
 
   // Hiển thị liên kết nguồn dữ liệu gốc
   const sourceUrl = edition?.sourceUrl || meta?.sourceUrl;
@@ -776,7 +811,7 @@ function renderDataNotice(meta, edition) {
 /**
  * Khởi tạo dữ liệu và dựng trang chi tiết hội nghị
  */
-async function initPage() {
+async function initPage({ forceReload = false } = {}) {
   showState(host, {
     kind: 'loading',
     title: 'Đang tải dữ liệu hội nghị',
@@ -784,7 +819,7 @@ async function initPage() {
   });
 
   try {
-    const catalog = await getCatalog();
+    const catalog = await getCatalog({ forceReload });
     const searchParams = new URLSearchParams(location.search);
     const editionId = searchParams.get('id');
     const urlDeadlineId = searchParams.get('deadlineId');
@@ -876,14 +911,14 @@ async function initPage() {
       renderHighlightBox(edition, selectedDeadline, nextInfo, isUserSelected, now),
       renderRoundsSection(edition, initialActiveId, handleSelectDeadline, now),
       renderLinksSection(edition),
-      renderDataNotice(catalog.meta, edition)
+      renderDataNotice(catalog.meta, edition, now)
     );
   } catch (error) {
     showState(host, {
       kind: 'error',
       title: 'Không tải được dữ liệu',
       message: error.message || 'Đã có lỗi xảy ra trong quá trình nạp thông tin.',
-      action: { label: 'Thử lại', onClick: initPage },
+      action: { label: 'Thử lại', onClick: () => initPage({ forceReload: true }) },
     });
   }
 }
