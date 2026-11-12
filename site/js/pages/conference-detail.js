@@ -461,7 +461,8 @@ function renderHighlightBox(edition, selectedDeadline, nextInfo, isUserSelected,
       try {
         const icsContent = createIcs(edition, selectedDeadline);
         if (icsContent && typeof icsContent === 'string') {
-          const blob = new Blob([icsContent], { type: 'text/calendar;charset=utf-8' });
+          // Thêm UTF-8 BOM để New Outlook nhận đúng file .ics có nội dung Unicode.
+          const blob = new Blob(['\uFEFF', icsContent], { type: 'text/calendar;charset=utf-8' });
           const downloadUrl = URL.createObjectURL(blob);
           const a = document.createElement('a');
           a.href = downloadUrl;

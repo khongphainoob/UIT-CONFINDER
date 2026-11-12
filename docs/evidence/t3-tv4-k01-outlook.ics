@@ -1,0 +1,15 @@
+﻿BEGIN:VCALENDAR
+VERSION:2.0
+PRODID:-//UIT ConFinder//Calendar Export//VI
+CALSCALE:GREGORIAN
+METHOD:PUBLISH
+BEGIN:VEVENT
+UID:demo-2027-r2-paper@uit-confinder.local
+DTSTAMP:20261112T080903Z
+DTSTART:20270116T115959Z
+SUMMARY:DEMO 2027 - Paper deadline
+DESCRIPTION:Edition: demo-2027\nDeadline: r2-paper\nRound: Fast track\nSource time: 2027-01-15 23:59:59\nSource timezone: AoE\nConference website: https://example.com/demo-2027
+LOCATION:Online
+URL:https://example.com/demo-2027
+END:VEVENT
+END:VCALENDAR
