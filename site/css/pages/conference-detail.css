@@ -96,9 +96,9 @@
   flex: 1 1 100%;
   margin: 0;
   padding: var(--space-2) var(--space-3);
-  border-left: 4px solid var(--color-danger);
+  border: 1px solid var(--color-danger);
   border-radius: var(--radius-sm);
-  background: #fff1f1;
+  background: var(--color-danger-bg);
   color: var(--color-ink);
 }
 
@@ -107,14 +107,12 @@
   gap: var(--space-3);
   padding: var(--space-4);
   border: 1px solid var(--color-primary);
-  border-left-width: 6px;
   border-radius: var(--radius);
   background: var(--color-card);
 }
 
 .detail-highlight--closed {
   border-color: var(--color-rule-strong);
-  border-left-color: var(--color-rule-strong);
   background: var(--color-closed);
 }
 
@@ -353,7 +351,8 @@
 
 .deadline-row--selected {
   background: var(--color-tint);
-  border-left: 4px solid var(--color-primary);
+  outline: 1px solid var(--color-primary);
+  outline-offset: -1px;
 }
 
 .deadline-row--selected:hover {
@@ -390,6 +389,51 @@
 }
 
 /* Liên kết nguồn trong data notice */
+.data-notice__header {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: var(--space-2);
+}
+
+.data-notice__title {
+  margin: 0;
+  font-weight: 600;
+  color: var(--color-ink);
+}
+
+.data-notice__chip {
+  display: inline-flex;
+  align-items: center;
+  gap: var(--space-1);
+  padding: 2px var(--space-2);
+  border-radius: var(--radius-sm);
+  font-size: var(--text-label);
+  font-weight: 600;
+  border: 1px solid var(--color-rule-strong);
+  background: var(--color-card);
+  color: var(--color-mute);
+  white-space: nowrap;
+}
+
+.data-notice__chip--stale {
+  border-color: var(--color-danger);
+  color: var(--color-danger);
+  background: var(--color-danger-bg);
+}
+
+.data-notice__chip--fresh {
+  border-color: var(--color-open-fg);
+  color: var(--color-open-fg);
+  background: var(--color-open-bg);
+}
+
+.data-notice__chip--unverified-source {
+  border-color: var(--color-dim);
+  color: var(--color-dim);
+  background: var(--color-card);
+}
+
 .data-notice__source-link {
   color: var(--color-primary);
   text-decoration: none;
