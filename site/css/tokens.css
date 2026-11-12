@@ -1,5 +1,9 @@
 /* TV2: thay đổi token tại đây để toàn site đổi đồng bộ. Không hard-code màu ở file khác.
    Tham khảo hệ thiết kế "Thẻ đeo hội nghị" (bảng màu Mận) từ Hoagjaxz/uit-confinder, site/css/site.css. */
+
+/* font tải tại đây thay vì <link> trong từng HTML: mọi trang đều nạp tokens.css nên đổi font chỉ sửa một chỗ */
+@import url("https://fonts.googleapis.com/css2?family=Be+Vietnam+Pro:wght@400;500;600;700&family=Bricolage+Grotesque:opsz,wght@12..96,500..800&family=JetBrains+Mono:wght@400;500;700&display=swap");
+
 :root {
   color-scheme: light;
 
@@ -43,10 +47,12 @@
 
   /* nút phá huỷ (vd. xoá khỏi Đã lưu) và lỗi nhập liệu */
   --color-danger: #a8200f;
+  --color-danger-bg: #fff1f1; /* nền khối cảnh báo; Chi tiết và Đã lưu đang viết thẳng mã màu này */
 
   /* chữ: font tải từ Google Fonts, luôn có stack hệ thống dự phòng */
   --font-ui: "Be Vietnam Pro", system-ui, "Segoe UI", Roboto, Arial, sans-serif;
-  --font-serif: "Newsreader", Georgia, "Times New Roman", serif;
+  /* giữ tên --font-serif để không phải sửa CSS trang khác; nay là font tiêu đề Bricolage Grotesque (không chân, có trục cỡ quang học) */
+  --font-serif: "Bricolage Grotesque", system-ui, "Segoe UI", Roboto, Arial, sans-serif;
   --font-mono: "JetBrains Mono", ui-monospace, "Cascadia Mono", Consolas, monospace;
 
   /* cỡ chữ dùng rem để theo cỡ chữ người dùng chọn trong trình duyệt (1rem = 16px) */
