@@ -827,7 +827,14 @@ async function initPage() {
 
     if (urlDeadlineId) {
       selectedDeadline = allDeadlines.find((d) => d.id === urlDeadlineId) || null;
-      if (selectedDeadline) isUserSelected = true;
+      if (selectedDeadline) {
+        isUserSelected = true;
+      } else {
+        // ID deadline không hợp lệ: bỏ khỏi URL để URL khớp với mốc fallback đang hiển thị.
+        const cleanUrl = new URL(location.href);
+        cleanUrl.searchParams.delete('deadlineId');
+        history.replaceState(null, '', cleanUrl.toString());
+      }
     }
     if (!selectedDeadline) {
       selectedDeadline = nextInfo.deadline || allDeadlines[0] || null;
