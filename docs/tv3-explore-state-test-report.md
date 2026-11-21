@@ -54,6 +54,7 @@ Cả 31 trường hợp đều khớp với kết quả mong đợi. Bảng này
 
 ## 4. Việc còn lại trước khi hoàn tất task
 
-1. Nhờ TV1 kiểm tra cách TV3 sử dụng `getNextSubmission`, `futureDeadlines` và hai trạng thái `unknown`, `closed`.
-2. Khi helper thật của TV1 được ghép vào, đối chiếu lại các trường hợp chính để bảo đảm kết quả không thay đổi.
-3. Nối phần state này với `conference-list.js`, sau đó kiểm tra thao tác thật trên trình duyệt.
+1. Gắn link commit hoặc Pull Request của branch task vào thẻ công việc.
+2. Nhờ TV1 kiểm tra cách TV3 sử dụng `getNextSubmission`, `futureDeadlines` và hai trạng thái `unknown`, `closed`.
+3. Khi helper thật của TV1 được ghép vào, đối chiếu lại các trường hợp chính để bảo đảm kết quả không thay đổi.
+4. Kiểm tra lại thao tác thật trên trang Khám phá sau khi đồng bộ với `main`.

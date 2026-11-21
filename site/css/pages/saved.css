@@ -1,4 +1,5 @@
 .saved-page { align-content: start; }
+.saved-page #page-content { min-height: 45vh; }
 .saved-page__intro { max-width: 720px; color: var(--color-mute); }
 .saved-summary { margin: 0; color: var(--color-mute); font-weight: 650; }
 .saved-list { display: grid; gap: var(--space-4); }

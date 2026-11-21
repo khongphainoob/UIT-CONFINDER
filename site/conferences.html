@@ -3,6 +3,9 @@
 <head>
   <meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
   <title>Khám phá hội nghị · UIT ConFinder</title>
+  <meta name="description" content="Tìm và lọc hội nghị khoa học theo lĩnh vực, xếp hạng CCF/CORE, hình thức tổ chức và hạn nộp bài; sắp xếp theo hạn gần nhất.">
+  <link rel="icon" href="assets/favicon-32.png" sizes="32x32" type="image/png"><link rel="icon" href="assets/favicon.svg" type="image/svg+xml">
+  <link rel="apple-touch-icon" href="assets/apple-touch-icon.png">
   <link rel="preconnect" href="https://fonts.googleapis.com"><link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Be+Vietnam+Pro:wght@400;500;600;700&family=JetBrains+Mono:wght@400;500;700&family=Newsreader:opsz,wght@6..72,400;6..72,500;6..72,600&display=swap">
   <link rel="stylesheet" href="css/tokens.css"><link rel="stylesheet" href="css/base.css">
@@ -12,11 +15,31 @@
 <body>
   <a class="skip-link" href="#main">Đến nội dung chính</a>
   <header class="site-header" data-site-header></header>
-  <main id="main" class="container stack"><h1>Khám phá hội nghị</h1>
-    <!-- Chủ trang tự xây HTML layout, CSS responsive và JavaScript nghiệp vụ tại đây. -->
-    <section id="filter-root" aria-label="Bộ tìm và lọc"></section>
-    <p id="result-status" role="status"></p><section id="page-content" class="stack" aria-label="Kết quả hội nghị"></section>
-    <nav id="pagination" aria-label="Phân trang"></nav>
+  <main id="main" class="container stack">
+    <header class="page-head explore-hero">
+      <span class="explore-hero__icon" aria-hidden="true">⌛</span>
+      <div class="explore-hero__content">
+        <p class="explore-eyebrow">Tra cứu hội nghị khoa học</p>
+        <h1>Khám phá hội nghị</h1>
+        <p class="page-head__lead">Tìm hạn nộp phù hợp, sắp xếp danh sách và lưu lại hội nghị bạn quan tâm.</p>
+      </div>
+    </header>
+    <div class="explore-layout">
+      <aside class="explore-sidebar" aria-label="Bộ lọc hội nghị">
+        <section id="filter-root" aria-label="Bộ tìm và lọc"></section>
+      </aside>
+      <section class="explore-results" aria-label="Danh sách hội nghị">
+        <div class="result-bar">
+          <div>
+            <h2>Hạn nộp sắp tới</h2>
+            <p id="result-status" role="status" aria-live="polite"></p>
+          </div>
+          <div id="active-filters" class="active-filters" aria-label="Bộ lọc đang áp dụng"></div>
+        </div>
+        <section id="page-content" class="stack" aria-label="Kết quả hội nghị"></section>
+        <nav id="pagination" aria-label="Phân trang"></nav>
+      </section>
+    </div>
   </main>
   <footer class="site-footer" data-site-footer></footer>
   <noscript>Hãy bật JavaScript để dùng tra cứu hội nghị.</noscript>

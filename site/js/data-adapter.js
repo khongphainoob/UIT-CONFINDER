@@ -32,8 +32,27 @@ export function parseTimezoneOffset(tz) {
   return null;
 }
 
-export function parseDeadlineItem(id, type, dateStr, timezone) {
+export function parseDeadlineItem(id, type, dateStr, timezone, options = {}) {
   const rawText = (dateStr || '').trim();
+  const checkedAt = options.checkedAt || null;
+  const verifiedAt = options.verifiedAt || null;
+  const sourceUrl = options.sourceUrl || null;
+
+  // Quy tắc nghiệp vụ TV1:
+  // - Verified CHỈ KHI đối chiếu nguồn chính thức có verifiedAt hợp lệ.
+  // - Estimated / TBA / Chưa đối chiếu (unverified) phân biệt rõ ràng.
+  const resolveQuality = (fallback) => {
+    if (options.quality === 'verified' && verifiedAt) {
+      return 'verified';
+    }
+    if (options.quality === 'estimated') {
+      return 'estimated';
+    }
+    if (options.quality === 'tba' || fallback === 'tba') {
+      return 'tba';
+    }
+    return 'unverified';
+  };
 
   if (!rawText || rawText === 'TBD' || rawText === 'TBA') {
     return {
@@ -44,9 +63,9 @@ export function parseDeadlineItem(id, type, dateStr, timezone) {
       timezone: timezone || null,
       precision: 'unknown',
       quality: 'tba',
-      sourceUrl: null,
-      checkedAt: null,
-      verifiedAt: null,
+      sourceUrl,
+      checkedAt,
+      verifiedAt,
     };
   }
 
@@ -60,10 +79,10 @@ export function parseDeadlineItem(id, type, dateStr, timezone) {
       sourceText: rawText,
       timezone: timezone || null,
       precision: 'date',
-      quality: 'unverified',
-      sourceUrl: null,
-      checkedAt: null,
-      verifiedAt: null,
+      quality: resolveQuality('unverified'),
+      sourceUrl,
+      checkedAt,
+      verifiedAt,
     };
   }
 
@@ -79,10 +98,10 @@ export function parseDeadlineItem(id, type, dateStr, timezone) {
         sourceText: rawText,
         timezone: timezone || null,
         precision: 'instant',
-        quality: 'unverified',
-        sourceUrl: null,
-        checkedAt: null,
-        verifiedAt: null,
+        quality: resolveQuality('unverified'),
+        sourceUrl,
+        checkedAt,
+        verifiedAt,
       };
     }
   }
@@ -102,10 +121,10 @@ export function parseDeadlineItem(id, type, dateStr, timezone) {
         sourceText: rawText,
         timezone: timezone || null,
         precision: 'instant',
-        quality: 'unverified',
-        sourceUrl: null,
-        checkedAt: null,
-        verifiedAt: null,
+        quality: resolveQuality('unverified'),
+        sourceUrl,
+        checkedAt,
+        verifiedAt,
       };
     }
   }
@@ -117,10 +136,10 @@ export function parseDeadlineItem(id, type, dateStr, timezone) {
     sourceText: rawText,
     timezone: timezone || null,
     precision: 'unknown',
-    quality: 'unverified',
-    sourceUrl: null,
-    checkedAt: null,
-    verifiedAt: null,
+    quality: resolveQuality('unverified'),
+    sourceUrl,
+    checkedAt,
+    verifiedAt,
   };
 }
 
@@ -130,11 +149,49 @@ export function normalizeCatalog(rawResponse) {
   }
 
   if (rawResponse.meta && Array.isArray(rawResponse.editions)) {
+    const sanitizedEditions = rawResponse.editions.map((edition) => {
+      if (!edition || typeof edition !== 'object') return edition;
+      const editionVerifiedAt = edition.verifiedAt || null;
+      const rounds = Array.isArray(edition.rounds)
+        ? edition.rounds.map((round) => {
+            if (!round || typeof round !== 'object') return round;
+            const deadlines = Array.isArray(round.deadlines)
+              ? round.deadlines.map((d) => {
+                  if (!d || typeof d !== 'object') return d;
+                  const itemVerifiedAt = d.verifiedAt || editionVerifiedAt;
+                  let quality = d.quality || 'unverified';
+                  // Rule: Verified CHỈ KHI có verifiedAt
+                  if (quality === 'verified' && !itemVerifiedAt) {
+                    quality = 'unverified';
+                  } else if (
+                    d.precision === 'unknown' ||
+                    (d.sourceText && (d.sourceText.trim() === 'TBA' || d.sourceText.trim() === 'TBD'))
+                  ) {
+                    quality = 'tba';
+                  }
+                  return {
+                    ...d,
+                    quality,
+                  };
+                })
+              : [];
+            return {
+              ...round,
+              deadlines,
+            };
+          })
+        : [];
+      return {
+        ...edition,
+        rounds,
+      };
+    });
+
     return {
       meta: {
         ...rawResponse.meta,
       },
-      editions: rawResponse.editions,
+      editions: sanitizedEditions,
     };
   }
 

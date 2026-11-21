@@ -9,7 +9,7 @@
 /* ---------- header: brand, nav, nút menu (đã bỏ dải hồng 4px ở đỉnh, xem decision-log 02/11) ---------- */
 .site-header {
   position: sticky; top: 0; z-index: var(--z-header);
-  background: var(--color-card); border-bottom: 1px solid var(--color-rule);
+  min-height: 52px; background: var(--color-card); border-bottom: 1px solid var(--color-rule);
 }
 .header-row { display: flex; flex-wrap: wrap; align-items: center; gap: var(--space-1) var(--space-2); min-height: 52px; }
 .brand { display: inline-block; margin-right: auto; font: 600 1.3125rem/var(--control-height) var(--font-serif); /* inline-flex sẽ nuốt dấu cách giữa "UIT" và "ConFinder" */ color: var(--color-ink); text-decoration: none; white-space: nowrap; }
@@ -34,7 +34,7 @@
 /* dải mực tối chốt cuối trang (cùng màu nút primary); mặt tối duy nhất ngoài hero Trang chủ */
 .site-footer {
   background: var(--color-ink); color: var(--color-on-ink-mute); font-size: var(--text-small);
-  padding-block: var(--space-6) var(--space-5);
+  min-height: 31rem; padding-block: var(--space-6) var(--space-5);
 }
 .site-footer .brand__accent { color: var(--color-on-ink-accent); }
 .site-footer :focus-visible { outline-color: var(--color-on-ink); } /* vòng tím mận không thấy trên nền mực */
@@ -289,7 +289,7 @@
   .header-row { gap: var(--space-1) var(--space-5); }
   .menu-toggle { display: none; }
   .site-nav { display: flex; flex: 0 0 auto; flex-direction: row; padding: 0; }
-  .site-footer { padding-block: var(--space-7) var(--space-6); }
+  .site-footer { min-height: 20rem; padding-block: var(--space-7) var(--space-6); }
   /* 3 cột link ôm sát nội dung và dồn về mép phải, thẳng với menu header; phần giới thiệu lấy chỗ còn lại */
   .footer-grid { grid-template-columns: 1fr auto auto auto; gap: var(--space-6); }
   .footer-intro { grid-column: auto; }

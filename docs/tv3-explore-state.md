@@ -114,4 +114,4 @@ Khi kiểm tra thủ công, nhóm dùng cùng một mốc thời gian giả đ�
 
 ## 6. Cách nghiệm thu
 
-Mở website bằng server HTML hiện có của dự án, thao tác tìm kiếm và bộ lọc trên trang Khám phá, sau đó ghi kết quả thực tế vào bảng tại `docs/tv3-explore-state-test-report.md`. Không cần cài hoặc chạy thêm file test Node.js. Trước khi hoàn tất task, nhóm cần nhờ TV1 xem lại cách dùng helper deadline và nối state này với giao diện Explore. Phần phụ thuộc chính là `T1-TV1-01` — model dữ liệu và helper chọn hạn.
+Mở website bằng server HTML hiện có của dự án, thao tác tìm kiếm và bộ lọc trên trang Khám phá, sau đó ghi kết quả thực tế vào bảng tại `docs/tv3-explore-state-test-report.md`. Không cần cài hoặc chạy thêm file test Node.js. Trước khi chuyển task sang Done, nhóm vẫn cần tạo Pull Request và nhờ TV1 xem lại cách dùng helper deadline. Phần phụ thuộc chính là `T1-TV1-01` — model dữ liệu và helper chọn hạn.

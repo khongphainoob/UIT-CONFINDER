@@ -184,3 +184,95 @@ export function formatDateGMT7(input) {
     year: 'numeric',
   }).format(date);
 }
+
+/**
+ * Đánh giá tính cũ (stale) nội bộ 30 ngày từ lần kiểm nguồn thật (checkedAt).
+ * Quy tắc:
+ * - Tuyệt đối không tính từ fetchedAt hay loadedAt.
+ * - Thiếu ngày kiểm (checkedAt null hoặc không hợp lệ): có trạng thái và nhãn riêng biệt ('unverified-source').
+ * - Đã quá 30 ngày kể từ checkedAt: isStale = true ('stale').
+ * - Trong vòng 30 ngày: isStale = false ('fresh').
+ */
+export function getStaleInfo(checkedAt, now = Date.now()) {
+  if (!checkedAt) {
+    return {
+      status: 'unverified-source',
+      isStale: false,
+      hasCheckedDate: false,
+      label: 'Chưa kiểm chứng nguồn thật',
+      days: null,
+    };
+  }
+
+  const checkMs = typeof checkedAt === 'number' ? checkedAt : Date.parse(checkedAt);
+  if (Number.isNaN(checkMs)) {
+    return {
+      status: 'unverified-source',
+      isStale: false,
+      hasCheckedDate: false,
+      label: 'Chưa kiểm chứng nguồn thật',
+      days: null,
+    };
+  }
+
+  const diffMs = now - checkMs;
+  const diffDays = Math.floor(diffMs / (1000 * 60 * 60 * 24));
+
+  if (diffDays > 30) {
+    return {
+      status: 'stale',
+      isStale: true,
+      hasCheckedDate: true,
+      label: `Dữ liệu đã cũ (quá ${diffDays} ngày chưa kiểm tra lại nguồn)`,
+      days: diffDays,
+    };
+  }
+
+  return {
+    status: 'fresh',
+    isStale: false,
+    hasCheckedDate: true,
+    label: diffDays <= 0 ? 'Đã kiểm nguồn hôm nay' : `Đã kiểm nguồn ${diffDays} ngày trước`,
+    days: diffDays,
+  };
+}
+
+/**
+ * Chuẩn hóa chất lượng dữ liệu của mốc deadline (quality):
+ * - 'verified': CHỈ KHI đối chiếu nguồn chính thức có verifiedAt.
+ * - 'estimated': thời gian ước lượng.
+ * - 'tba': chưa công bố thời gian.
+ * - 'unverified': chưa đối chiếu nguồn chính thức (mặc định).
+ */
+export function resolveDeadlineQuality(deadline, edition = null) {
+  if (!deadline || typeof deadline !== 'object') return 'unverified';
+
+  const rawQuality = deadline.quality;
+  const rawText = (deadline.sourceText || '').trim().toUpperCase();
+
+  if (
+    deadline.precision === 'unknown' ||
+    rawQuality === 'tba' ||
+    rawText === 'TBA' ||
+    rawText === 'TBD' ||
+    !deadline.sourceText
+  ) {
+    return 'tba';
+  }
+
+  if (rawQuality === 'estimated') {
+    return 'estimated';
+  }
+
+  const verifiedDate = deadline.verifiedAt || edition?.verifiedAt;
+  const hasValidVerifiedAt =
+    verifiedDate &&
+    typeof verifiedDate === 'string' &&
+    !Number.isNaN(Date.parse(verifiedDate));
+
+  if (rawQuality === 'verified' && hasValidVerifiedAt) {
+    return 'verified';
+  }
+
+  return 'unverified';
+}
