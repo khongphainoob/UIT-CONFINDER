@@ -206,6 +206,7 @@ export function applyFilters(editions, inputState, {
 
   const state = normalizeState(inputState, { validFields });
   const query = normalizeSearchText(state.q);
+  const queryTokens = query ? query.split(' ') : [];
   const selectedFields = new Set(state.fields.map(normalizeSearchText));
   const selectedCcf = new Set(state.ccf);
   const selectedCore = new Set(state.core);
@@ -216,9 +217,10 @@ export function applyFilters(editions, inputState, {
   const output = [];
   for (const edition of editions) {
     if (!edition || typeof edition !== 'object') continue;
-    if (query) {
+    if (queryTokens.length) {
       const haystack = normalizeSearchText(`${edition.acronym ?? ''} ${edition.name ?? ''}`);
-      if (!haystack.includes(query)) continue;
+      // Mỗi từ người dùng nhập phải xuất hiện, nhưng không cần đứng sát nhau.
+      if (!queryTokens.every((token) => haystack.includes(token))) continue;
     }
     // Nhiều lựa chọn trong cùng nhóm là OR; các khối if khác nhau tạo thành AND.
     if (selectedFields.size) {
@@ -261,6 +263,28 @@ export function sortEditions(items, inputState = DEFAULT_STATE) {
     core: (left, right) => compareRank(left, right, 'core', CORE_VALUES),
   }[state.sort] ?? compareDeadline;
   return sorted.sort((left, right) => comparator(left, right) || compareId(left, right));
+}
+
+export function findNextDeadlineTime(editions, kind, now, getNextSubmission) {
+  if (!Array.isArray(editions) || typeof getNextSubmission !== 'function') return null;
+
+  let nearestTime = null;
+
+  for (const edition of editions) {
+    const submission = getNextSubmission(edition, { kind, now });
+    for (const deadline of submission?.futureDeadlines || []) {
+      const targetTime = Number.isFinite(deadline.targetTime)
+        ? deadline.targetTime
+        : Date.parse(deadline.instant);
+
+      const isNearer = nearestTime === null || targetTime < nearestTime;
+      if (Number.isFinite(targetTime) && targetTime > now && isNearer) {
+        nearestTime = targetTime;
+      }
+    }
+  }
+
+  return nearestTime;
 }
 
 export function paginate(items, page, pageSize = PAGE_SIZE) {
