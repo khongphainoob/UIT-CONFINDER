@@ -544,13 +544,15 @@ function renderRoundsSection(edition, selectedDeadlineId, onSelectDeadline, now)
 
     card.append(header);
 
-    const list = document.createElement('ul');
+    const list = document.createElement('div');
     list.className = 'round-card__list';
+    list.setAttribute('role', 'group');
+    list.setAttribute('aria-label', 'Các mốc thời gian của vòng này');
 
     const deadlines = Array.isArray(round.deadlines) ? round.deadlines : [];
 
     if (deadlines.length === 0) {
-      const li = document.createElement('li');
+      const li = document.createElement('div');
       li.className = 'deadline-row';
       const p = document.createElement('p');
       p.className = 'detail-empty-note';
@@ -566,7 +568,7 @@ function renderRoundsSection(edition, selectedDeadlineId, onSelectDeadline, now)
         };
 
         const isSelected = itemData.id === selectedDeadlineId;
-        const li = document.createElement('li');
+        const li = document.createElement('div');
         li.className = `deadline-row deadline-row--interactive ${isSelected ? 'deadline-row--selected' : ''}`;
         li.setAttribute('role', 'button');
         li.setAttribute('tabindex', '0');
