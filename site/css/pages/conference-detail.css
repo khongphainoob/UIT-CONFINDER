@@ -400,6 +400,12 @@
   text-decoration: underline;
 }
 
+.data-notice__chip--unverified-source {
+  border-color: var(--color-mute);
+  color: var(--color-mute);
+  background: var(--color-card);
+}
+
 /* Toast thông báo */
 .detail-toast {
   position: fixed;
