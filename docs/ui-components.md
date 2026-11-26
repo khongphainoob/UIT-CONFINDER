@@ -11,15 +11,15 @@ Chép nguyên khối này vào `<head>` trang mình; chỉ đổi `<title>`, CSS
 ```html
 <meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
 <title>Tên trang · UIT ConFinder</title>
-<link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 32 32'%3E%3Crect width='32' height='32' rx='6' fill='%235b2d9b'/%3E%3Ctext x='16' y='23' font-size='20' text-anchor='middle' fill='%23ffffff' font-family='system-ui,sans-serif' font-weight='700'%3EC%3C/text%3E%3C/svg%3E">
+<link rel="icon" href="assets/favicon-32.png" sizes="32x32" type="image/png"><link rel="icon" href="assets/favicon.svg" type="image/svg+xml">
+<link rel="apple-touch-icon" href="assets/apple-touch-icon.png">
 <link rel="preconnect" href="https://fonts.googleapis.com"><link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Be+Vietnam+Pro:wght@400;500;600;700&family=JetBrains+Mono:wght@400;500;700&family=Newsreader:opsz,wght@6..72,400;6..72,500;6..72,600&display=swap">
 <link rel="stylesheet" href="css/tokens.css"><link rel="stylesheet" href="css/base.css">
 <link rel="stylesheet" href="css/components.css"><link rel="stylesheet" href="css/pages/ten-trang.css">
 <script type="module" src="js/pages/ten-trang.js"></script>
 ```
 
-Dòng `rel="icon"` là favicon nhúng sẵn (chữ C trên nền tím mận); thiếu nó trình duyệt sẽ tự gọi `/favicon.ico` và báo 404 trong Network. Font Google là tài nguyên ngoài (không phải thư viện); thiếu mạng thì trang tự dùng font hệ thống dự phòng. Luôn dùng đường dẫn tương đối (không bắt đầu bằng `/`) để chạy được dưới `/ten-repo/`.
+Favicon nằm trong `assets/`; thiếu thẻ `rel="icon"` trình duyệt sẽ tự gọi `/favicon.ico` và báo 404 trong Network. Font Google được `css/tokens.css` nạp bằng `@import`, trang không thêm link font riêng. Đó là tài nguyên ngoài (không phải thư viện); thiếu mạng thì trang tự dùng font hệ thống dự phòng. Luôn dùng đường dẫn tương đối (không bắt đầu bằng `/`) để chạy được dưới `/ten-repo/`.
 
 ## 2. Khung trang
 
@@ -43,7 +43,7 @@ import { initCommonUI } from '../common.js';
 initCommonUI('explore'); // home | explore | detail | saved | about | components
 ```
 
-`initCommonUI` chèn sprite icon, dựng header (dải dây hồng, brand, nav 3 mục, nút menu mobile) và footer; tự thêm `tabindex="-1"` cho `<main id="main">`. `detail` đánh dấu mục "Khám phá". Không xử lý nghiệp vụ.
+`initCommonUI` chèn sprite icon, dựng header (logo và brand, 4 mục nav: Trang chủ, Hội nghị, Đã lưu, Giới thiệu dữ liệu; nút menu mobile) và footer; tự thêm `tabindex="-1"` cho `<main id="main">`. `detail` đánh dấu mục "Hội nghị". Không xử lý nghiệp vụ.
 
 ## 3. Token (`css/tokens.css`)
 
@@ -141,7 +141,14 @@ Dưới 48rem nên để các nhóm đóng (trừ nhóm đầu) cho danh sách k
 
 Nút 44px là vùng bấm, `.chip__face` 30px là phần nhìn thấy.
 
-### Thẻ đeo hội nghị (chỉ style; mỗi trang tự render bằng DOM API)
+### Thẻ đeo hội nghị
+
+Trang Hội nghị và Đã lưu dựng thẻ bằng `js/ui/edition-card.js`, không tự viết lại:
+
+- `createEditionCard({ edition, submission }, { now, savedIds, onSavedChange })` trả về `article.badge-card`; `submission` lấy từ `getNextSubmission` (TV1). Nút sao tự ghi qua `saved-store.js`; ghi lỗi thì báo ngay trên thẻ. `onSavedChange(ids)` chạy sau khi ghi thành công. Trang cần dựng lại cả danh sách thì nghe sự kiện `saved:changed`.
+- `createDataNotice(meta)` trả về dòng báo bản lưu sẵn, hoặc `null` khi dữ liệu trực tiếp.
+
+Markup tương đương:
 
 ```html
 <ul class="badge-list">

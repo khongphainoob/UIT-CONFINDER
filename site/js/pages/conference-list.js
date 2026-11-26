@@ -1,14 +1,8 @@
 import { createIcon, initCommonUI } from '../common.js';
 import { getCatalog } from '../data-service.js';
-import {
-  formatDateGMT7,
-  formatTimeGMT7,
-  getCountdownText,
-  getNextSubmission,
-  getUrgencyInfo,
-} from '../deadline-utils.js';
-import { ROUTES } from '../routes.js';
-import { getSavedIds, toggleSaved } from '../saved-store.js';
+import { getNextSubmission } from '../deadline-utils.js';
+import { getSavedIds } from '../saved-store.js';
+import { createDataNotice, createEditionCard, FIELD_LABELS } from '../ui/edition-card.js';
 import { showState } from '../ui/state.js';
 import {
   DEFAULT_STATE,
@@ -28,6 +22,7 @@ const filterRoot = document.querySelector('#filter-root');
 const resultStatus = document.querySelector('#result-status');
 const activeFilters = document.querySelector('#active-filters');
 const paginationRoot = document.querySelector('#pagination');
+const noticeRoot = document.querySelector('#data-source-notice');
 
 let catalog = { editions: [] };
 let state = { ...DEFAULT_STATE, fields: [], ccf: [], core: [], mode: [] };
@@ -45,19 +40,6 @@ const SORT_LABELS = { deadline: 'Hạn gần nhất', name: 'Tên A–Z', ccf: '
 const CCF_OPTIONS = { A: 'CCF A', B: 'CCF B', C: 'CCF C' };
 const CORE_OPTIONS = { 'A*': 'CORE A*', A: 'CORE A', B: 'CORE B', C: 'CORE C' };
 const MODE_OPTIONS = { online: 'Online', offline: 'Offline', hybrid: 'Hybrid' };
-const FIELD_LABELS = {
-  AI: 'AI — Trí tuệ nhân tạo',
-  CG: 'CG — Đồ họa và đa phương tiện',
-  CT: 'CT — Lý thuyết máy tính',
-  DB: 'DB — Cơ sở dữ liệu',
-  DS: 'DS — Kiến trúc và hệ phân tán',
-  HI: 'HI — Tương tác người–máy',
-  MX: 'MX — Liên ngành và lĩnh vực mới',
-  NW: 'NW — Mạng máy tính',
-  SC: 'SC — An toàn hệ thống và mạng',
-  SE: 'SE — Kỹ thuật phần mềm',
-};
-
 function copyDefaultState() {
   return { ...DEFAULT_STATE, fields: [], ccf: [], core: [], mode: [] };
 }
@@ -136,6 +118,7 @@ function createCheckboxGroup(titleText, key, options) {
   const fieldset = document.createElement('fieldset');
   fieldset.className = 'explore-filter-group';
   const legend = document.createElement('legend');
+  legend.className = 'visually-hidden';
   legend.textContent = titleText;
   const optionList = document.createElement('div');
   optionList.className = 'explore-filter-group__options';
@@ -146,6 +129,7 @@ function createCheckboxGroup(titleText, key, options) {
     input.type = 'checkbox';
     input.name = key;
     input.value = value;
+    input.dataset.focusKey = `opt:${key}:${value}`;
     input.checked = state[key].includes(value);
     input.addEventListener('change', () => toggleArrayFilter(key, value, input.checked));
     label.append(input, labelText);
@@ -155,33 +139,23 @@ function createCheckboxGroup(titleText, key, options) {
   return fieldset;
 }
 
-// Chip dùng cho các bộ lọc hay bấm nhất: lĩnh vực và CCF.
-function createQuickFilter(titleText, key, options) {
-  const section = document.createElement('section');
-  section.className = 'quick-filter';
-  const title = document.createElement('p');
-  title.className = 'quick-filter__title';
-  title.textContent = titleText;
-  const list = document.createElement('div');
-  list.className = 'quick-filter__list';
-
-  for (const [value, labelText] of Object.entries(options)) {
-    const selected = state[key].includes(value);
-    const button = document.createElement('button');
-    button.type = 'button';
-    button.className = 'chip';
-    button.setAttribute('aria-pressed', String(selected));
-    button.setAttribute('aria-label', `${titleText}: ${FIELD_LABELS[value] || labelText}`);
-    const face = document.createElement('span');
-    face.className = 'chip__face';
-    face.textContent = labelText;
-    button.append(face);
-    button.addEventListener('click', () => toggleArrayFilter(key, value, !selected));
-    list.append(button);
-  }
-
-  section.append(title, list);
-  return section;
+// Nhóm lọc thu gọn dùng chung kiểu .filter-group; tiêu đề ghi số lựa chọn đang bật.
+function createFilterGroup(key, title, selectedCount, body, open) {
+  const group = document.createElement('details');
+  group.className = 'filter-group';
+  group.dataset.group = key;
+  group.open = open;
+  const summary = document.createElement('summary');
+  summary.className = 'filter-group__summary';
+  summary.dataset.focusKey = `group:${key}`;
+  const chevron = createIcon('down');
+  chevron.classList.add('filter-group__chevron');
+  summary.append(selectedCount ? `${title} (${selectedCount})` : title, chevron);
+  const content = document.createElement('div');
+  content.className = 'filter-group__body';
+  content.append(...body);
+  group.append(summary, content);
+  return group;
 }
 
 function renderFilters() {
@@ -194,78 +168,76 @@ function renderFilters() {
   const searchLabel = document.createElement('label');
   searchLabel.className = 'field';
   searchLabel.htmlFor = 'conference-query';
-  searchLabel.textContent = 'Tìm theo tên hoặc tên viết tắt';
+  searchLabel.textContent = 'Tên hoặc tên viết tắt';
   const search = document.createElement('input');
   search.id = 'conference-query';
+  search.dataset.focusKey = 'q';
   search.name = 'q';
   search.type = 'search';
   search.maxLength = 100;
   search.value = state.q;
-  search.placeholder = 'Ví dụ: ICSE, trí tuệ nhân tạo…';
+  search.placeholder = 'Ví dụ: ICSE, AI…';
   searchLabel.append(search);
   const searchButton = document.createElement('button');
   searchButton.type = 'submit';
+  searchButton.dataset.focusKey = 'search-submit';
   searchButton.className = 'button explore-filters__search-button';
-  searchButton.append(createIcon('search'), 'Tìm kiếm');
+  const searchText = document.createElement('span');
+  searchText.className = 'visually-hidden';
+  searchText.textContent = 'Tìm kiếm';
+  searchButton.append(createIcon('search'), searchText);
   searchRow.append(searchLabel, searchButton);
 
   const fieldOptions = {};
-  for (const field of validFields) fieldOptions[field] = field;
-  const quickFilters = document.createElement('div');
-  quickFilters.className = 'quick-filters';
-  quickFilters.append(
-    createQuickFilter('Lĩnh vực', 'fields', fieldOptions),
-    createQuickFilter('Xếp hạng CCF', 'ccf', CCF_OPTIONS),
-  );
+  for (const field of validFields) fieldOptions[field] = FIELD_LABELS[field] || field;
 
-  const controls = document.createElement('div');
-  controls.className = 'explore-filters__controls';
   const kind = createSelectField('Loại hạn', 'kind', KIND_LABELS);
   kind.select.value = state.kind;
   const windowField = createSelectField('Khoảng thời gian', 'window', WINDOW_LABELS);
   windowField.select.value = state.window;
   const sort = createSelectField('Sắp xếp', 'sort', SORT_LABELS);
   sort.select.value = state.sort;
+  kind.select.dataset.focusKey = 'kind';
+  windowField.select.dataset.focusKey = 'window';
+  sort.select.dataset.focusKey = 'sort';
 
   const pastLabel = document.createElement('label');
-  pastLabel.className = 'option explore-filters__past';
+  pastLabel.className = 'option';
   const past = document.createElement('input');
   past.type = 'checkbox';
   past.name = 'past';
   past.checked = state.past;
+  past.dataset.focusKey = 'past';
   pastLabel.append(past, 'Hiện hạn đã qua');
 
-  const actions = document.createElement('div');
-  actions.className = 'explore-filters__actions';
+  const head = document.createElement('div');
+  head.className = 'explore-filters__head';
+  const headTitle = document.createElement('h2');
+  headTitle.className = 'explore-filters__title';
+  headTitle.textContent = 'Bộ lọc';
   const reset = document.createElement('button');
   reset.type = 'button';
+  reset.dataset.focusKey = 'reset';
   reset.className = 'button button--ghost';
   reset.append(createIcon('refresh'), 'Đặt lại');
-  actions.append(reset);
-  controls.append(kind.label, windowField.label, sort.label, pastLabel, actions);
+  head.append(headTitle, reset);
 
-  const advanced = document.createElement('details');
-  advanced.className = 'explore-advanced';
-  const advancedCount = state.core.length + state.mode.length;
-  advanced.open = advancedCount > 0;
-  const advancedSummary = document.createElement('summary');
-  advancedSummary.className = 'explore-advanced__summary';
-  const advancedTitle = document.createElement('span');
-  advancedTitle.textContent = advancedCount
-    ? `Lọc nâng cao (${advancedCount} lựa chọn)`
-    : 'Lọc nâng cao';
-  const advancedHint = document.createElement('span');
-  advancedHint.className = 'explore-advanced__hint';
-  advancedHint.textContent = 'CORE · Hình thức tổ chức';
-  advancedSummary.append(advancedTitle, advancedHint, createIcon('down'));
-  const advancedBody = document.createElement('div');
-  advancedBody.className = 'explore-advanced__body';
-  advancedBody.append(
-    createCheckboxGroup('Hạng CORE', 'core', CORE_OPTIONS),
-    createCheckboxGroup('Hình thức', 'mode', MODE_OPTIONS),
-  );
-  advanced.append(advancedSummary, advancedBody);
-  form.append(searchRow, quickFilters, controls, advanced);
+  const deadlineCount = ['kind', 'window', 'past'].filter((key) => state[key] !== DEFAULT_STATE[key]).length;
+  const groupSpecs = [
+    ['fields', 'Lĩnh vực', state.fields.length, [createCheckboxGroup('Lĩnh vực', 'fields', fieldOptions)]],
+    ['ccf', 'CCF', state.ccf.length, [createCheckboxGroup('Xếp hạng CCF', 'ccf', CCF_OPTIONS)]],
+    ['core', 'CORE', state.core.length, [createCheckboxGroup('Hạng CORE', 'core', CORE_OPTIONS)]],
+    ['mode', 'Hình thức', state.mode.length, [createCheckboxGroup('Hình thức', 'mode', MODE_OPTIONS)]],
+    ['deadline', 'Hạn nộp', deadlineCount, [kind.label, windowField.label, pastLabel]],
+  ];
+  const groups = document.createElement('div');
+  groups.className = 'explore-groups';
+  for (const [key, title, count, body] of groupSpecs) {
+    // Giữ nhóm đang mở/đóng qua mỗi lần dựng lại; lần đầu thì mở nhóm đang có lựa chọn.
+    const previous = filterRoot.querySelector(`[data-group="${key}"]`);
+    groups.append(createFilterGroup(key, title, count, body, previous ? previous.open : count > 0));
+  }
+  form.append(head, searchRow, sort.label, groups);
 
   function updateSearch() {
     changeFilters(
@@ -289,7 +261,16 @@ function renderFilters() {
   sort.select.addEventListener('change', () => changeFilters({ sort: sort.select.value }));
   past.addEventListener('change', () => changeFilters({ past: past.checked }));
   reset.addEventListener('click', () => setState(copyDefaultState()));
+  // Dựng lại form làm mất focus, nên nhớ control đang focus rồi trả lại đúng chỗ.
+  const focusedKey = filterRoot.contains(document.activeElement) ? document.activeElement.dataset.focusKey : null;
   filterRoot.replaceChildren(form);
+  if (focusedKey) {
+    filterRoot.querySelector(`[data-focus-key="${CSS.escape(focusedKey)}"]`)?.focus({ preventScroll: true });
+  }
+}
+
+function focusResultStatus() {
+  resultStatus.focus({ preventScroll: true });
 }
 
 function removeArrayValue(key, value) {
@@ -302,7 +283,15 @@ function addActiveChip(label, onRemove) {
   button.className = 'filter-chip';
   button.append(label, createIcon('x'));
   button.setAttribute('aria-label', `Bỏ bộ lọc ${label}`);
-  button.addEventListener('click', onRemove);
+  button.addEventListener('click', () => {
+    const index = [...activeFilters.querySelectorAll('.filter-chip')].indexOf(button);
+    const hadFocus = document.activeElement === button;
+    onRemove();
+    if (!hadFocus) return;
+    const chips = activeFilters.querySelectorAll('.filter-chip');
+    if (chips.length) chips[Math.min(index, chips.length - 1)].focus();
+    else focusResultStatus();
+  });
   activeFilters.append(button);
 }
 
@@ -327,146 +316,44 @@ function renderActiveFilters() {
   }
 }
 
-function createRibbon(system, rank) {
-  const ribbon = document.createElement('span');
-  const rankClass = rank === 'A*' ? 'core-a-star' : String(rank).toLocaleLowerCase('vi');
-  ribbon.className = `ribbon ribbon--${rankClass}`;
-  ribbon.textContent = `${system} ${rank}`;
-  return ribbon;
-}
-
-function createSaveButton(edition, card) {
-  const button = document.createElement('button');
-  button.type = 'button';
-  button.className = 'icon-button badge-card__save conference-card__save';
-  const update = () => {
-    const saved = savedIds.includes(edition.id);
-    button.setAttribute('aria-pressed', String(saved));
-    button.setAttribute('aria-label', saved ? `Bỏ lưu ${edition.acronym}` : `Lưu ${edition.acronym}`);
-  };
-  button.append(createIcon('star'));
-  update();
-  button.addEventListener('click', () => {
-    const result = toggleSaved(edition.id);
-    if (!result.ok) {
-      let message = card.querySelector('.conference-card__save-message');
-      if (!message) {
-        message = document.createElement('p');
-        message.className = 'conference-card__save-message';
-        card.append(message);
-      }
-      message.textContent = result.error;
-      return;
-    }
-    savedIds = result.ids;
-    update();
-  });
-  return button;
-}
-
-function createConferenceCard(item, now) {
-  const { edition, submission } = item;
-  const card = document.createElement('article');
-  card.className = `badge-card${submission.status === 'closed' ? ' badge-card--closed' : ''}`;
-  const mainField = edition.fields?.[0] || 'MX';
-  card.classList.add(`conference-card--${mainField.toLocaleLowerCase('vi')}`);
-
-  const main = document.createElement('div');
-  main.className = 'badge-card__main';
-  const title = document.createElement('h2');
-  title.className = 'badge-card__name';
-  const link = document.createElement('a');
-  link.href = `${ROUTES.conference}?id=${encodeURIComponent(edition.id)}`;
-  link.textContent = `${edition.acronym}${edition.year ? ` ${edition.year}` : ''}`;
-  title.append(link);
-  const fullName = document.createElement('p');
-  fullName.className = 'badge-card__full-name';
-  fullName.textContent = edition.name || 'Chưa có tên đầy đủ';
-  const meta = document.createElement('div');
-  meta.className = 'badge-card__meta';
-  const fieldTag = document.createElement('span');
-  fieldTag.className = 'conference-card__field';
-  fieldTag.textContent = mainField;
-  fieldTag.title = FIELD_LABELS[mainField] || mainField;
-  const ranks = document.createElement('div');
-  ranks.className = 'conference-card__rank-list';
-  if (edition.ranks?.core) ranks.append(createRibbon('CORE', edition.ranks.core));
-  if (edition.ranks?.ccf) ranks.append(createRibbon('CCF', edition.ranks.ccf));
-  const place = document.createElement('span');
-  place.className = 'badge-card__place';
-  place.textContent = [edition.format, edition.place].filter(Boolean).join(' · ') || 'Chưa rõ hình thức';
-  meta.append(fieldTag, ranks, place);
-  main.append(title, fullName, meta);
-
-  const due = document.createElement('div');
-  due.className = 'badge-card__due';
-  const dueLabel = document.createElement('span');
-  dueLabel.className = 'badge-card__due-label';
-  dueLabel.textContent = 'Hạn nộp';
-  if (submission.deadline?.type === 'abstract') dueLabel.textContent = 'Hạn abstract';
-  if (submission.deadline?.type === 'paper') dueLabel.textContent = 'Hạn full paper';
-  due.append(dueLabel);
-  const deadline = submission.deadline;
-  const instant = deadline?.instant ? Date.parse(deadline.instant) : Number.NaN;
-  if (Number.isFinite(instant) && deadline.precision === 'instant' && !['estimated', 'tba'].includes(deadline.quality)) {
-    const date = document.createElement('span');
-    date.className = 'badge-card__date';
-    date.textContent = formatDateGMT7(deadline.instant);
-    const time = document.createElement('span');
-    time.className = 'badge-card__time';
-    time.textContent = formatTimeGMT7(deadline.instant);
-    due.append(date, time);
-  } else {
-    const unknown = document.createElement('span');
-    unknown.className = 'conference-card__deadline-empty';
-    unknown.textContent = deadline?.sourceText || 'Chưa xác định';
-    due.append(unknown);
-  }
-
-  const status = document.createElement('div');
-  status.className = 'badge-card__state';
-  const targetTime = Number.isFinite(instant) ? instant : Number.NaN;
-  const urgency = getUrgencyInfo(targetTime, now);
-  const statusLine = document.createElement('span');
-  statusLine.className = `conference-card__deadline-status ${urgency.className}`;
-  const dot = document.createElement('span');
-  dot.className = 'conference-card__deadline-dot';
-  dot.setAttribute('aria-hidden', 'true');
-  const countdown = document.createElement('span');
-  countdown.className = 'badge-card__countdown';
-  if (Number.isFinite(targetTime)) {
-    const countdownText = getCountdownText(targetTime, now);
-    countdown.textContent = countdownText.charAt(0).toLocaleUpperCase('vi') + countdownText.slice(1);
-  } else {
-    countdown.textContent = 'Chưa rõ thời gian';
-  }
-  statusLine.append(dot, countdown);
-  status.append(statusLine);
-
-  card.append(main, due, status, createSaveButton(edition, card));
-  return card;
-}
-
 function stateUrl(page) {
   return getStateUrl({ ...state, page });
 }
 
-function createPageButton(label, page, { current = false, disabled = false } = {}) {
-  const link = document.createElement('a');
-  link.className = 'pager__item';
-  link.textContent = label;
-  link.href = stateUrl(page);
-  if (current) link.setAttribute('aria-current', 'page');
-  if (disabled) link.setAttribute('aria-disabled', 'true');
-  if (!disabled && !current) {
-    link.addEventListener('click', (event) => {
+// Markup theo .pager trong components.html. Nút vô hiệu là <button disabled> để không còn href bấm được.
+function createPageButton(label, page, { current = false, disabled = false, ariaLabel } = {}) {
+  const control = document.createElement(disabled ? 'button' : 'a');
+  control.className = 'pager__item';
+  control.append(label);
+  if (ariaLabel) control.setAttribute('aria-label', ariaLabel);
+  if (disabled) {
+    control.type = 'button';
+    control.disabled = true;
+  } else {
+    control.href = stateUrl(page);
+    if (current) control.setAttribute('aria-current', 'page');
+    control.addEventListener('click', (event) => {
+      // Ctrl/Cmd/Shift + click vẫn mở tab hoặc cửa sổ mới như link thường.
+      if (event.ctrlKey || event.metaKey || event.shiftKey) return;
       event.preventDefault();
+      if (current) return;
       const search = document.querySelector('#conference-query');
       setState({ ...state, q: search?.value ?? state.q, page });
-      document.querySelector('#result-status')?.scrollIntoView({ behavior: 'smooth', block: 'start' });
+      focusResultStatus();
+      const reduceMotion = matchMedia('(prefers-reduced-motion: reduce)').matches;
+      resultStatus.scrollIntoView({ behavior: reduceMotion ? 'auto' : 'smooth', block: 'start' });
     });
   }
-  return link;
+  const item = document.createElement('li');
+  item.append(control);
+  return item;
+}
+
+function createPageGap() {
+  const item = document.createElement('li');
+  item.setAttribute('aria-hidden', 'true');
+  item.textContent = '…';
+  return item;
 }
 
 function renderPagination(pageInfo) {
@@ -479,15 +366,18 @@ function renderPagination(pageInfo) {
   const summary = document.createElement('p');
   summary.className = 'pager__summary';
   summary.textContent = `Trang ${pageInfo.page}/${pageInfo.totalPages}`;
-  const list = document.createElement('div');
+  const list = document.createElement('ul');
   list.className = 'pager__list';
-  list.append(createPageButton('Trước', pageInfo.page - 1, { disabled: pageInfo.page === 1 }));
+  list.append(createPageButton(createIcon('left'), pageInfo.page - 1, { disabled: pageInfo.page === 1, ariaLabel: 'Trang trước' }));
+  let lastShown = 0;
   for (let page = 1; page <= pageInfo.totalPages; page += 1) {
     if (page === 1 || page === pageInfo.totalPages || Math.abs(page - pageInfo.page) <= 1) {
+      if (page - lastShown > 1) list.append(createPageGap());
       list.append(createPageButton(String(page), page, { current: page === pageInfo.page }));
+      lastShown = page;
     }
   }
-  list.append(createPageButton('Sau', pageInfo.page + 1, { disabled: pageInfo.page === pageInfo.totalPages }));
+  list.append(createPageButton(createIcon('right'), pageInfo.page + 1, { disabled: pageInfo.page === pageInfo.totalPages, ariaLabel: 'Trang sau' }));
   pager.append(summary, list);
   paginationRoot.replaceChildren(pager);
 }
@@ -516,17 +406,23 @@ function renderResults() {
   if (!pageInfo.total) {
     showState(host, {
       title: 'Không có kết quả phù hợp',
-      message: 'Hãy thử khoảng thời gian rộng hơn hoặc đặt lại bộ lọc.',
-      action: { label: 'Đặt lại bộ lọc', onClick: () => setState(copyDefaultState()) },
+      message: 'Thử đổi từ khóa, nới bộ lọc hoặc đặt lại.',
+      action: {
+        label: 'Đặt lại bộ lọc',
+        onClick: () => {
+          setState(copyDefaultState());
+          focusResultStatus();
+        },
+      },
     });
     paginationRoot.replaceChildren();
     return;
   }
   const list = document.createElement('ol');
-  list.className = 'conference-list badge-list';
+  list.className = 'badge-list';
   pageInfo.items.forEach((item) => {
     const row = document.createElement('li');
-    row.append(createConferenceCard(item, now));
+    row.append(createEditionCard(item, { now, savedIds, onSavedChange: (ids) => { savedIds = ids; } }));
     list.append(row);
   });
   host.replaceChildren(list);
@@ -544,6 +440,8 @@ async function initPage() {
   showState(host, { kind: 'loading', title: 'Đang tải dữ liệu', message: 'Vui lòng chờ.' });
   try {
     catalog = await getCatalog();
+    const notice = createDataNotice(catalog.meta);
+    noticeRoot.replaceChildren(...(notice ? [notice] : []));
     const fieldSet = new Set();
     for (const edition of catalog.editions) {
       for (const field of edition.fields || []) fieldSet.add(field);
@@ -555,10 +453,11 @@ async function initPage() {
     writeStateUrl({ addHistory: false });
     renderPage();
   } catch (error) {
+    console.error(error);
     showState(host, {
       kind: 'error',
       title: 'Không tải được dữ liệu',
-      message: error.message,
+      message: 'Không tải được dữ liệu hội nghị. Kiểm tra kết nối rồi thử lại.',
       action: { label: 'Thử lại', onClick: initPage },
     });
   }
