@@ -1,0 +1,49 @@
+# Cập nhật dữ liệu hằng ngày (TV4-03). Chạy ingest → crawl → enrich, chỉ commit khi dữ liệu đổi.
+name: Ingest data
+
+on:
+  # TODO(TV4-03): bỏ comment khi TV1-04 chạy được, để tránh job lỗi mỗi ngày.
+  # schedule:
+  #   - cron: '0 20 * * *'   # 20:00 UTC = 03:00 giờ Việt Nam
+  workflow_dispatch:
+
+permissions:
+  contents: write
+
+concurrency:
+  group: ingest
+  cancel-in-progress: false
+
+jobs:
+  ingest:
+    runs-on: ubuntu-latest
+    timeout-minutes: 30
+    defaults:
+      run:
+        working-directory: backend
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 24
+      - run: npm ci
+      - run: npm run ingest
+      # Crawl và enrich lỗi thì vẫn giữ kết quả ingest, nên cho phép tiếp tục.
+      - run: npm run crawl
+        continue-on-error: true
+      - run: npm run enrich
+        continue-on-error: true
+        env:
+          GEMINI_API_KEY: ${{ secrets.GEMINI_API_KEY }}
+          GEMINI_MODEL: ${{ vars.GEMINI_MODEL }}
+      - name: Commit nếu dữ liệu thay đổi
+        run: |
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git add data/catalog.enriched.json
+          if git diff --cached --quiet; then
+            echo "Dữ liệu không đổi."
+          else
+            git commit -m "data: cập nhật catalog $(date -u +%Y-%m-%d)"
+            git push
+          fi

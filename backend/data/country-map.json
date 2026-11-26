@@ -1,0 +1,32 @@
+{
+  "_note": "TV1-01: bổ sung đủ quốc gia xuất hiện trong dữ liệu. region thuộc: vietnam, sea, asia, europe, america, oceania, africa. 'sea' là Đông Nam Á; khi lọc 'asia' thì gồm cả 'vietnam' và 'sea'.",
+  "countries": {
+    "VN": { "region": "vietnam", "names": ["vietnam", "viet nam"] },
+    "SG": { "region": "sea", "names": ["singapore"] },
+    "TH": { "region": "sea", "names": ["thailand"] },
+    "MY": { "region": "sea", "names": ["malaysia"] },
+    "JP": { "region": "asia", "names": ["japan"] },
+    "KR": { "region": "asia", "names": ["korea", "south korea"] },
+    "CN": { "region": "asia", "names": ["china"] },
+    "US": { "region": "america", "names": ["usa", "united states", "u.s.a."] },
+    "CA": { "region": "america", "names": ["canada"] },
+    "AU": { "region": "oceania", "names": ["australia"] }
+  },
+  "cities": {
+    "hanoi": "VN",
+    "ha noi": "VN",
+    "ho chi minh city": "VN",
+    "danang": "VN",
+    "da nang": "VN",
+    "phu quoc": "VN",
+    "singapore": "SG",
+    "bangkok": "TH",
+    "kyoto": "JP",
+    "osaka": "JP",
+    "seattle": "US",
+    "vancouver": "CA",
+    "montreal": "CA",
+    "montréal": "CA",
+    "melbourne": "AU"
+  }
+}
