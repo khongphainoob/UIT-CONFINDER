@@ -167,7 +167,7 @@ export function initCommonUI(pageKey) {
     note.className = 'footer-legal__note';
     note.append(createIcon('check-circle'), footerNote);
     const team = document.createElement('p');
-    team.textContent = 'Đồ án IE104, UIT · Nhóm 2';
+    team.textContent = 'Đồ án IE104, UIT · Nhóm 7';
     legal.append(note, team);
 
     footer.replaceChildren(grid, legal);
