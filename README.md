@@ -19,8 +19,8 @@ Quy trình task, handoff và báo cáo nằm tại
 | Tên đồ án | UIT ConFinder — Website tra cứu hội nghị khoa học |
 | Môn học | IE104 — Internet và Công nghệ Web |
 | Lớp | Internet và công nghệ web - IE104.R11.CNVN |
-| Giảng viên hướng dẫn | TS Võ Tấn Khoa |
-| Nhóm thực hiện | [Nhóm 2] |
+| Giảng viên hướng dẫn | ThS. Võ Tấn Khoa |
+| Nhóm thực hiện | Nhóm 7 |
 | Học kỳ / Năm học | [2026-2027 (Học Kỳ 5)] |
 | Website demo | [Bổ sung sau khi triển khai] |
 
