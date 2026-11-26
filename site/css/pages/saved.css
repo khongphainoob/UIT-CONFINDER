@@ -2,3 +2,18 @@
 .saved-page #page-content { align-content: start; min-height: 45vh; }
 .saved-summary { margin: 0; color: var(--color-mute); font-size: var(--text-small); font-weight: 600; }
 .saved-stale { justify-items: start; gap: var(--space-2); }
+
+/* Khối đồng bộ Google Calendar: chữ bên trái, nút bên phải; dưới 768px xếp dọc. */
+.saved-sync { display: grid; gap: var(--space-3) var(--space-5); grid-template-columns: 1fr auto; align-items: center; }
+.saved-sync__text { display: grid; gap: var(--space-1); }
+.saved-sync__title { margin: 0; font-size: var(--text-body); }
+.saved-sync__lead { margin: 0; color: var(--color-mute); font-size: var(--text-small); max-width: 70ch; }
+.saved-sync__actions { display: flex; flex-wrap: wrap; gap: var(--space-2); justify-content: flex-end; }
+.saved-sync__status { grid-column: 1 / -1; margin: 0; font-size: var(--text-small); }
+.saved-sync__status:empty { display: none; }
+.saved-sync__status--error { color: var(--color-danger); }
+@media (max-width: 767px) {
+  .saved-sync { grid-template-columns: 1fr; }
+  .saved-sync__actions { justify-content: flex-start; }
+  .saved-sync__actions .button { flex: 1 1 auto; }
+}

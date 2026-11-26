@@ -62,6 +62,8 @@ TV3 lọc cửa sổ bằng futureDeadlines: now < deadline <= now + N*24h. Khô
 - `buildGoogleCalendarUrl(edition, selectedDeadline) -> string URL`.
 - `createIcs(edition, selectedDeadline) -> string nội dung ICS`; caller tạo Blob/tải, revoke Object URL sau khi dùng.
 - Calendar helpers từ chối dữ liệu không đủ chính xác/Estimated/TBA bằng lỗi có lý do; caller hiển thị lý do hoặc disable. Không tự chọn lại deadline, thêm duration hay reminder.
+- `getEventData(edition, selectedDeadline) -> {date, summary, details, uid}`: nội dung sự kiện dùng chung cho URL, ICS và đồng bộ Google; cùng quy tắc từ chối.
+- Đồng bộ Google Calendar (`google-calendar-sync.js`, chỉ trang Đã lưu gọi): `syncSavedDeadlines({clientId, editions, now?, onProgress?}) -> Promise<{calendarId, created, updated, unchanged, removed, skipped, failed:[{label,message}]}>`. Ghi vào lịch riêng do web tạo (scope `calendar.app.created`), có reminder 1 ngày/1 giờ; quy tắc "không thêm reminder" ở trên chỉ áp dụng cho URL/ICS. Chi tiết: [google-calendar-sync.md](google-calendar-sync.md).
 
 Các hàm TV4 hiện là stub; chưa có lưu/xuất lịch thật trong starter.
 

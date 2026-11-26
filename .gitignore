@@ -5,3 +5,6 @@ Thumbs.db
 .vscode/
 .env
 node_modules/
+
+# File OAuth tải từ Google Cloud có client secret: không commit
+client_secret*.json

@@ -81,7 +81,8 @@ function getEventUid(edition, deadline) {
   return `${edition.id}-${deadline.id}@uit-confinder.local`;
 }
 
-function getEventData(edition, deadline) {
+// Dùng chung cho Google Calendar URL, ICS và google-calendar-sync.js để nội dung sự kiện nhất quán.
+export function getEventData(edition, deadline) {
   assertExportable(edition, deadline);
   return {
     date: new Date(deadline.instant),
