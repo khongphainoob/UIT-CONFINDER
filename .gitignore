@@ -8,3 +8,7 @@ node_modules/
 
 # File OAuth tải từ Google Cloud có client secret: không commit
 client_secret*.json
+
+# Văn bản CFP crawl về: lớn và tạo lại được, không commit
+backend/data/cfp/
+backend/data/cfp-errors.json

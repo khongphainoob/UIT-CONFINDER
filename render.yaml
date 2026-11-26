@@ -1,0 +1,31 @@
+# Cấu hình deploy backend lên Render (TV4-01). Render đọc file này khi tạo "Blueprint" từ repo.
+services:
+  - type: web
+    name: uit-confinder-api
+    runtime: node
+    plan: free
+    region: singapore
+    rootDir: backend
+    buildCommand: npm ci
+    startCommand: npm start
+    healthCheckPath: /api/health
+    # Chỉ deploy lại khi backend hoặc dữ liệu snapshot thay đổi.
+    buildFilter:
+      paths:
+        - backend/**
+        - site/js/data-adapter.js
+        - site/data/conferences.snapshot.json
+    envVars:
+      - key: NODE_VERSION
+        value: "24"
+      # Express khuyến nghị đặt production để giảm thông tin lỗi gửi ra ngoài và tăng hiệu năng.
+      - key: NODE_ENV
+        value: production
+      - key: TRUST_PROXY
+        value: "1"
+      - key: ALLOWED_ORIGIN
+        sync: false
+      - key: GEMINI_API_KEY
+        sync: false
+      - key: GEMINI_MODEL
+        sync: false
