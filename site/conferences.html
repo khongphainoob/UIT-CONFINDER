@@ -7,7 +7,6 @@
   <link rel="icon" href="assets/favicon-32.png" sizes="32x32" type="image/png"><link rel="icon" href="assets/favicon.svg" type="image/svg+xml">
   <link rel="apple-touch-icon" href="assets/apple-touch-icon.png">
   <link rel="preconnect" href="https://fonts.googleapis.com"><link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-  <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Be+Vietnam+Pro:wght@400;500;600;700&family=JetBrains+Mono:wght@400;500;700&family=Newsreader:opsz,wght@6..72,400;6..72,500;6..72,600&display=swap">
   <link rel="stylesheet" href="css/tokens.css"><link rel="stylesheet" href="css/base.css">
   <link rel="stylesheet" href="css/components.css"><link rel="stylesheet" href="css/pages/conference-list.css">
   <script type="module" src="js/pages/conference-list.js"></script>
@@ -16,13 +15,9 @@
   <a class="skip-link" href="#main">Đến nội dung chính</a>
   <header class="site-header" data-site-header></header>
   <main id="main" class="container stack">
-    <header class="page-head explore-hero">
-      <span class="explore-hero__icon" aria-hidden="true">⌛</span>
-      <div class="explore-hero__content">
-        <p class="explore-eyebrow">Tra cứu hội nghị khoa học</p>
-        <h1>Khám phá hội nghị</h1>
-        <p class="page-head__lead">Tìm hạn nộp phù hợp, sắp xếp danh sách và lưu lại hội nghị bạn quan tâm.</p>
-      </div>
+    <header class="page-head">
+      <h1>Khám phá hội nghị</h1>
+      <p class="page-head__lead">Tìm hạn nộp phù hợp, sắp xếp danh sách và lưu lại hội nghị bạn quan tâm.</p>
     </header>
     <div class="explore-layout">
       <aside class="explore-sidebar" aria-label="Bộ lọc hội nghị">
@@ -31,11 +26,12 @@
       <section class="explore-results" aria-label="Danh sách hội nghị">
         <div class="result-bar">
           <div>
-            <h2>Hạn nộp sắp tới</h2>
-            <p id="result-status" role="status" aria-live="polite"></p>
+            <h2>Kết quả</h2>
+            <p id="result-status" tabindex="-1" role="status" aria-live="polite"></p>
           </div>
           <div id="active-filters" class="active-filters" role="group" aria-label="Bộ lọc đang áp dụng"></div>
         </div>
+        <div id="data-source-notice"></div>
         <section id="page-content" class="stack" aria-label="Kết quả hội nghị"></section>
         <nav id="pagination" aria-label="Phân trang"></nav>
       </section>
