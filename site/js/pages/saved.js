@@ -1,11 +1,13 @@
 import { createIcon, initCommonUI } from '../common.js';
 import { getCatalog } from '../data-service.js';
 import { getNextSubmission } from '../deadline-utils.js';
+import { hasSyncedBefore } from '../google-calendar-sync.js';
 import { ROUTES } from '../routes.js';
 import { getSavedIds, removeSavedIds } from '../saved-store.js';
 import { createDataNotice, createEditionCard } from '../ui/edition-card.js';
 import { showState } from '../ui/state.js';
 import { findNextDeadlineTime } from './explore-state.js';
+import { createCalendarSyncPanel } from './saved-calendar-sync.js';
 
 initCommonUI('saved');
 
@@ -14,6 +16,7 @@ const MAX_TIMEOUT = 2_147_000_000;
 let currentCatalog = { editions: [] };
 let currentIds = [];
 let deadlineTimer = null;
+let syncPanel; // tạo khi catalog đã tải, giữ nguyên qua các lần dựng lại; null nếu chưa cấu hình Google
 
 function createStaleWarning(staleIds) {
   const warning = document.createElement('div');
@@ -94,6 +97,11 @@ function renderSaved(ids) {
   const notice = createDataNotice(currentCatalog.meta);
   if (notice) content.append(notice);
   if (staleIds.length > 0) content.append(createStaleWarning(staleIds));
+  // Đã từng đồng bộ thì vẫn hiện để gỡ các mốc khỏi lịch sau khi bỏ lưu hết.
+  if (syncPanel && (savedEditions.length > 0 || hasSyncedBefore())) {
+    syncPanel.update(savedEditions);
+    content.append(syncPanel.element);
+  }
   if (savedEditions.length === 0) {
     const empty = document.createElement('div');
     showState(empty, {
@@ -126,6 +134,7 @@ async function initPage() {
   }
   try {
     currentCatalog = await getCatalog();
+    if (syncPanel === undefined) syncPanel = createCalendarSyncPanel();
     renderSaved(saved.ids);
   } catch (error) {
     console.error(error);

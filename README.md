@@ -113,6 +113,7 @@ Người dùng cần phân biệt được các mốc này, kiểm tra múi gi�
 - Tải file `.ics` cho deadline được chọn.
 - Xuất đúng kỳ hội nghị, vòng nộp và mốc thời gian đang xem.
 - Không xuất các mốc thiếu giờ/múi giờ hoặc chỉ mang tính ước lượng.
+- Đồng bộ các hạn đã lưu vào lịch riêng "UIT ConFinder" trên Google Calendar (đăng nhập Google OAuth ngay trên trình duyệt, không cần backend). Xem [docs/google-calendar-sync.md](docs/google-calendar-sync.md).
 
 ### 5.5. Giao diện và trải nghiệm
 
@@ -123,7 +124,7 @@ Người dùng cần phân biệt được các mốc này, kiểm tra múi gi�
 
 ### 5.6. Ngoài phạm vi phiên bản chính
 
-- Đăng nhập và đồng bộ tài khoản.
+- Tài khoản riêng của website và đồng bộ danh sách đã lưu giữa thiết bị (đăng nhập Google chỉ dùng để ghi lịch).
 - Backend và hệ quản trị cơ sở dữ liệu riêng.
 - Gửi email hoặc thông báo tự động.
 - Thu thập dữ liệu toàn web bằng crawler.
@@ -156,6 +157,7 @@ JavaScript và tài liệu liên quan.
 | JavaScript ES Modules | Chia module, xử lý dữ liệu và tương tác |
 | Fetch API | Tải dữ liệu JSON |
 | LocalStorage | Lưu danh sách hội nghị trên trình duyệt |
+| Google Identity Services + Calendar API | Đăng nhập OAuth và ghi hạn nộp vào Google Calendar từ trình duyệt |
 | Git / GitHub | Quản lý phiên bản và review mã nguồn |
 | GitHub Pages | Phương án triển khai website tĩnh |
 | Python HTTP Server | Chạy website trong môi trường phát triển local |
@@ -194,6 +196,7 @@ Các trang sử dụng cùng model dữ liệu và cùng quy tắc chọn deadli
 | `site/js/deadline-utils.js` | Xử lý deadline dùng chung |
 | `site/js/saved-store.js` | Đọc và ghi danh sách đã lưu |
 | `site/js/calendar-export.js` | Tạo Google Calendar URL và nội dung ICS |
+| `site/js/google-calendar-sync.js` | Đồng bộ hạn đã lưu sang lịch riêng trên Google Calendar |
 | `site/data/` | Snapshot JSON đã chuẩn hóa |
 | `site/assets/` | Hình ảnh và tài nguyên |
 | `docs/` | Tài liệu kiến trúc, phân công và kiểm thử |
