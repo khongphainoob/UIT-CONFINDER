@@ -1,5 +1,16 @@
 # Kiểm tra trước PR
 
+## Test tự động
+
+- Cần Node.js 22 trở lên, không cài thêm thư viện. Chạy `npm test` (hoặc
+  `node --test "tests/**/*.test.js"`) ở thư mục gốc repo.
+- Test dùng `node:test` và `node:assert` có sẵn trong Node, gọi trực tiếp các
+  module trong `site/js/` với `now` cố định và fixture riêng.
+- Phạm vi: `deadline-utils.js`, `data-adapter.js`, `data-service.js` (fetch giả),
+  `pages/explore-state.js`, `calendar-export.js`, `saved-store.js` (window giả).
+- Phần giao diện (DOM, CSS, responsive) vẫn kiểm tra trên trình duyệt theo mục
+  Smoke test bên dưới.
+
 ## Smoke test
 
 - Chạy `python tools/serve.py`, mở 5 trang và `components.html`.

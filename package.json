@@ -1,0 +1,9 @@
+{
+  "name": "uit-confinder",
+  "private": true,
+  "description": "Website tra cứu hạn nộp hội nghị khoa học, đồ án IE104",
+  "type": "module",
+  "scripts": {
+    "test": "node --test \"tests/**/*.test.js\""
+  }
+}
