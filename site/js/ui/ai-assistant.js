@@ -112,7 +112,9 @@ export function initAiAssistant({ apiBase }) {
 
   function updateFullLink() {
     const text = textarea.value.trim();
-    fullLink.href = text ? `${ROUTES.match}?q=${encodeURIComponent(text)}` : ROUTES.match;
+    // Phòng routes.js cũ trong cache chưa có khóa match (xem common.js).
+    const matchPage = ROUTES.match ?? 'match.html';
+    fullLink.href = text ? `${matchPage}?q=${encodeURIComponent(text)}` : matchPage;
   }
   updateFullLink();
 
