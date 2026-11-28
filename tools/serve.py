@@ -19,14 +19,22 @@ def find_available_port(start_port=5500, max_tries=10):
     return start_port
 
 class NoCacheHandler(SimpleHTTPRequestHandler):
-    """Bắt trình duyệt hỏi lại server mỗi lần (file không đổi thì nhận 304, vẫn nhanh).
+    """Máy chủ dev: trình duyệt không bao giờ dùng file cũ.
 
-    Không có header này, Chrome tự giữ file JS cũ nhiều ngày khi file lâu không sửa:
-    routes.js cũ thiếu ROUTES.match làm link "Gợi ý AI" thành .../undefined.
+    Chỉ "no-cache" là chưa đủ: file đã vào cache TRƯỚC khi có header vẫn bị Chrome dùng lại
+    mà không hỏi server, nên trang trộn file mới với file cũ và vỡ, ví dụ:
+    - routes.js cũ thiếu ROUTES.match làm link "Gợi ý AI" thành .../undefined (404)
+    - explore-state.js cũ thiếu countByPlace làm conference-list.js báo SyntaxError
+    Cách xử lý:
+    - mọi file: no-store (không lưu vào cache nữa)
+    - trang HTML: Clear-Site-Data "cache" để Chrome xóa luôn cache cũ của origin này
+      trước khi tải JS/CSS của trang. Chỉ dùng cho máy chủ dev; GitHub Pages không bị ảnh hưởng.
     """
 
     def end_headers(self) -> None:
-        self.send_header('Cache-Control', 'no-cache')
+        self.send_header('Cache-Control', 'no-store')
+        if self.path.split('?', 1)[0].endswith(('.html', '/')):
+            self.send_header('Clear-Site-Data', '"cache"')
         super().end_headers()
 
 
