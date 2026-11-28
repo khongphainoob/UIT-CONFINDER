@@ -1,5 +1,6 @@
 // TV4 (DOM) + TV2 (style): widget "Gợi ý hội nghị bằng AI" nổi ở góc phải, có trên mọi trang trừ trang Gợi ý AI.
 // Phần chung (gửi yêu cầu, trạng thái, chip "AI hiểu là") ở ./ai-session.js; file này dựng khung nổi và thẻ kết quả gọn.
+import { warmUp } from '../ai-match-client.js';
 import { createIcon } from '../common.js';
 import { formatDateGMT7, getNextSubmission, getUrgencyInfo } from '../deadline-utils.js';
 import { ROUTES } from '../routes.js';
@@ -121,6 +122,7 @@ export function initAiAssistant({ apiBase }) {
   function setOpen(open) {
     fab.setAttribute('aria-expanded', String(open));
     if (open) {
+      warmUp(apiBase); // đánh thức backend (Render ngủ) ngay khi mở, trước khi người dùng gõ xong
       panel.hidden = false;
       // đợi một khung hình để transition chạy từ trạng thái đóng sang mở
       requestAnimationFrame(() => { panel.dataset.state = 'open'; });

@@ -3,7 +3,25 @@
 
 export const DESCRIPTION_MIN = 20;
 export const DESCRIPTION_MAX = 1500;
-const REQUEST_TIMEOUT_MS = 60_000; // Render bản miễn phí có thể mất 30–60 giây để "thức dậy"
+// Render bản miễn phí ngủ sau 15 phút không có truy cập, thức dậy mất khoảng 1 phút; cộng 2 lần gọi Gemini.
+const REQUEST_TIMEOUT_MS = 90_000;
+
+const warmedUp = new Set();
+/**
+ * Gọi GET /api/health một lần cho mỗi apiBase (không chờ, bỏ qua lỗi) để Render thức dậy
+ * trong lúc người dùng còn đang gõ, nhờ vậy lần gợi ý đầu không phải chờ thêm khoảng 1 phút.
+ * /api/health không bị giới hạn tần suất và không tốn lượt AI.
+ * @returns {boolean} true nếu lần này có gửi yêu cầu
+ */
+export function warmUp(apiBase, { fetchImpl = fetch } = {}) {
+  const base = normalizeApiBase(apiBase);
+  if (!base || warmedUp.has(base)) return false;
+  warmedUp.add(base);
+  Promise.resolve()
+    .then(() => fetchImpl(`${base}/api/health`, { method: 'GET', mode: 'cors', credentials: 'omit' }))
+    .catch(() => {});
+  return true;
+}
 
 const REGION_LABELS = {
   vietnam: 'Việt Nam', sea: 'Đông Nam Á', asia: 'Châu Á', europe: 'Châu Âu',

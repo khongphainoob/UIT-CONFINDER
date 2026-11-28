@@ -3,7 +3,7 @@ import { test } from 'node:test';
 import assert from 'node:assert/strict';
 import {
   describeRelaxed, filtersToChips, normalizeApiBase, removeFilterChip, requestMatch,
-  safeExploreHref, validateDescription,
+  safeExploreHref, validateDescription, warmUp,
 } from '../site/js/ai-match-client.js';
 
 const BASE = 'http://localhost:3000';
@@ -122,4 +122,15 @@ test('describeRelaxed', () => {
   assert.equal(describeRelaxed([]), '');
   assert.equal(describeRelaxed(['withinDays', 'region']), 'Không có hội nghị khớp mọi tiêu chí nên đã bỏ giới hạn thời gian, mở rộng ra mọi khu vực.');
   assert.equal(describeRelaxed(['lạ']), '');
+});
+
+test('warmUp: gọi /api/health đúng một lần cho mỗi địa chỉ, bỏ qua lỗi, bỏ địa chỉ không hợp lệ', async () => {
+  const calls = [];
+  const fetchImpl = async (url, init) => { calls.push([url, init.method]); throw new TypeError('offline'); };
+  assert.equal(warmUp('https://warm.example/', { fetchImpl }), true);
+  assert.equal(warmUp('https://warm.example', { fetchImpl }), false);
+  assert.equal(warmUp('javascript:alert(1)', { fetchImpl }), false);
+  assert.equal(warmUp('', { fetchImpl }), false);
+  await new Promise((resolve) => setTimeout(resolve, 0));
+  assert.deepEqual(calls, [['https://warm.example/api/health', 'GET']]);
 });
