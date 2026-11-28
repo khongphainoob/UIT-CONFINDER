@@ -1,6 +1,7 @@
 // TV1: trang chỉ gọi getCatalog, không tự fetch một endpoint khác.
 import { API_ENDPOINT, SNAPSHOT_URL } from './config.js';
 import { normalizeCatalog } from './data-adapter.js';
+import { attachPlaceInfo } from './place-utils.js';
 
 let cachedCatalogPromise = null;
 
@@ -43,7 +44,8 @@ async function loadSnapshot({ signal } = {}) {
       mode: 'snapshot',
       loadedAt: new Date().toISOString(),
     },
-    editions: catalog.editions,
+    // Thêm country/region (place-utils.js) để lọc theo khu vực; không đổi trường cũ của contract.
+    editions: attachPlaceInfo(catalog.editions),
   };
 }
 
@@ -75,7 +77,7 @@ async function fetchCatalog({ signal } = {}) {
           mode: 'live',
           loadedAt: new Date().toISOString(),
         },
-        editions: catalog.editions,
+        editions: attachPlaceInfo(catalog.editions),
       };
     } catch (liveError) {
       console.warn('Không thể tải từ Live API CCFDDL, chuyển sang fallback snapshot dự phòng:', liveError.message);

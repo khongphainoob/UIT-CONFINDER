@@ -1,0 +1,35 @@
+/* TV2: bố cục trang Gợi ý AI. Chip, thông báo, thanh điểm dùng chung ở css/ai-assistant.css. */
+.match-page { align-content: start; }
+.match-layout { display: grid; gap: var(--space-5); align-items: start; }
+
+/* cột trái: form trong thẻ trắng */
+.match-ask { display: grid; gap: var(--space-4); }
+.match-ask__title { font-size: var(--text-card-title); }
+.match-ask textarea { min-height: 180px; }
+.match-how { border-top: 1px solid var(--color-rule); padding-top: var(--space-3); }
+.match-how__summary { min-height: var(--control-height); display: flex; align-items: center; font-size: var(--text-small); font-weight: 700; cursor: pointer; }
+.match-how__steps { display: grid; gap: var(--space-2); margin: 0; padding-left: 1.25rem; color: var(--color-mute); font-size: var(--text-small); }
+.match-note { color: var(--color-mute); font-size: var(--text-xs); }
+
+/* cột phải: kết quả */
+.match-results { display: grid; gap: var(--space-3); min-width: 0; }
+.match-results .ai-output { gap: var(--space-4); }
+.match-empty {
+  padding: var(--space-6) var(--space-5); border: 1px dashed var(--color-rule-strong); border-radius: var(--radius);
+  color: var(--color-mute); text-align: center;
+}
+
+/* mỗi kết quả: thẻ hội nghị chung + khối lý do dính liền bên dưới */
+.match-list { display: grid; gap: var(--space-4); padding: 0; list-style: none; }
+.match-item { container-type: inline-size; display: grid; } /* thẻ xếp theo bề rộng ô, giống .badge-list > li */
+.match-item > .badge-card { border-radius: var(--radius) var(--radius) 0 0; }
+.match-item > .ai-reason {
+  padding: var(--space-3) var(--space-4); border: 1px solid var(--color-rule); border-top-style: dashed;
+  border-radius: 0 0 var(--radius) var(--radius); background: var(--color-card);
+}
+
+/* từ 64rem: form bên trái cố định khi cuộn, kết quả bên phải */
+@media (min-width: 64rem) {
+  .match-layout { grid-template-columns: minmax(20rem, 26rem) minmax(0, 1fr); }
+  .match-ask { position: sticky; top: 72px; }
+}

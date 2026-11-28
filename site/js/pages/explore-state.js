@@ -1,8 +1,10 @@
 // Các hàm trong file này chỉ lo phần tìm, lọc, sắp xếp và chia trang.
 // Phần giao diện sẽ gọi các hàm này, còn common.js vẫn dành cho UI dùng chung.
+import { COUNTRIES, REGION_CODES, regionMatches } from '../place-utils.js';
+
 export const DEFAULT_STATE = Object.freeze({
   q: '', fields: Object.freeze([]), ccf: Object.freeze([]), core: Object.freeze([]),
-  mode: Object.freeze([]), kind: 'any', window: 'all', past: false,
+  mode: Object.freeze([]), region: Object.freeze([]), country: '', kind: 'any', window: 'all', past: false,
   sort: 'deadline', page: 1,
 });
 
@@ -12,7 +14,7 @@ const CCF_VALUES = Object.freeze(['A', 'B', 'C']);
 const CORE_VALUES = Object.freeze(['A*', 'A', 'B', 'C']);
 const MODE_VALUES = Object.freeze(['online', 'offline', 'hybrid']);
 const KIND_VALUES = Object.freeze(['any', 'abstract', 'paper']);
-const WINDOW_VALUES = Object.freeze(['all', '7', '14', '30', '90']);
+const WINDOW_VALUES = Object.freeze(['all', '7', '14', '30', '90', '180']);
 const SORT_VALUES = Object.freeze(['deadline', 'name', 'ccf', 'core']);
 const DAY_MS = 24 * 60 * 60 * 1000;
 
@@ -136,6 +138,12 @@ export function normalizeSearchText(value) {
     .replace(/\s+/g, ' ');
 }
 
+// Mã quốc gia ISO 2 chữ có trong bảng tra (place-utils.js); giá trị lạ thì bỏ.
+function normalizeCountry(value) {
+  const code = String(value ?? '').trim().toUpperCase();
+  return Object.hasOwn(COUNTRIES, code) ? code : '';
+}
+
 export function normalizeState(input = {}, { validFields = [] } = {}) {
   // URL có thể bị sửa bằng tay nên mọi giá trị đều được kiểm tra trước khi dùng.
   const fieldValues = unique((Array.isArray(validFields) ? validFields : [])
@@ -152,6 +160,8 @@ export function normalizeState(input = {}, { validFields = [] } = {}) {
     ccf: canonicalValues(input.ccf, CCF_VALUES, { caseInsensitive: true }),
     core: canonicalValues(input.core, CORE_VALUES, { caseInsensitive: true }),
     mode: canonicalValues(input.mode, MODE_VALUES, { caseInsensitive: true }),
+    region: canonicalValues(input.region, REGION_CODES, { caseInsensitive: true }),
+    country: normalizeCountry(input.country),
     kind: oneOf(input.kind, KIND_VALUES, DEFAULT_STATE.kind, { caseInsensitive: true }),
     window: oneOf(input.window, WINDOW_VALUES, DEFAULT_STATE.window),
     past: input.past === true || input.past === 1 || input.past === '1',
@@ -169,6 +179,8 @@ export function parseState(searchParams, options = {}) {
     ccf: params.getAll('ccf'),
     core: params.getAll('core'),
     mode: params.getAll('mode'),
+    region: params.getAll('region'),
+    country: params.get('country') ?? DEFAULT_STATE.country,
     kind: params.get('kind') ?? DEFAULT_STATE.kind,
     window: params.get('window') ?? DEFAULT_STATE.window,
     past: params.get('past') === '1',
@@ -186,6 +198,8 @@ export function serializeState(input, options = {}) {
   state.ccf.forEach((value) => params.append('ccf', value));
   state.core.forEach((value) => params.append('core', value));
   state.mode.forEach((value) => params.append('mode', value));
+  state.region.forEach((value) => params.append('region', value));
+  if (state.country) params.set('country', state.country);
   if (state.kind !== DEFAULT_STATE.kind) params.set('kind', state.kind);
   if (state.window !== DEFAULT_STATE.window) params.set('window', state.window);
   if (state.past) params.set('past', '1');
@@ -211,16 +225,26 @@ export function applyFilters(editions, inputState, {
   const selectedCcf = new Set(state.ccf);
   const selectedCore = new Set(state.core);
   const selectedModes = new Set(state.mode);
+  const selectedRegions = state.region;
   const windowDays = state.window === 'all' ? null : Number(state.window);
   const windowEnd = windowDays == null ? null : now + windowDays * DAY_MS;
+  // Khi đang tìm theo tên, vẫn hiện kỳ MỚI NHẤT của mỗi hội nghị dù đã đóng hạn:
+  // tìm "cvpr" phải thấy CVPR 2027 (đã đóng) thay vì danh sách trống. Các kỳ cũ hơn vẫn ẩn.
+  const latestYears = queryTokens.length && !state.past ? latestYearBySeries(editions) : null;
 
   const output = [];
   for (const edition of editions) {
     if (!edition || typeof edition !== 'object') continue;
     if (queryTokens.length) {
-      const haystack = normalizeSearchText(`${edition.acronym ?? ''} ${edition.name ?? ''}`);
+      const haystack = normalizeSearchText(`${edition.acronym ?? ''} ${edition.name ?? ''} ${edition.place ?? ''}`);
       // Mỗi từ người dùng nhập phải xuất hiện, nhưng không cần đứng sát nhau.
       if (!queryTokens.every((token) => haystack.includes(token))) continue;
+    }
+    // Khu vực và quốc gia cộng dồn (OR): "châu Âu" + "Nhật Bản" ra cả hai. Chọn châu Á gồm cả Việt Nam.
+    if (selectedRegions.length || state.country) {
+      const inRegion = selectedRegions.some((region) => regionMatches(edition.region, region));
+      const inCountry = Boolean(state.country) && edition.country === state.country;
+      if (!inRegion && !inCountry) continue;
     }
     // Nhiều lựa chọn trong cùng nhóm là OR; các khối if khác nhau tạo thành AND.
     if (selectedFields.size) {
@@ -238,7 +262,10 @@ export function applyFilters(editions, inputState, {
 
     // Việc chọn deadline thuộc TV1; TV3 chỉ dùng kết quả để lọc danh sách.
     const submission = getNextSubmission(edition, { kind: state.kind, now });
-    if (!state.past && submission?.status === 'closed') continue;
+    if (!state.past && submission?.status === 'closed') {
+      const isLatest = latestYears && edition.year === latestYears.get(seriesOf(edition));
+      if (!isLatest) continue;
+    }
     if (windowEnd != null) {
       const matchesWindow = Array.isArray(submission?.futureDeadlines)
         && submission.futureDeadlines.some((deadline) => {
@@ -250,6 +277,47 @@ export function applyFilters(editions, inputState, {
     output.push({ edition, submission });
   }
   return output;
+}
+
+function seriesOf(edition) {
+  return edition.seriesKey ?? edition.id;
+}
+
+function latestYearBySeries(editions) {
+  const latest = new Map();
+  for (const edition of editions) {
+    if (!edition || typeof edition !== 'object') continue;
+    const key = seriesOf(edition);
+    if ((edition.year ?? 0) > (latest.get(key) ?? 0)) latest.set(key, edition.year);
+  }
+  return latest;
+}
+
+/**
+ * Số kỳ khớp mọi điều kiện nhưng đang bị ẩn vì đã hết hạn (để báo "Có N kỳ đã hết hạn" kèm nút xem).
+ * Bật "Hiện hạn đã qua" thì không còn gì bị ẩn.
+ */
+export function countHiddenPast(editions, inputState, options) {
+  const state = normalizeState(inputState, options);
+  if (state.past) return 0;
+  return applyFilters(editions, { ...state, past: true }, options).length
+    - applyFilters(editions, state, options).length;
+}
+
+/**
+ * Đếm số kỳ theo từng khu vực và quốc gia, áp dụng mọi bộ lọc khác trừ chính khu vực/quốc gia
+ * (đếm kiểu "facet": người dùng biết chọn khu vực nào sẽ ra bao nhiêu kết quả).
+ * @returns {{ regions: Record<string, number>, countries: Record<string, number> }}
+ */
+export function countByPlace(editions, inputState, options) {
+  const base = applyFilters(editions, { ...inputState, region: [], country: '' }, options);
+  const regions = Object.fromEntries(REGION_CODES.map((code) => [code, 0]));
+  const countries = {};
+  for (const { edition } of base) {
+    for (const code of REGION_CODES) if (regionMatches(edition.region, code)) regions[code] += 1;
+    if (edition.country) countries[edition.country] = (countries[edition.country] ?? 0) + 1;
+  }
+  return { regions, countries };
 }
 
 export function sortEditions(items, inputState = DEFAULT_STATE) {

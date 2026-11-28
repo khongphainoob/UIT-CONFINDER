@@ -49,6 +49,10 @@
   --color-danger: #a8200f;
   --color-danger-bg: #fff1f1; /* nền khối cảnh báo; Chi tiết và Đã lưu đang viết thẳng mã màu này */
 
+  /* đã lưu hội nghị: ngôi sao xanh lá, tách khỏi tím của ruy-băng rank ngay cạnh (≈4.5:1 trên nền trắng) */
+  --color-saved: #1f8a4c;
+  --color-saved-bg: #e8f5ec;
+
   /* chữ: font tải từ Google Fonts, luôn có stack hệ thống dự phòng */
   --font-ui: "Be Vietnam Pro", system-ui, "Segoe UI", Roboto, Arial, sans-serif;
   /* giữ tên --font-serif để không phải sửa CSS trang khác; nay là font tiêu đề Bricolage Grotesque (không chân, có trục cỡ quang học) */

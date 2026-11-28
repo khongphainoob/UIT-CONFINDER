@@ -9,7 +9,11 @@ import {
   applyFilters,
   sortEditions,
   paginate,
+  countHiddenPast,
+  countByPlace,
 } from '../site/js/pages/explore-state.js';
+import { predictNextDeadline } from '../site/js/deadline-utils.js';
+import { attachPlaceInfo } from '../site/js/place-utils.js';
 import { getNextSubmission } from '../site/js/deadline-utils.js';
 
 const NOW = Date.parse('2026-10-20T00:00:00Z');
@@ -40,8 +44,9 @@ test('tìm không phân biệt hoa thường và dấu tiếng Việt', () => {
   }
 });
 
-test('mặc định ẩn kỳ đã hết hạn, bật past thì hiện lại', () => {
-  assert.deepEqual(filterIds({ q: 'tri tue' }), []);
+test('không tìm thì ẩn kỳ đã hết hạn; tìm theo tên thì vẫn hiện kỳ mới nhất (lỗi CVPR)', () => {
+  // Trước đây tìm tên một hội nghị đã đóng hạn ra danh sách trống, thầy tìm CVPR không thấy.
+  assert.deepEqual(filterIds({ q: 'tri tue' }), ['e3']);
   assert.deepEqual(filterIds({ q: 'tri tue', past: true }), ['e3']);
   assert.deepEqual(filterIds({}), ['e1', 'e2', 'e4']);
 });
@@ -117,4 +122,66 @@ test('ghi rồi đọc lại URL khôi phục đúng trạng thái', () => {
   const state = { ...DEFAULT_STATE, q: 'vision', ccf: ['A'], core: ['A*'], mode: ['online', 'hybrid'], kind: 'paper', window: '14', past: true, sort: 'core', page: 3 };
   const restored = parseState(serializeState(state));
   assert.deepEqual(restored, { ...state, fields: [], mode: ['online', 'hybrid'] });
+});
+
+// ---------- Lỗi CVPR: gộp theo hội nghị khi tìm, đếm kỳ bị ẩn ----------
+const series = (id, year, paper) => ({ ...makeEdition(id, 'CVPR', 'Computer Vision and Pattern Recognition', { fields: ['AI'], ccf: 'A', format: 'Offline', paper }), seriesKey: 'AI/cvpr', year });
+const CVPR = [series('cvpr25', 2025, NOW - 400 * DAY), series('cvpr26', 2026, NOW - 30 * DAY), series('cvpr27', 2027, NOW - 3 * DAY)];
+
+test('tìm "cvpr" khi mọi kỳ đã đóng: chỉ hiện kỳ mới nhất, kỳ cũ vẫn ẩn', () => {
+  const ids = applyFilters(CVPR, { ...DEFAULT_STATE, q: 'cvpr' }, { now: NOW, getNextSubmission }).map((i) => i.edition.id);
+  assert.deepEqual(ids, ['cvpr27']);
+  assert.equal(countHiddenPast(CVPR, { ...DEFAULT_STATE, q: 'cvpr' }, { now: NOW, getNextSubmission }), 2);
+  assert.equal(countHiddenPast(CVPR, { ...DEFAULT_STATE, q: 'cvpr', past: true }, { now: NOW, getNextSubmission }), 0);
+});
+
+test('không tìm theo tên: kỳ mới nhất đã đóng vẫn ẩn như cũ', () => {
+  assert.deepEqual(applyFilters(CVPR, DEFAULT_STATE, { now: NOW, getNextSubmission }), []);
+});
+
+test('dự báo kỳ sau: kỳ mới nhất đã đóng thì cộng 1 năm, kỳ quá cũ thì không dự báo', () => {
+  assert.ok(predictNextDeadline(CVPR[2], { now: NOW }).instant.startsWith('2027-10'));
+  assert.equal(predictNextDeadline(CVPR[0], { now: NOW }), null);
+  assert.equal(predictNextDeadline(E1, { now: NOW }), null); // còn hạn thì không cần dự báo
+});
+
+// ---------- Lọc theo khu vực và quốc gia ----------
+const placed = attachPlaceInfo([
+  { ...E1, id: 'hn', place: 'Hanoi, Vietnam' },
+  { ...E1, id: 'tk', place: 'Tokyo, Japan' },
+  { ...E1, id: 'sg', place: 'Singapore' },
+  { ...E1, id: 'pa', place: 'Paris, France' },
+  { ...E1, id: 'sf', place: 'San Francisco, CA' },
+  { ...E1, id: 'vt', place: 'Virtual' },
+]);
+const placeIds = (state) => applyFilters(placed, { ...DEFAULT_STATE, ...state }, { now: NOW, getNextSubmission }).map((i) => i.edition.id);
+
+test('châu Á gồm Việt Nam, Đông Nam Á, Đông Á; Đông Nam Á gồm Việt Nam', () => {
+  assert.deepEqual(placeIds({ region: ['asia'] }), ['hn', 'tk', 'sg']);
+  assert.deepEqual(placeIds({ region: ['sea'] }), ['hn', 'sg']);
+  assert.deepEqual(placeIds({ region: ['vietnam'] }), ['hn']);
+  assert.deepEqual(placeIds({ region: ['online'] }), ['vt']);
+});
+
+test('nhiều khu vực và quốc gia cộng dồn (OR)', () => {
+  assert.deepEqual(placeIds({ region: ['europe', 'north-america'] }), ['pa', 'sf']);
+  assert.deepEqual(placeIds({ region: ['europe'], country: 'JP' }), ['tk', 'pa']);
+  assert.deepEqual(placeIds({ country: 'jp' }), ['tk']);
+});
+
+test('khu vực và quốc gia đi qua URL; giá trị lạ bị bỏ', () => {
+  const state = parseState('?region=asia&region=khong-co&country=VN&window=180');
+  assert.deepEqual(state.region, ['asia']);
+  assert.equal(state.country, 'VN');
+  assert.equal(state.window, '180');
+  assert.equal(serializeState(state).toString(), 'region=asia&country=VN&window=180');
+  assert.equal(parseState('?country=XX').country, '');
+});
+
+test('đếm theo khu vực áp dụng bộ lọc khác nhưng bỏ qua chính khu vực đang chọn', () => {
+  const counts = countByPlace(placed, { ...DEFAULT_STATE, region: ['vietnam'] }, { now: NOW, getNextSubmission });
+  assert.equal(counts.regions.asia, 3);
+  assert.equal(counts.regions.vietnam, 1);
+  assert.equal(counts.regions.america, 1);
+  assert.equal(counts.countries.JP, 1);
 });

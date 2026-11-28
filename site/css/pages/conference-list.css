@@ -21,7 +21,9 @@
 .explore-filter-group { min-width: 0; margin: 0; padding: 0; border: 0; }
 .explore-filter-group__options { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 0 var(--space-3); }
 .explore-filter-group__options .option { min-width: 0; }
-[data-group="fields"] .explore-filter-group__options { grid-template-columns: minmax(0, 1fr); }
+/* Lĩnh vực và Khu vực có nhãn dài, Khu vực còn là cây cha – con: xếp một cột */
+[data-group="fields"] .explore-filter-group__options,
+[data-group="place"] .explore-filter-group__options { grid-template-columns: minmax(0, 1fr); }
 
 .result-bar { display: grid; gap: var(--space-2); padding-bottom: var(--space-3); border-bottom: 1px solid var(--color-rule); }
 #result-status { color: var(--color-mute); font-size: var(--text-small); font-weight: 600; }
@@ -47,3 +49,22 @@
   .result-bar { grid-template-columns: minmax(0, 1fr); }
   .active-filters { justify-content: flex-start; }
 }
+
+/* lọc nhanh theo khu vực, ngay dưới ô tìm kiếm */
+.explore-quick { display: flex; flex-wrap: wrap; gap: 0 var(--space-2); margin-top: calc(-1 * var(--space-2)); }
+
+/* cây khu vực: khu vực con thụt vào, số kỳ canh phải */
+.region-option { justify-content: flex-start; }
+.region-option--child { padding-left: var(--space-6); }
+[data-group="place"] .field { margin-top: var(--space-2); }
+.region-option__count { margin-left: auto; color: var(--color-mute); font-size: var(--text-xs); font-variant-numeric: tabular-nums; }
+.region-option:has(input:checked) .region-option__count { color: var(--color-ink); font-weight: 600; }
+
+/* nhắc số kỳ đang ẩn vì đã hết hạn */
+.explore-hidden {
+  display: flex; flex-wrap: wrap; align-items: center; gap: var(--space-1) var(--space-2); margin-bottom: var(--space-3);
+  padding: var(--space-2) var(--space-3); border-left: 3px solid var(--color-ink); border-radius: 0 var(--radius-sm) var(--radius-sm) 0;
+  background: var(--color-hover); font-size: var(--text-small);
+}
+.explore-hidden > .icon { color: var(--color-mute); }
+.explore-hidden__action { min-height: 36px; padding: 0 var(--space-2); }

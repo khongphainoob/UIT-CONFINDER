@@ -31,6 +31,21 @@ Hướng sửa:
 3. **Thêm trang "Gợi ý hội nghị bằng AI"**: người dùng mô tả đề tài, hệ thống trả về 5 hội nghị phù hợp kèm lý do. Có chặn spam theo IP.
 4. **Viết tài liệu lưu vết prompt** trung thực.
 
+### Tiến độ (cập nhật 28/11/2026)
+
+| Hạng mục | Trạng thái | Ở đâu |
+|---|---|---|
+| Sửa lỗi CVPR, dự báo kỳ sau, báo số kỳ ẩn | Xong | `site/js/pages/explore-state.js`, `edition-card.js` |
+| Lọc châu lục / quốc gia / 180 ngày | Xong | `site/js/place-utils.js`, `conference-list.js` |
+| Backend Express + SQLite, `GET /api/conferences` đọc và lọc bằng SQL | Xong | `backend/src/routes/conferences.js`, `db.js` |
+| Gợi ý AI (`POST /api/match`), trang và widget | Xong | `backend/src/match.js`, `site/match.html` |
+| Chặn spam theo IP, ngân sách AI, giới hạn input | Xong | `backend/src/middleware/rate-limit.js`, `ai-budget.js` |
+| Ingest + crawl CFP + enrich, cron 03:00 hằng ngày | Xong, đã chạy thật | `backend/scripts/`, `.github/workflows/ingest.yml` |
+| Đồng bộ Google Calendar (OAuth) | Xong từ đợt trước (PR #20) | `site/js/google-calendar-sync.js` |
+| Lưu vết prompt | Xong phần TV4; TV1–TV3 bổ sung nhật ký phần mình | `docs/prompt-plan/` |
+| Deploy backend lên Render | **Chưa**: cần tài khoản Render của nhóm | `render.yaml` |
+| Đo lại Lighthouse sau khi thêm AI | **Chưa** | — |
+
 ---
 
 ## 2. Phạm vi (scope)
@@ -60,7 +75,7 @@ Chia theo mức ưu tiên. **Phải có** thì không được cắt. **Nên có
 
 | Không làm | Lý do |
 |---|---|
-| Đăng nhập, đăng ký | Thầy xác nhận không cần: công cụ tra cứu mở, ai vào dùng cũng được |
+| Tài khoản riêng của web (đăng ký, mật khẩu) | Thầy xác nhận không cần: công cụ tra cứu mở, ai vào dùng cũng được. **Đăng nhập Google để đồng bộ lịch vẫn có** (mục 2.1), nhưng chỉ để cấp quyền Calendar, web không lưu tài khoản |
 | Load balancing, nhiều server | Thầy xác nhận không cần: lượng truy cập thấp |
 | Viết lại frontend bằng React/Vue | Thầy không chê frontend. Viết lại mất nhiều thời gian mà không thêm điểm |
 | Lưu danh sách "Đã lưu" lên server | Không có tài khoản thì không biết lưu cho ai. Giữ `localStorage` |
@@ -76,7 +91,7 @@ Chia theo mức ưu tiên. **Phải có** thì không được cắt. **Nên có
 |---|---|---|
 | Tìm CVPR không ra, đặt lại bộ lọc vẫn không ra | Search đã khớp cả tên viết tắt lẫn tên đầy đủ, không phân biệt hoa thường, bỏ dấu (`explore-state.js:220-224`). Nhưng mặc định `past = false` loại mọi kỳ đã hết hạn (`explore-state.js:241`). CVPR 2027 hết hạn 16/11/2026, nguồn chưa có CVPR 2028. Nút "Đặt lại" cũng về `past = false`. | **Lỗi thiết kế mặc định, không phải lỗi so khớp.** 274/385 chuỗi (71%) có kỳ mới nhất đã hết hạn, nên mặc định chỉ hiện 84/2.346 kỳ, và trang không báo là có kết quả bị ẩn. |
 | Ít chức năng, "prompt cái là ra" | Chỉ lấy JSON của CCFDDL rồi lọc ở trình duyệt. Không có backend, database hay dữ liệu riêng. | Đúng. Cần thêm thứ trang gốc không có. |
-| Thiếu lọc quốc gia | `place` là chuỗi tự do: "Hanoi, Vietnam", "Ho Chi Minh City", "Singapore EXPO". Có 12 kỳ ở Việt Nam, 3 kỳ còn hạn. | Cần chuẩn hóa thành `country` và `region`. |
+| Thiếu lọc quốc gia | `place` là chuỗi tự do: "Hanoi, Vietnam", "Ho Chi Minh City", "Singapore EXPO". Có 11 kỳ ở Việt Nam (snapshot từng lẫn thêm 1 bản ghi kiểm thử giả, đã gỡ 28/11). | Cần chuẩn hóa thành `country` và `region`. |
 | Thiếu lọc thời gian dài | Chỉ có 7/14/30/90 ngày, lại giấu trong nhóm "Hạn nộp". | Thêm 180 ngày và đưa ra ngoài. |
 | Lĩnh vực quá rộng | `fields` chỉ có 10 mã lớn của CCF, cộng 3 giá trị lạc "Data", "Web", "Systems". | Cần `topics` từ trang CFP và dọn giá trị lạc. |
 | Không lưu vết dùng AI | Chưa có tài liệu. | Thêm `docs/prompt-plan/`. |
@@ -207,11 +222,12 @@ Vì sao cách này tốt hơn "BM25 trên nguyên câu người dùng":
 
 **Bắt buộc cấu hình** `app.set('trust proxy', 1)`. Render chuyển request qua proxy, nếu thiếu dòng này thì mọi người dùng đều mang chung IP của proxy, và một người spam sẽ chặn cả trang.
 
-### QĐ10. Crawl trang CFP: `fetch` + `cheerio`
+### QĐ10. Crawl trang CFP: `fetch` + tách HTML bằng regex (không thêm thư viện)
 
 | | Lựa chọn | Đánh giá |
 |---|---|---|
-| ✅ **Chọn** | **`fetch` (có sẵn) + `cheerio` (đọc HTML)** | Nhẹ, nhanh, chạy tốt trên GitHub Actions. Phần lớn trang hội nghị là HTML tĩnh. |
+| ✅ **Chọn (khi làm thật)** | **`fetch` (có sẵn) + hàm tách link/chữ tự viết** | Chỉ cần 2 việc: lấy các thẻ `<a>` và lấy chữ của trang. Viết vài hàm nhỏ có test riêng (`backend/tests/cfp-crawler.test.js`), không thêm phụ thuộc. Chạy thật 28/11/2026 trên 385 hội nghị. |
+| ❌ (kế hoạch ban đầu) | `fetch` + `cheerio` | Đọc HTML chuẩn hơn, nhưng thêm một thư viện chỉ để làm 2 việc trên. Nếu sau này cần đọc cấu trúc phức tạp (bảng, nhiều tầng) thì chuyển sang cheerio. |
 | ❌ | Puppeteer, Playwright | Phải tải cả trình duyệt (vài trăm MB), chậm. Chỉ cần với trang render bằng JS, mà các trang đó có thể bỏ qua. |
 | ❌ | Không crawl, chỉ dùng tên hội nghị | AI chỉ biết tên nên gợi ý kém chính xác. Đây là phương án dự phòng nếu trễ. |
 
@@ -401,7 +417,7 @@ Cột **Mức** theo mục 2. Cột **Cần trước** là task phải xong trư
 
 | ID | Việc | Mức | Đợt | Cần trước | File | Xong khi |
 |---|---|---|---|---|---|---|
-| TV1-01 | Chuẩn hóa `place` thành `country` (mã ISO, ví dụ VN) và `region` (`vietnam`, `sea`, `asia`, `europe`, `america`, `oceania`, `africa`). Bảng tra gồm cả thành phố (Hanoi, Ho Chi Minh City, Danang, Phu Quoc → VN; "Singapore EXPO" → SG). Không đoán được thì ghi `null`, không đoán bừa | Phải có | 1 | — | `backend/data/country-map.json`, `backend/src/normalize.js`, `site/js/data-adapter.js` | Trên 95% kỳ có `country`. Có test cho các ca khó: FAI 2027, "Virtual", "Online" |
+| TV1-01 | Chuẩn hóa `place` thành `country` (mã ISO, ví dụ VN) và `region` (`vietnam`, `sea`, `asia`, `europe`, `america`, `oceania`, `africa`). Bảng tra gồm cả thành phố (Hanoi, Ho Chi Minh City, Danang, Phu Quoc → VN; "Singapore EXPO" → SG). Không đoán được thì ghi `null`, không đoán bừa | Phải có | 1 | — | `backend/data/country-map.json`, `backend/src/normalize.js`, `site/js/data-adapter.js` | Trên 95% kỳ có `country`. Có test cho các ca khó: "Ho Chi Minh City" (không ghi tên nước), "Virtual", "Online" |
 | TV1-02 | Dọn `fields`: "Data", "Web", "Systems" gộp về mã CCF tương ứng | Phải có | 1 | — | `site/js/data-adapter.js` | Bộ lọc lĩnh vực chỉ còn 10 mã CCF |
 | TV1-03 | `predictNextDeadline(series)`: kỳ mới nhất đã đóng thì lấy hạn đó cộng 1 năm, trả `{ instant, predicted: true }` | Nên có | 1 | — | `site/js/deadline-utils.js` | CVPR trả về khoảng 10/11/2027. Có test cho năm nhuận (29/02) |
 | TV1-04 | `backend/scripts/ingest.js`: tải CCFDDL (timeout 20 giây) → chuẩn hóa → gộp với phần đã làm giàu từ lần trước → ghi `catalog.enriched.json`. Lỗi mạng hoặc sai format thì thoát với mã lỗi và không ghi file | Phải có | 2 | TV1-01 | `backend/scripts/ingest.js` | Chạy `npm run ingest` ra file JSON. Tắt mạng chạy lại thì file cũ không đổi |
@@ -432,7 +448,7 @@ Cột **Mức** theo mục 2. Cột **Cần trước** là task phải xong trư
 | TV3-01 | **Sửa lỗi CVPR, phần 1**: hàm `countHiddenPast(editions, state)`. Khi có kết quả bị ẩn vì đã hết hạn thì hiện "Có N kết quả đã hết hạn nộp" kèm nút **Xem cả hạn đã qua** (bật `past=1`) | Phải có | 1 | — | `explore-state.js`, `pages/conference-list.js` | Gõ `cvpr` ra thông báo "7 kết quả", bấm nút thấy CVPR 2021–2027 |
 | TV3-02 | **Sửa lỗi CVPR, phần 2**: gộp theo `seriesKey`, mỗi hội nghị một thẻ cho kỳ mới nhất. Khi có từ khóa thì hiện cả hội nghị có kỳ mới nhất đã đóng, kèm hạn dự kiến (TV1-03). Thêm dòng "Các năm trước" ở trang chi tiết | Phải có | 1 | TV1-03 | `explore-state.js`, `pages/conference-list.js`, `pages/conference-detail.js` (báo TV1) | Tìm `cvpr` mặc định ra 1 thẻ "CVPR 2027 · Đã đóng · dự kiến ~11/2027" |
 | TV3-03 | Search thêm trên `place`, `country`, `fields`, `topics` | Phải có | 1 | TV1-01 | `explore-state.js` | Gõ "vietnam" ra kỳ ở Việt Nam, gõ "computer vision" ra CVPR, ICCV, ECCV |
-| TV3-04 | Bộ lọc **Quốc gia / Khu vực**: chip nhanh "Việt Nam", "Đông Nam Á", "Châu Á", kèm danh sách quốc gia. URL `region=vietnam&country=SG` | Phải có | 1 | TV1-01 | `explore-state.js`, `pages/conference-list.js` | Chọn Việt Nam ra 3 kỳ còn hạn (12 nếu bật hạn đã qua), có FAI 2027 |
+| TV3-04 | Bộ lọc **Quốc gia / Khu vực**: chip nhanh "Việt Nam", "Đông Nam Á", "Châu Á", kèm danh sách quốc gia. URL `region=vietnam&country=SG` | Phải có | 1 | TV1-01 | `explore-state.js`, `pages/conference-list.js` | Chọn Việt Nam ra các kỳ còn hạn, bật hạn đã qua thì ra đủ 11 kỳ |
 | TV3-05 | Thêm khoảng 180 ngày. Đưa "Khoảng thời gian" ra hàng lọc chính, cạnh "Sắp xếp" | Phải có | 1 | — | `explore-state.js:15`, `pages/conference-list.js` | URL `window=180` hoạt động, có chip đang lọc |
 | TV3-06 | Thêm test cho TV3-01 đến TV3-05 | Phải có | 1 | — | `tests/explore-state.test.js` | `npm test` PASS |
 | TV3-07 | `backend/src/retrieval.js`: BM25 chấm điểm **danh sách từ khóa AI trả về** (không phải nguyên câu người dùng) trên `acronym + name + summary + topics` (k1 = 1,2; b = 0,75), bỏ từ dừng tiếng Anh, giữ cụm từ 2 chữ ("prompt injection"). Chỉ chấm trong các kỳ đã qua lọc SQL. Trả 20 kỳ cao nhất | Phải có | 3 | TV1-05 | `backend/src/retrieval.js` | Test: `["object detection"]` ra CVPR/ICCV, `["software testing"]` ra ICSE/ISSTA, `["query optimization"]` ra SIGMOD/VLDB |
@@ -521,7 +537,7 @@ Thầy cho dùng AI nhưng yêu cầu trung thực. Báo cáo ghi rõ phần nà
 5 phút, sau phần slide.
 
 1. **Explore**, gõ `cvpr`: ra "CVPR 2027 · Đã đóng · dự kiến ~11/2027". Bấm "Xem cả hạn đã qua" thấy 7 kỳ. Nói một câu về nguyên nhân lỗi cũ.
-2. **Chip Việt Nam**: còn hạn có MobiSys 2027 (TP.HCM, CCF B, hạn 27/11 và 04/12/2026), EASE 2027 (Hà Nội, hạn 15/01/2027), FAI 2027 (TP.HCM). *Kiểm tra lại sáng hôm bảo vệ vì hạn có thể đã qua.*
+2. **Chip Việt Nam**: còn hạn có MobiSys 2027 (TP.HCM, CCF B, hạn 27/11 và 04/12/2026), EASE 2027 (Hà Nội, hạn 15/01/2027). *Kiểm tra lại sáng hôm bảo vệ vì hạn có thể đã qua.*
 3. **180 ngày** + CCF B trở lên.
 4. **Gợi ý hội nghị**: dán "Tôi làm bảo mật cho AI agent, phát hiện prompt injection, muốn nộp ở châu Á trong 3 tháng tới, CCF B trở lên" → hiện chip "AI hiểu là: Châu Á · CCF ≥ B · 90 ngày · prompt injection…" → 5 kết quả kèm lý do. Xóa chip "Châu Á", bấm chạy lại để thầy thấy bộ lọc là thật và sửa được.
 5. Terminal chạy `npm run spam-test` (trong `backend/`): 5 lần 200, 5 lần 429. Trên giao diện bấm liên tục thấy thông báo đếm ngược.

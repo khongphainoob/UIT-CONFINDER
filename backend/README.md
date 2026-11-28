@@ -36,26 +36,26 @@ Dòng `ExperimentalWarning: SQLite is an experimental feature` là bình thườ
 - Theo tài liệu Express: `helmet` (header bảo mật, tắt `X-Powered-By`), `compression` (catalog 2 MB còn khoảng 130 KB), `trust proxy` dạng số, route tách bằng `express.Router`, middleware lỗi 4 tham số đặt cuối, tắt server êm khi nhận SIGTERM, `NODE_ENV=production` trên Render
 - CORS chỉ cho domain trong `ALLOWED_ORIGIN`, giới hạn body 10 KB, xử lý lỗi không lộ stack trace
 - Giới hạn tần suất: `/api/conferences` 60/phút, `/api/match` 5/phút và 20/ngày mỗi IP, trả 429 kèm `Retry-After`
-- `POST /api/match` đã kiểm tra đầu vào (400). Thiếu khóa Gemini thì 503, còn lại trả 501 cho tới khi xong TV4-04
-- Test cho các phần trên, cộng danh sách `test.todo` cho phần còn lại
+- `POST /api/match`: luồng gợi ý 5 bước, cache 24 giờ, ngân sách AI toàn hệ thống. Chi tiết, hợp đồng API và rà soát bảo mật: [docs/ai-assistant.md](../docs/ai-assistant.md)
+- 82 test (`npm test`), Gemini được thay bằng bản giả nên không cần mạng hay khóa
 
 ## Phần của từng người
 
-Tìm `TODO(` trong thư mục `backend/` để thấy hết việc còn lại.
+Tìm `TODO(` trong thư mục `backend/` để thấy việc còn lại.
 
-| File | Hàm | Chủ | Task |
-|---|---|---|---|
-| `src/normalize.js`, `data/country-map.json` | `normalizePlace` | TV1 | TV1-01 |
-| `src/db.js` | `queryEditionIds` | TV1 | TV1-05 |
-| `src/routes/conferences.js` | đọc từ SQLite | TV1 | TV1-06 |
-| `scripts/ingest.js`, `crawl-cfp.js`, `enrich.js` | cả file | TV1 | TV1-04, 07, 08 |
-| `src/filters.js` | `validateFilters`, `relaxFilters`, `toExploreUrl` | TV3 | TV3-10 |
-| `src/retrieval.js` | `rankByKeywords` | TV3 | TV3-07 |
-| `src/gemini.js` | `generateJson` | TV4 | TV4-05 |
-| `src/match.js` | `runMatch` (5 bước, cache, prompt phân tích) | TV4 | TV4-04, 06, 10 |
-| `render.yaml`, `.github/workflows/ingest.yml` | deploy, cron | TV4 | TV4-01, 03 |
+| File | Hàm | Chủ | Task | Trạng thái |
+|---|---|---|---|---|
+| `src/normalize.js`, `data/country-map.json` | `normalizePlace` | TV1 | TV1-01 | Xong phía backend; còn đưa sang `site/js/data-adapter.js` |
+| `src/db.js` | `queryEditionIds` | TV1 | TV1-05 | Xong |
+| `src/routes/conferences.js` | đọc từ SQLite | TV1 | TV1-06 | Chưa |
+| `scripts/ingest.js`, `crawl-cfp.js`, `enrich.js` | cả file | TV1 | TV1-04, 07, 08 | Chưa |
+| `src/filters.js` | `validateFilters`, `relaxFilters`, `toExploreUrl` | TV3 | TV3-10 | Xong |
+| `src/retrieval.js` | `createRetrievalIndex`, `rankByKeywords` | TV3 | TV3-07 | Xong |
+| `src/gemini.js` | `generateJson` | TV4 | TV4-05 | Xong, chờ khóa chạy được để thử thật |
+| `src/prompts.js`, `src/match.js`, `src/ai-budget.js` | prompt, luồng 5 bước, cache, ngân sách | TV4 | TV4-04, 06, 10 | Xong; còn ghi 10 câu thử thật vào prompt-plan |
+| `render.yaml`, `.github/workflows/ingest.yml` | deploy, cron | TV4 | TV4-01, 03 | Chưa deploy |
 
-Quy tắc: viết test trước hoặc cùng lúc với code, đổi `test.todo` thành test thật khi làm xong.
+Người phụ trách task phải đọc, hiểu và tự giải thích được phần code đã làm sẵn cho mình. Quy tắc: viết test cùng lúc với code.
 
 ## Cấu trúc
 
@@ -66,6 +66,9 @@ backend/
     app.js         ghép middleware chung → router → 404 → xử lý lỗi (tách riêng để test không cần mở cổng)
     routes/        mỗi nhóm endpoint một express.Router: health.js, conferences.js, match.js
     middleware/    rate-limit.js, error-handler.js
+    services.js    dựng SQLite, chỉ mục BM25, ngân sách AI, dịch vụ gợi ý một lần (server và test dùng chung)
+    prompts.js     prompt + JSON Schema cho 2 lần gọi Gemini
+    ai-budget.js   trần lượt gọi AI toàn hệ thống và số yêu cầu đồng thời
     config.js      đọc biến môi trường, hạn mức
     catalog.js     nạp JSON, dùng chung normalizeCatalog với frontend
     db.js          schema 5 bảng, nạp dữ liệu, truy vấn

@@ -18,8 +18,20 @@ def find_available_port(start_port=5500, max_tries=10):
                 return port
     return start_port
 
+class NoCacheHandler(SimpleHTTPRequestHandler):
+    """Bắt trình duyệt hỏi lại server mỗi lần (file không đổi thì nhận 304, vẫn nhanh).
+
+    Không có header này, Chrome tự giữ file JS cũ nhiều ngày khi file lâu không sửa:
+    routes.js cũ thiếu ROUTES.match làm link "Gợi ý AI" thành .../undefined.
+    """
+
+    def end_headers(self) -> None:
+        self.send_header('Cache-Control', 'no-cache')
+        super().end_headers()
+
+
 site = Path(__file__).resolve().parents[1] / 'site'
-handler = partial(SimpleHTTPRequestHandler, directory=str(site))
+handler = partial(NoCacheHandler, directory=str(site))
 
 port = find_available_port(5500)
 ThreadingHTTPServer.allow_reuse_address = False

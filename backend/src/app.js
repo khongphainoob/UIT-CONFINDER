@@ -15,8 +15,7 @@ import { createMatchRouter } from './routes/match.js';
 
 /**
  * @param {{ config: ReturnType<import('./config.js').loadConfig>,
- *           catalog: { meta: object, editions: object[] },
- *           db: import('node:sqlite').DatabaseSync }} deps
+ *           catalog: { meta: object, editions: object[] } } & ReturnType<import('./services.js').createServices>} deps
  */
 export function createApp(deps) {
   const { config } = deps;

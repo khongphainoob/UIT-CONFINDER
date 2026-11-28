@@ -7,3 +7,9 @@ export const PAGE_SIZE = 12;
 // không phải secret; Google chỉ chấp nhận nó từ các Authorized JavaScript origins đã khai báo.
 // Để trống thì trang Đã lưu không hiện khối đồng bộ. Cách tạo: docs/google-calendar-sync.md.
 export const GOOGLE_CLIENT_ID = '759516155051-g51ugl3sikl3616ki6oqo1iq7pqcumqk.apps.googleusercontent.com';
+
+// TV4: địa chỉ backend Express cho widget "Gợi ý hội nghị bằng AI" (backend/README.md).
+// Chạy trên máy (localhost/127.0.0.1) thì gọi backend ở cổng 3000. Trên GitHub Pages để trống:
+// widget không hiện cho tới khi có URL Render thật, giống cách GOOGLE_CLIENT_ID đang làm.
+const LOCAL_HOSTS = ['localhost', '127.0.0.1'];
+export const AI_API_BASE = LOCAL_HOSTS.includes(globalThis.location?.hostname) ? 'http://localhost:3000' : '';

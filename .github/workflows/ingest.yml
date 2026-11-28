@@ -1,10 +1,13 @@
 # Cập nhật dữ liệu hằng ngày (TV4-03). Chạy ingest → crawl → enrich, chỉ commit khi dữ liệu đổi.
+# - ingest: lấy CCFDDL mới nhất (lỗi thì dừng, giữ file cũ).
+# - crawl: tối đa 120 chuỗi/ngày, 1 request/giây; chuỗi đã có chủ đề thì 180 ngày mới crawl lại.
+# - enrich: tối đa 100 lượt Gemini/ngày, hết quota (429) thì dừng, hôm sau làm tiếp.
+# Commit dữ liệu mới lên nhánh chính thì Render tự deploy lại backend với catalog mới.
 name: Ingest data
 
 on:
-  # TODO(TV4-03): bỏ comment khi TV1-04 chạy được, để tránh job lỗi mỗi ngày.
-  # schedule:
-  #   - cron: '0 20 * * *'   # 20:00 UTC = 03:00 giờ Việt Nam
+  schedule:
+    - cron: '0 20 * * *'   # 20:00 UTC = 03:00 giờ Việt Nam
   workflow_dispatch:
 
 permissions:
@@ -29,9 +32,9 @@ jobs:
       - run: npm ci
       - run: npm run ingest
       # Crawl và enrich lỗi thì vẫn giữ kết quả ingest, nên cho phép tiếp tục.
-      - run: npm run crawl
+      - run: npm run crawl -- --limit=120
         continue-on-error: true
-      - run: npm run enrich
+      - run: npm run enrich -- --limit=100
         continue-on-error: true
         env:
           GEMINI_API_KEY: ${{ secrets.GEMINI_API_KEY }}

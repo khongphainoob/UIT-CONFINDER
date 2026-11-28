@@ -751,7 +751,8 @@ function renderDataNotice(meta, edition, now = Date.now()) {
   const staleInfo = getStaleInfo(checkedAtTime, now);
   const isStale = staleInfo.isStale;
 
-  const notice = document.createElement('aside');
+  // div thay vì aside: aside mang role complementary, không được đổi thành status (Lighthouse aria-allowed-role).
+  const notice = document.createElement('div');
   notice.className = `data-notice ${isStale ? 'data-notice--stale' : ''}`;
   notice.setAttribute('role', 'status');
 
