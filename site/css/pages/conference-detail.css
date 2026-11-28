@@ -454,11 +454,12 @@
   background: var(--color-card);
 }
 
-/* Toast thông báo */
+/* Toast thông báo: giữa đáy màn hình, không đè nút "Hỏi AI" ở góc phải dưới */
 .detail-toast {
   position: fixed;
   bottom: 24px;
-  right: 24px;
+  left: 50%;
+  max-width: calc(100vw - 2 * var(--gutter));
   z-index: var(--z-skip);
   padding: 12px 20px;
   border-radius: var(--radius);
@@ -467,13 +468,13 @@
   font-size: var(--text-small);
   box-shadow: 0 4px 16px rgba(0, 0, 0, 0.2);
   opacity: 0;
-  transform: translateY(12px);
+  transform: translate(-50%, 12px);
   pointer-events: none;
   transition: opacity 0.25s ease, transform 0.25s ease;
 }
 
 .detail-toast--visible {
   opacity: 1;
-  transform: translateY(0);
+  transform: translate(-50%, 0);
   pointer-events: auto;
 }
