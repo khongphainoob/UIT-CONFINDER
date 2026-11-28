@@ -101,5 +101,11 @@ test('quá thời gian chờ → 503', async () => {
   const fetchImpl = (url, init) => new Promise((resolve, reject) => {
     init.signal.addEventListener('abort', () => reject(init.signal.reason));
   });
-  await quietly(() => assert.rejects(generateJson(GEMINI, { ...REQUEST, timeoutMs: 20 }, { fetchImpl }), { status: 503 }));
+  // AbortSignal.timeout không giữ tiến trình sống; thiếu timer này Node 22 hủy test ("Promise resolution is still pending").
+  const keepAlive = setTimeout(() => {}, 5_000);
+  try {
+    await quietly(() => assert.rejects(generateJson(GEMINI, { ...REQUEST, timeoutMs: 20 }, { fetchImpl }), { status: 503 }));
+  } finally {
+    clearTimeout(keepAlive);
+  }
 });
