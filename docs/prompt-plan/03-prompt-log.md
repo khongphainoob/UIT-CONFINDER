@@ -20,7 +20,8 @@ Ghi trung thực, kể cả khi AI sai. Cột "Lỗi AI gây ra" là phần quan
 | 28/11 | TV4 | Claude Code | Widget AI | "Tạo widget AI nhỏ, kế thừa CSS của site" | Widget + trang Gợi ý AI | Import vòng `common.js` ↔ widget làm trang trắng | Console báo lỗi; đổi sang `import()` động | 0d1e678 |
 | 28/11 | TV4 | Claude Code | Trang Gợi ý AI | — | — | Trang hiện "undefined" | Do trình duyệt giữ `routes.js` cũ trong cache; `tools/serve.py` gửi `Cache-Control: no-cache` | cfc68b6 |
 | 28/11 | TV4 | Claude Code | Menu | "Trang Gợi ý AI không có đường vào" | — | Mục menu bị ẩn khi chưa có backend, nên GitHub Pages không có link | Luôn hiện link; trang tự báo "chưa bật" khi thiếu backend | a756274 |
-| 28/11 | TV4 | Claude Code | TV1-04/07/08 crawler | "Viết ingest, crawl CFP, enrich theo TODO" | 3 script + test | Lần đầu lấy nhầm CFP Journal Track của AAAI; lẫn chữ menu; nhận trang chủ ACL, CHI là CFP | Đọc tay văn bản crawl của 15 hội nghị; loại link journal/workshop, bỏ `<nav>/<header>/<footer>`, đi thêm một bước qua trang "Calls", siết điều kiện nhận CFP; thêm test cho từng ca | (commit crawler) |
+| 28/11 | TV4 | Claude Code | TV1-04/07/08 crawler | "Viết ingest, crawl CFP, enrich theo TODO" | 3 script + test | Lần đầu lấy nhầm CFP Journal Track của AAAI; lẫn chữ menu; nhận trang chủ ACL, CHI là CFP | Đọc tay văn bản crawl của 15 hội nghị; loại link journal/workshop, bỏ `<nav>/<header>/<footer>`, đi thêm một bước qua trang "Calls", siết điều kiện nhận CFP; thêm test cho từng ca | 086b011 |
+| 28/11 | TV4 | Claude Code | TV1-07 crawler | (chạy đủ 387 hội nghị) | 324/387 lấy được CFP | ICSE lấy nhầm CFP của CAIN (tổ chức chung trên conf.researchr.org); tương tự ICSME, CGO, MoDELS | Đọc nhật ký thấy link `track/cain-2027`; loại link track không chứa tên hội nghị, crawl và enrich lại 4 hội nghị, thêm test | 135943a |
 
 ## Phần các thành viên bổ sung
 
