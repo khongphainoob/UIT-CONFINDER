@@ -10,7 +10,8 @@ export const ORIGIN = 'http://127.0.0.1:5500';
 
 let catalogPromise;
 export function getCatalog() {
-  catalogPromise ??= loadCatalog();
+  // Luôn dùng snapshot cố định, kể cả khi máy đã có data/catalog.enriched.json từ lần chạy ingest.
+  catalogPromise ??= loadCatalog({ enrichedPath: null });
   return catalogPromise;
 }
 

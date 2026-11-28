@@ -16,8 +16,7 @@ CREATE TABLE series (
   core           TEXT,
   summary        TEXT,
   topics_json    TEXT,
-  cfp_url        TEXT,
-  cfp_crawled_at TEXT
+  cfp_url        TEXT
 );
 CREATE TABLE editions (
   id          TEXT PRIMARY KEY,
@@ -27,7 +26,10 @@ CREATE TABLE editions (
   country     TEXT,
   region      TEXT,
   format      TEXT,
-  website_url TEXT
+  website_url TEXT,
+  -- Bản JSON đầy đủ của kỳ (đúng contracts.md) để GET /api/conferences trả lại nguyên shape,
+  -- còn các cột ở trên dùng cho WHERE và chỉ mục.
+  payload     TEXT NOT NULL
 );
 CREATE TABLE deadlines (
   id          TEXT PRIMARY KEY,
@@ -72,8 +74,8 @@ export function createDatabase(catalog) {
     INSERT OR IGNORE INTO series (key, acronym, name, field, ccf, core, summary, topics_json, cfp_url)
     VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)`);
   const insertEdition = db.prepare(`
-    INSERT OR IGNORE INTO editions (id, series_key, year, place, country, region, format, website_url)
-    VALUES (?, ?, ?, ?, ?, ?, ?, ?)`);
+    INSERT OR IGNORE INTO editions (id, series_key, year, place, country, region, format, website_url, payload)
+    VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)`);
   const insertDeadline = db.prepare(`
     INSERT OR IGNORE INTO deadlines (id, edition_id, round_label, kind, instant_utc, source_text, timezone, quality)
     VALUES (?, ?, ?, ?, ?, ?, ?, ?)`);
@@ -102,6 +104,7 @@ export function createDatabase(catalog) {
         edition.region ?? null,
         edition.format ?? null,
         edition.websiteUrl ?? null,
+        JSON.stringify(edition),
       );
       for (const round of edition.rounds ?? []) {
         for (const deadline of round.deadlines ?? []) {
@@ -188,6 +191,19 @@ export function queryEditionIds(db, filters, { now = Date.now() } = {}) {
     ${where.length ? `WHERE ${where.join(' AND ')}` : ''}
     ORDER BY e.id`;
   return db.prepare(sql).all(...params).map((row) => row.id);
+}
+
+/**
+ * Đọc kỳ hội nghị từ SQLite theo đúng shape contracts.md (TV1-06).
+ * @param {string[] | null} ids null = tất cả; giữ thứ tự id như queryEditionIds trả về
+ */
+export function listEditions(db, ids = null) {
+  if (ids === null) {
+    return db.prepare('SELECT payload FROM editions ORDER BY rowid').all().map((row) => JSON.parse(row.payload));
+  }
+  if (!ids.length) return [];
+  const statement = db.prepare('SELECT payload FROM editions WHERE id = ?');
+  return ids.map((id) => statement.get(id)).filter(Boolean).map((row) => JSON.parse(row.payload));
 }
 
 // Cache kết quả AI (TV4-06). created_at là milliseconds để so sánh thẳng với now.

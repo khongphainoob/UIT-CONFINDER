@@ -29,6 +29,33 @@ describe('API nền', () => {
     assert.ok(!data.editions.some((edition) => edition.id.startsWith('fixture-')));
   });
 
+  test('conferences đọc từ SQLite: không tham số thì đủ mọi kỳ, giữ nguyên shape', async () => {
+    const data = await (await fetch(`${ctx.base}/api/conferences`)).json();
+    assert.equal(data.editions.length, ctx.catalog.editions.length);
+    assert.equal(data.meta.total, ctx.catalog.editions.length);
+    assert.deepEqual(data.editions[0], ctx.catalog.editions[0]);
+    assert.equal(data.meta.filters, undefined);
+  });
+
+  test('conferences lọc bằng SQL: Việt Nam, CCF ≥ B, còn hạn trong 180 ngày', async () => {
+    const data = await (await fetch(`${ctx.base}/api/conferences?country=vn&ccfMin=b&withinDays=180`)).json();
+    assert.ok(data.editions.length > 0);
+    assert.ok(data.editions.every((edition) => edition.country === 'VN' && ['A', 'B'].includes(edition.ranks.ccf)));
+    assert.deepEqual(data.meta.filters, {
+      region: null, countries: ['VN'], ccfMin: 'B', coreMin: null, withinDays: 180, fields: [],
+    });
+  });
+
+  test('conferences: giá trị lạ bị bỏ qua, không lỗi và không chèn được SQL', async () => {
+    const response = await fetch(`${ctx.base}/api/conferences?region=${encodeURIComponent("asia' OR 1=1 --")}&field=ZZ`);
+    const data = await response.json();
+    assert.equal(response.status, 200);
+    assert.equal(data.editions.length, ctx.catalog.editions.length);
+    const europe = await (await fetch(`${ctx.base}/api/conferences?region=europe&field=se`)).json();
+    assert.ok(europe.editions.length > 0);
+    assert.ok(europe.editions.every((edition) => edition.region === 'europe' && edition.fields[0] === 'SE'));
+  });
+
   test('CORS: domain được phép nhận header, domain lạ thì không', async () => {
     const allowed = await fetch(`${ctx.base}/api/health`, { headers: { origin: ORIGIN } });
     assert.equal(allowed.headers.get('access-control-allow-origin'), ORIGIN);

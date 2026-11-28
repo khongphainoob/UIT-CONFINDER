@@ -22,5 +22,5 @@ export function createServices({ config, catalog, generate = generateJson, now =
   const matchService = createMatchService({
     config, catalog, db, index, budget, countries: catalog.countries, generate, now,
   });
-  return { db, index, budget, matchService };
+  return { db, index, budget, matchService, now };
 }
