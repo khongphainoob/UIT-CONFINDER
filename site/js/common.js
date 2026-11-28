@@ -10,7 +10,9 @@ const navigation = [
   ['explore', 'Hội nghị', ROUTES.conferences],
   // Luôn hiện để người xem biết có tính năng này. Khi chưa có backend (AI_API_BASE trống),
   // trang match tự báo "chưa bật" và chỉ sang trang Hội nghị, không để trang hỏng.
-  ['match', 'Gợi ý AI', ROUTES.match],
+  // `?? 'match.html'`: trình duyệt có thể còn routes.js cũ trong cache (GitHub Pages cache 10 phút,
+  // bản cũ chưa có khóa match) trong khi common.js đã mới, khi đó link thành "undefined" và báo 404.
+  ['match', 'Gợi ý AI', ROUTES.match ?? 'match.html'],
   ['saved', 'Đã lưu', ROUTES.saved],
   ['about', 'Giới thiệu dữ liệu', ROUTES.about],
 ];
