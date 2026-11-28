@@ -77,10 +77,13 @@ test('requestMatch: lỗi mạng, hết giờ, dữ liệu sai định dạng, c
   const network = await requestMatch({ apiBase: BASE, description: 'x', fetchImpl: async () => { throw new TypeError('fetch failed'); } });
   assert.equal(network.error.code, 'NETWORK');
 
+  // AbortSignal.timeout dùng timer không giữ tiến trình sống: Node 22 thấy event loop trống và hủy test
+  // (CI báo "Promise resolution is still pending"). Giữ một timer thường cho tới khi có kết quả.
+  const keepAlive = setTimeout(() => {}, 5_000);
   const timeout = await requestMatch({
     apiBase: BASE, description: 'x', timeoutMs: 10,
     fetchImpl: (url, init) => new Promise((resolve, reject) => init.signal.addEventListener('abort', () => reject(init.signal.reason))),
-  });
+  }).finally(() => clearTimeout(keepAlive));
   assert.equal(timeout.error.code, 'TIMEOUT');
 
   // Kết quả có edition không khớp id: không tin, không render
