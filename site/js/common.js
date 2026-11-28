@@ -1,4 +1,5 @@
-// TV2: chỉ shell UI (sprite icon, header, nav, menu mobile, footer). Không fetch dữ liệu, không lưu hội nghị ở đây.
+// TV2: chỉ shell UI (sprite icon, header, nav, menu mobile, footer, nạp widget AI). Không fetch dữ liệu, không lưu hội nghị ở đây.
+import { AI_API_BASE } from './config.js';
 import { ROUTES } from './routes.js';
 
 // Tham khảo Hoagjaxz/uit-confinder: tools/chrome.mjs (khung header/footer, brand), site/js/nav.js (menu + Escape).
@@ -7,6 +8,8 @@ import { ROUTES } from './routes.js';
 const navigation = [
   ['home', 'Trang chủ', ROUTES.home],
   ['explore', 'Hội nghị', ROUTES.conferences],
+  // Chỉ hiện khi có backend AI (config.js); trên bản chưa có server thì ẩn để không dẫn tới trang không dùng được.
+  ...(AI_API_BASE ? [['match', 'Gợi ý AI', ROUTES.match]] : []),
   ['saved', 'Đã lưu', ROUTES.saved],
   ['about', 'Giới thiệu dữ liệu', ROUTES.about],
 ];
@@ -45,6 +48,7 @@ const SPRITE = `<svg id="icon-sprite" xmlns="http://www.w3.org/2000/svg" aria-hi
 <symbol id="i-check" viewBox="0 0 24 24"><path d="M20 6 9 17l-5-5"/></symbol>
 <symbol id="i-pause" viewBox="0 0 24 24"><path d="M6 4h4v16H6zM14 4h4v16h-4z"/></symbol>
 <symbol id="i-approx" viewBox="0 0 24 24"><path d="M4 9c2.7-2.4 5.3-2.4 8 0s5.3 2.4 8 0M4 15c2.7-2.4 5.3-2.4 8 0s5.3 2.4 8 0"/></symbol>
+<symbol id="i-sparkles" viewBox="0 0 24 24"><path d="M9.937 15.5A2 2 0 0 0 8.5 14.063l-6.135-1.582a.5.5 0 0 1 0-.962L8.5 9.936A2 2 0 0 0 9.937 8.5l1.582-6.135a.5.5 0 0 1 .963 0L14.063 8.5A2 2 0 0 0 15.5 9.937l6.135 1.581a.5.5 0 0 1 0 .964L15.5 14.063a2 2 0 0 0-1.437 1.437l-1.582 6.135a.5.5 0 0 1-.963 0z"/><path d="M20 3v4M22 5h-4M4 17v2M5 18H3"/></symbol>
 <symbol id="i-help" viewBox="0 0 24 24"><circle cx="12" cy="12" r="10"/><path d="M9.1 9a3 3 0 0 1 5.8 1c0 2-3 3-3 3M12 17h.01"/></symbol>
 </svg>`;
 
@@ -96,7 +100,7 @@ function createNav(className, label, items, current) {
   return nav;
 }
 
-// pageKey: 'home' | 'explore' | 'detail' | 'saved' | 'about' | 'components'
+// pageKey: 'home' | 'explore' | 'detail' | 'match' | 'saved' | 'about' | 'components'
 export function initCommonUI(pageKey) {
   if (!document.getElementById('icon-sprite')) document.body.insertAdjacentHTML('afterbegin', SPRITE);
   // main nhận focus khi bấm skip link
@@ -171,6 +175,15 @@ export function initCommonUI(pageKey) {
     legal.append(note, team);
 
     footer.replaceChildren(grid, legal);
+  }
+
+  // Widget AI (js/ui/ai-assistant.js): chỉ tải khi đã cấu hình backend. import() động để tránh
+  // vòng import (widget dùng createIcon của file này) và để trang không tốn tải khi chưa có backend.
+  // Trang Gợi ý AI đã có form đầy đủ nên không cần nút nổi.
+  if (AI_API_BASE && pageKey !== 'match') {
+    import('./ui/ai-assistant.js')
+      .then(({ initAiAssistant }) => initAiAssistant({ apiBase: AI_API_BASE }))
+      .catch((error) => console.error('Không tải được widget AI:', error));
   }
 }
 

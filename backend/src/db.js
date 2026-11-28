@@ -1,6 +1,10 @@
 // SQLite có sẵn trong Node (node:sqlite). DB nằm trong bộ nhớ và được nạp lại từ JSON
 // mỗi lần server khởi động, vì Render bản miễn phí xóa ổ đĩa sau mỗi lần deploy (QĐ4).
 import { DatabaseSync } from 'node:sqlite';
+import { CCF_RANKS, CORE_RANKS, ranksAtLeast } from './filters.js';
+import { regionsWithin } from './normalize.js';
+
+const DAY_MS = 24 * 60 * 60 * 1000;
 
 const SCHEMA = `
 CREATE TABLE series (
@@ -38,7 +42,7 @@ CREATE TABLE deadlines (
 CREATE TABLE match_cache (
   query_hash  TEXT PRIMARY KEY,
   result_json TEXT NOT NULL,
-  created_at  TEXT NOT NULL
+  created_at  INTEGER NOT NULL
 );
 CREATE TABLE ingest_log (
   id             INTEGER PRIMARY KEY AUTOINCREMENT,
@@ -49,11 +53,13 @@ CREATE TABLE ingest_log (
 );
 CREATE INDEX idx_editions_series ON editions(series_key);
 CREATE INDEX idx_editions_region ON editions(region, country);
-CREATE INDEX idx_deadlines_edition ON deadlines(edition_id);
+CREATE INDEX idx_deadlines_edition ON deadlines(edition_id, instant_utc);
 `;
 
-function toUtc(instant) {
-  const time = instant ? Date.parse(instant) : Number.NaN;
+// Chỉ mốc có giờ chính xác mới tính là "còn hạn", giống getNextSubmission (contracts.md mục 2).
+function toUtc(deadline) {
+  if (deadline.precision !== 'instant' || ['estimated', 'tba'].includes(deadline.quality)) return null;
+  const time = deadline.instant ? Date.parse(deadline.instant) : Number.NaN;
   return Number.isFinite(time) ? new Date(time).toISOString() : null;
 }
 
@@ -103,8 +109,8 @@ export function createDatabase(catalog) {
             `${edition.id}:${deadline.id}`,
             edition.id,
             round.label ?? null,
-            deadline.kind ?? null,
-            toUtc(deadline.instant),
+            deadline.type ?? null,
+            toUtc(deadline),
             deadline.sourceText ?? null,
             deadline.timezone ?? null,
             deadline.quality ?? null,
@@ -125,18 +131,78 @@ export function countEditions(db) {
   return db.prepare('SELECT COUNT(*) AS total FROM editions').get().total;
 }
 
+function placeholders(values) {
+  return values.map(() => '?').join(', ');
+}
+
 /**
- * TODO(TV1-05): lọc kỳ hội nghị bằng SQL theo bộ lọc đã qua validateFilters.
- * Bắt buộc dùng tham số `?`, không nối chuỗi người dùng vào câu SQL.
+ * Lọc kỳ hội nghị bằng SQL theo bộ lọc ĐÃ qua validateFilters (TV1-05).
+ * Mọi giá trị đi vào câu SQL qua tham số `?`; phần nối chuỗi chỉ là tên cột và dấu `?` do code tự sinh.
  *
- * @param {import('node:sqlite').DatabaseSync} db
- * @param {{ region?: string|null, countries?: string[], ccfMin?: string|null,
- *           coreMin?: string|null, withinDays?: number|null, fields?: string[] }} filters
- * @param {{ now?: number }} [options]
- * @returns {string[]} danh sách edition id thỏa điều kiện
+ * - region và countries cùng có thì lấy hợp (OR): "châu Á hoặc Úc".
+ * - withinDays: còn ít nhất một mốc chính xác trong (now, now + N ngày], cùng quy tắc với futureDeadlines.
+ *
+ * @returns {string[]} edition id
  */
 export function queryEditionIds(db, filters, { now = Date.now() } = {}) {
-  void filters;
-  void now;
-  return db.prepare('SELECT id FROM editions').all().map((row) => row.id);
+  const where = [];
+  const params = [];
+
+  const place = [];
+  if (filters.region) {
+    const regions = regionsWithin(filters.region);
+    place.push(`e.region IN (${placeholders(regions)})`);
+    params.push(...regions);
+  }
+  if (filters.countries?.length) {
+    place.push(`e.country IN (${placeholders(filters.countries)})`);
+    params.push(...filters.countries);
+  }
+  if (place.length) where.push(`(${place.join(' OR ')})`);
+
+  const ccf = ranksAtLeast(filters.ccfMin, CCF_RANKS);
+  if (ccf.length) {
+    where.push(`s.ccf IN (${placeholders(ccf)})`);
+    params.push(...ccf);
+  }
+  const core = ranksAtLeast(filters.coreMin, CORE_RANKS);
+  if (core.length) {
+    where.push(`s.core IN (${placeholders(core)})`);
+    params.push(...core);
+  }
+  if (filters.fields?.length) {
+    where.push(`s.field IN (${placeholders(filters.fields)})`);
+    params.push(...filters.fields);
+  }
+  if (filters.withinDays) {
+    const kinds = filters.kind === 'abstract' || filters.kind === 'paper' ? [filters.kind] : ['abstract', 'paper'];
+    where.push(`EXISTS (
+      SELECT 1 FROM deadlines d
+      WHERE d.edition_id = e.id
+        AND d.kind IN (${placeholders(kinds)})
+        AND d.instant_utc > ? AND d.instant_utc <= ?)`);
+    params.push(...kinds, new Date(now).toISOString(), new Date(now + filters.withinDays * DAY_MS).toISOString());
+  }
+
+  const sql = `SELECT e.id FROM editions e JOIN series s ON s.key = e.series_key
+    ${where.length ? `WHERE ${where.join(' AND ')}` : ''}
+    ORDER BY e.id`;
+  return db.prepare(sql).all(...params).map((row) => row.id);
+}
+
+// Cache kết quả AI (TV4-06). created_at là milliseconds để so sánh thẳng với now.
+export function readMatchCache(db, hash, { now, ttlMs }) {
+  const row = db.prepare('SELECT result_json, created_at FROM match_cache WHERE query_hash = ?').get(hash);
+  if (!row || now - row.created_at > ttlMs) return null;
+  return JSON.parse(row.result_json);
+}
+
+export function writeMatchCache(db, hash, result, { now }) {
+  db.prepare('INSERT OR REPLACE INTO match_cache (query_hash, result_json, created_at) VALUES (?, ?, ?)')
+    .run(hash, JSON.stringify(result), now);
+}
+
+// Dọn bản hết hạn để bảng không phình mãi khi server chạy lâu.
+export function pruneMatchCache(db, { now, ttlMs }) {
+  db.prepare('DELETE FROM match_cache WHERE created_at < ?').run(now - ttlMs);
 }

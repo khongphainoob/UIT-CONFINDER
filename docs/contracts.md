@@ -69,7 +69,7 @@ Các hàm TV4 hiện là stub; chưa có lưu/xuất lịch thật trong starter
 
 ## 4. UI chung (TV2)
 
-- `initCommonUI(pageKey)` chỉ dựng nav/footer và menu mobile; không xử lý business. pageKey: `home | explore | detail | saved | about | components`; `detail` đánh dấu mục Khám phá.
+- `initCommonUI(pageKey)` chỉ dựng nav/footer và menu mobile; không xử lý business. pageKey: `home | explore | detail | match | saved | about | components`; `detail` đánh dấu mục Khám phá.
 - `showState(host,{kind,title,message,action?})` dùng DOM/textContent; kind loading/error/empty. `action` tuỳ chọn: `{label,onClick}` (nút, vd. Thử lại) hoặc `{label,href}` (liên kết http/https hoặc tương đối). Không truyền `action` thì chạy như cũ.
 - `createIcon(name, className?)` trong common.js trả `<svg class="icon">` dùng sprite `#i-<name>`; dùng khi render bằng DOM API.
 - tokens/base/components là nền chung; chủ trang tự viết layout/responsive CSS của mình.
@@ -83,3 +83,8 @@ URL multi-select dùng params lặp. Lọc OR trong nhóm, AND giữa nhóm, sor
 ## 6. Khi contract đổi
 
 Chủ module sửa docs này cùng PR, đưa ví dụ input/output, báo TV đang gọi module, và chỉ merge sau review. Không đổi ID/field để chữa lỗi riêng của một trang. Stub chưa làm phải ném lỗi rõ, không trả kết quả giả khiến các trang hiểu đã có chức năng.
+
+## 6. Backend và gợi ý AI (TV4)
+
+- `GET /api/conferences` trả cùng shape mục 1, mỗi edition có thêm `country` (mã ISO 2 chữ hoặc null) và `region` (`vietnam | sea | asia | europe | america | oceania | africa` hoặc null).
+- `POST /api/match`, mã lỗi và widget: [ai-assistant.md](ai-assistant.md). Widget chỉ dùng `site/js/ai-match-client.js`, không tự gọi fetch ở chỗ khác.

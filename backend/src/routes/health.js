@@ -2,7 +2,7 @@
 import { Router } from 'express';
 import { countEditions } from '../db.js';
 
-export function createHealthRouter({ config, catalog, db }) {
+export function createHealthRouter({ config, catalog, db, budget }) {
   const router = Router();
 
   router.get('/health', (req, res) => {
@@ -12,6 +12,8 @@ export function createHealthRouter({ config, catalog, db }) {
       source: catalog.meta.backendSource,
       dataUpdatedAt: catalog.meta.fetchedAt ?? null,
       aiConfigured: Boolean(config.gemini.apiKey && config.gemini.model),
+      // Chỉ số lượt đã dùng, không có thông tin người dùng.
+      aiBudget: { used: budget.snapshot().used, dailyLimit: budget.snapshot().dailyLimit },
     });
   });
 

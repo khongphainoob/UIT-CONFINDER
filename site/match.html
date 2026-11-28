@@ -1,0 +1,61 @@
+<!doctype html>
+<html lang="vi">
+<head>
+  <meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
+  <title>Gợi ý hội nghị bằng AI · UIT ConFinder</title>
+  <meta name="description" content="Mô tả đề tài nghiên cứu bằng tiếng Việt hoặc tiếng Anh, AI gợi ý 5 hội nghị khoa học phù hợp kèm lý do, lọc trong dữ liệu hạn nộp thật.">
+  <link rel="icon" href="assets/favicon-32.png" sizes="32x32" type="image/png"><link rel="icon" href="assets/favicon.svg" type="image/svg+xml">
+  <link rel="apple-touch-icon" href="assets/apple-touch-icon.png">
+  <link rel="preconnect" href="https://fonts.googleapis.com"><link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link rel="stylesheet" href="css/tokens.css"><link rel="stylesheet" href="css/base.css">
+  <link rel="stylesheet" href="css/components.css"><link rel="stylesheet" href="css/ai-assistant.css"><link rel="stylesheet" href="css/pages/match.css">
+  <script type="module" src="js/pages/match.js"></script>
+</head>
+<body>
+  <a class="skip-link" href="#main">Đến nội dung chính</a>
+  <header class="site-header" data-site-header></header>
+  <main id="main" class="container stack match-page">
+    <header class="page-head">
+      <h1>Gợi ý hội nghị bằng AI</h1>
+      <p class="page-head__lead">Mô tả đề tài và mong muốn của bạn. AI rút ra tiêu chí, hệ thống lọc trong dữ liệu hội nghị thật, rồi AI chọn tối đa 5 nơi phù hợp nhất kèm lý do.</p>
+    </header>
+
+    <div class="match-layout">
+      <section class="card match-ask" aria-labelledby="match-ask-title">
+        <h2 id="match-ask-title" class="match-ask__title">Yêu cầu của bạn</h2>
+        <form class="ai-form" id="match-form">
+          <label class="field">Mô tả đề tài và mong muốn
+            <textarea id="match-description" name="description" rows="8" aria-describedby="match-count"
+              placeholder="Ví dụ: đề tài, khu vực muốn đi, hạng tối thiểu (CCF, CORE), còn bao lâu để viết bài… Có thể dán tóm tắt bài báo."></textarea>
+            <span class="field__hint ai-form__count" id="match-count">0/1.500 ký tự</span>
+          </label>
+          <div data-examples></div>
+          <button class="button ai-form__submit" type="submit">Gợi ý cho tôi</button>
+        </form>
+
+        <details class="match-how">
+          <summary class="match-how__summary">AI xử lý yêu cầu thế nào?</summary>
+          <ol class="match-how__steps">
+            <li>AI đọc mô tả và rút ra tiêu chí: khu vực, hạng, thời gian, lĩnh vực, từ khóa tiếng Anh.</li>
+            <li>Hệ thống kiểm tra tiêu chí, giá trị lạ bị bỏ.</li>
+            <li>Lọc trong cơ sở dữ liệu hội nghị thật. Không có kết quả thì nới dần tiêu chí và báo cho bạn.</li>
+            <li>Chấm điểm theo từ khóa, giữ 20 hội nghị khớp nhất.</li>
+            <li>AI chọn tối đa 5 trong 20 hội nghị đó và viết lý do. AI không thể đưa ra hội nghị ngoài danh sách.</li>
+          </ol>
+        </details>
+        <p class="match-note">AI có thể sai. Hạn nộp hiển thị lấy từ dữ liệu CCFDDL, không phải do AI viết; luôn kiểm tra lại trên trang chính thức của hội nghị.</p>
+      </section>
+
+      <section class="match-results" aria-labelledby="match-results-title">
+        <h2 id="match-results-title">Kết quả</h2>
+        <div class="ai-status" id="match-status" role="status" aria-live="polite"></div>
+        <div class="ai-output" id="match-output">
+          <p class="match-empty">Nhập mô tả hoặc chọn một câu ví dụ rồi bấm "Gợi ý cho tôi". Bạn có thể bấm vào từng tiêu chí AI rút ra để bỏ nó và gợi ý lại.</p>
+        </div>
+      </section>
+    </div>
+  </main>
+  <footer class="site-footer" data-site-footer></footer>
+  <noscript>Hãy bật JavaScript để dùng gợi ý hội nghị.</noscript>
+</body>
+</html>
