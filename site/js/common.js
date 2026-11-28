@@ -8,8 +8,9 @@ import { ROUTES } from './routes.js';
 const navigation = [
   ['home', 'Trang chủ', ROUTES.home],
   ['explore', 'Hội nghị', ROUTES.conferences],
-  // Chỉ hiện khi có backend AI (config.js); trên bản chưa có server thì ẩn để không dẫn tới trang không dùng được.
-  ...(AI_API_BASE ? [['match', 'Gợi ý AI', ROUTES.match]] : []),
+  // Luôn hiện để người xem biết có tính năng này. Khi chưa có backend (AI_API_BASE trống),
+  // trang match tự báo "chưa bật" và chỉ sang trang Hội nghị, không để trang hỏng.
+  ['match', 'Gợi ý AI', ROUTES.match],
   ['saved', 'Đã lưu', ROUTES.saved],
   ['about', 'Giới thiệu dữ liệu', ROUTES.about],
 ];
