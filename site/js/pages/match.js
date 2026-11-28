@@ -1,6 +1,6 @@
 // TV2 (bố cục) + TV4 (gọi AI): trang Gợi ý hội nghị bằng AI.
 // Khung trang nằm trong match.html; file này nối form với ui/ai-session.js và dựng kết quả bằng thẻ hội nghị chung.
-import { DESCRIPTION_MAX } from '../ai-match-client.js';
+import { DESCRIPTION_MAX, warmUp } from '../ai-match-client.js';
 import { initCommonUI } from '../common.js';
 import { AI_API_BASE } from '../config.js';
 import { getNextSubmission } from '../deadline-utils.js';
@@ -58,6 +58,8 @@ if (!AI_API_BASE) {
     action: { label: 'Mở trang Hội nghị', href: ROUTES.conferences },
   });
 } else {
+  // Vào trang là đánh thức backend (Render ngủ sau 15 phút) trong lúc người dùng còn đang gõ mô tả.
+  warmUp(AI_API_BASE);
   const session = bindAiSession({
     apiBase: AI_API_BASE, form, textarea, hint, submit, status, output,
     renderResults: renderFullResults,
