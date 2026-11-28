@@ -4,11 +4,15 @@ import { getNextSubmission } from '../deadline-utils.js';
 import { getSavedIds } from '../saved-store.js';
 import { createDataNotice, createEditionCard, FIELD_LABELS } from '../ui/edition-card.js';
 import { showState } from '../ui/state.js';
+import { REGION_LABELS, REGION_TREE } from '../place-utils.js';
 import {
   DEFAULT_STATE,
   applyFilters,
+  countByPlace,
+  countHiddenPast,
   findNextDeadlineTime,
   normalizeState,
+  PAGE_SIZE,
   paginate,
   parseState,
   serializeState,
@@ -25,7 +29,7 @@ const paginationRoot = document.querySelector('#pagination');
 const noticeRoot = document.querySelector('#data-source-notice');
 
 let catalog = { editions: [] };
-let state = { ...DEFAULT_STATE, fields: [], ccf: [], core: [], mode: [] };
+let state = copyDefaultState();
 let validFields = [];
 let savedIds = [];
 let searchTimer = null;
@@ -35,13 +39,17 @@ const MAX_TIMEOUT = 2_147_000_000;
 
 // Các nhãn này nằm gần phần giao diện để người đọc dễ sửa chữ hiển thị.
 const KIND_LABELS = { any: 'Mọi hạn nộp', abstract: 'Abstract', paper: 'Full paper' };
-const WINDOW_LABELS = { all: 'Mọi thời điểm', 7: '7 ngày tới', 14: '14 ngày tới', 30: '30 ngày tới', 90: '90 ngày tới' };
+const WINDOW_LABELS = { all: 'Mọi thời điểm', 7: '7 ngày tới', 14: '14 ngày tới', 30: '30 ngày tới', 90: '90 ngày tới', 180: '180 ngày tới' };
+// Chip nhanh dưới ô tìm kiếm: những khu vực người học ở Việt Nam hay chọn nhất (theo góp ý của giảng viên).
+const QUICK_REGIONS = ['vietnam', 'sea', 'asia', 'europe', 'north-america'];
+const COUNTRY_NAMES = new Intl.DisplayNames(['vi'], { type: 'region' });
+const countryName = (code) => { try { return COUNTRY_NAMES.of(code) ?? code; } catch { return code; } };
 const SORT_LABELS = { deadline: 'Hạn gần nhất', name: 'Tên A–Z', ccf: 'Hạng CCF', core: 'Hạng CORE' };
 const CCF_OPTIONS = { A: 'CCF A', B: 'CCF B', C: 'CCF C' };
 const CORE_OPTIONS = { 'A*': 'CORE A*', A: 'CORE A', B: 'CORE B', C: 'CORE C' };
 const MODE_OPTIONS = { online: 'Online', offline: 'Offline', hybrid: 'Hybrid' };
 function copyDefaultState() {
-  return { ...DEFAULT_STATE, fields: [], ccf: [], core: [], mode: [] };
+  return { ...DEFAULT_STATE, fields: [], ccf: [], core: [], mode: [], region: [], country: '' };
 }
 
 function getStateUrl(nextState = state) {
@@ -158,7 +166,99 @@ function createFilterGroup(key, title, selectedCount, body, open) {
   return group;
 }
 
+function filterOptions(now = Date.now()) {
+  return { now, validFields, getNextSubmission };
+}
+
+// Một ô chọn khu vực kèm số kỳ; khu vực con thụt vào trong khu vực cha.
+function createRegionOption(code, count, child) {
+  const label = document.createElement('label');
+  label.className = `option region-option${child ? ' region-option--child' : ''}`;
+  const input = document.createElement('input');
+  input.type = 'checkbox';
+  input.name = 'region';
+  input.value = code;
+  input.dataset.focusKey = `opt:region:${code}`;
+  input.checked = state.region.includes(code);
+  input.addEventListener('change', () => toggleArrayFilter('region', code, input.checked));
+  const count_ = document.createElement('span');
+  count_.className = 'region-option__count';
+  count_.textContent = String(count);
+  label.append(input, REGION_LABELS[code], count_);
+  return label;
+}
+
+// Cây khu vực lấy từ place-utils.js: Châu Á (Việt Nam, Đông Nam Á, Đông Á…), Châu Âu, Châu Mỹ (Bắc Mỹ, Mỹ Latinh)…
+function createRegionTree(counts) {
+  const fieldset = document.createElement('fieldset');
+  fieldset.className = 'explore-filter-group';
+  const legend = document.createElement('legend');
+  legend.className = 'visually-hidden';
+  legend.textContent = 'Khu vực tổ chức';
+  const list = document.createElement('div');
+  list.className = 'explore-filter-group__options';
+  for (const node of REGION_TREE) {
+    list.append(createRegionOption(node.code, counts.regions[node.code] ?? 0, false));
+    for (const child of node.children) list.append(createRegionOption(child.code, counts.regions[child.code] ?? 0, true));
+  }
+  fieldset.append(legend, list);
+  return fieldset;
+}
+
+// Ô chọn một quốc gia cụ thể (tên tiếng Việt, kèm số kỳ), cộng dồn với khu vực đã chọn.
+function createCountrySelect(counts) {
+  const label = document.createElement('label');
+  label.className = 'field';
+  label.textContent = 'Hoặc một quốc gia';
+  const select = document.createElement('select');
+  select.name = 'country';
+  select.dataset.focusKey = 'country';
+  const all = document.createElement('option');
+  all.value = '';
+  all.textContent = 'Mọi quốc gia';
+  select.append(all);
+  const codes = Object.keys(counts.countries);
+  if (state.country && !codes.includes(state.country)) codes.push(state.country);
+  codes
+    .map((code) => [code, countryName(code)])
+    .sort((a, b) => a[1].localeCompare(b[1], 'vi'))
+    .forEach(([code, name]) => {
+      const option = document.createElement('option');
+      option.value = code;
+      option.textContent = `${name} (${counts.countries[code] ?? 0})`;
+      select.append(option);
+    });
+  select.value = state.country;
+  select.addEventListener('change', () => changeFilters({ country: select.value }));
+  label.append(select);
+  return label;
+}
+
+// Chip nhanh theo khu vực: bấm là bật/tắt đúng khu vực đó, không cần mở nhóm lọc.
+function createQuickRegions() {
+  const row = document.createElement('div');
+  row.className = 'explore-quick';
+  row.setAttribute('role', 'group');
+  row.setAttribute('aria-label', 'Lọc nhanh theo khu vực');
+  for (const code of QUICK_REGIONS) {
+    const chip = document.createElement('button');
+    chip.type = 'button';
+    chip.className = 'chip';
+    chip.dataset.focusKey = `quick:${code}`;
+    const pressed = state.region.includes(code);
+    chip.setAttribute('aria-pressed', String(pressed));
+    const face = document.createElement('span');
+    face.className = 'chip__face';
+    face.textContent = REGION_LABELS[code];
+    chip.append(face);
+    chip.addEventListener('click', () => toggleArrayFilter('region', code, !pressed));
+    row.append(chip);
+  }
+  return row;
+}
+
 function renderFilters() {
+  const placeCounts = countByPlace(catalog.editions, state, filterOptions());
   const form = document.createElement('form');
   form.className = 'explore-filters';
   form.setAttribute('role', 'search');
@@ -227,6 +327,7 @@ function renderFilters() {
     ['fields', 'Lĩnh vực', state.fields.length, [createCheckboxGroup('Lĩnh vực', 'fields', fieldOptions)]],
     ['ccf', 'CCF', state.ccf.length, [createCheckboxGroup('Xếp hạng CCF', 'ccf', CCF_OPTIONS)]],
     ['core', 'CORE', state.core.length, [createCheckboxGroup('Hạng CORE', 'core', CORE_OPTIONS)]],
+    ['place', 'Khu vực', state.region.length + (state.country ? 1 : 0), [createRegionTree(placeCounts), createCountrySelect(placeCounts)]],
     ['mode', 'Hình thức', state.mode.length, [createCheckboxGroup('Hình thức', 'mode', MODE_OPTIONS)]],
     ['deadline', 'Hạn nộp', deadlineCount, [kind.label, windowField.label, pastLabel]],
   ];
@@ -237,7 +338,7 @@ function renderFilters() {
     const previous = filterRoot.querySelector(`[data-group="${key}"]`);
     groups.append(createFilterGroup(key, title, count, body, previous ? previous.open : count > 0));
   }
-  form.append(head, searchRow, sort.label, groups);
+  form.append(head, searchRow, createQuickRegions(), sort.label, groups);
 
   function updateSearch() {
     changeFilters(
@@ -302,6 +403,8 @@ function renderActiveFilters() {
   for (const value of state.fields) entries.push([`Lĩnh vực: ${value}`, () => removeArrayValue('fields', value)]);
   for (const value of state.ccf) entries.push([`CCF ${value}`, () => removeArrayValue('ccf', value)]);
   for (const value of state.core) entries.push([`CORE ${value}`, () => removeArrayValue('core', value)]);
+  for (const value of state.region) entries.push([`Khu vực: ${REGION_LABELS[value]}`, () => removeArrayValue('region', value)]);
+  if (state.country) entries.push([`Quốc gia: ${countryName(state.country)}`, () => changeFilters({ country: '' })]);
   for (const value of state.mode) entries.push([`Hình thức: ${value}`, () => removeArrayValue('mode', value)]);
   if (state.kind !== DEFAULT_STATE.kind) entries.push([`Loại: ${KIND_LABELS[state.kind]}`, () => changeFilters({ kind: DEFAULT_STATE.kind })]);
   if (state.window !== DEFAULT_STATE.window) entries.push([`Hạn: ${WINDOW_LABELS[state.window]}`, () => changeFilters({ window: DEFAULT_STATE.window })]);
@@ -403,18 +506,30 @@ function renderResults() {
   } else {
     resultStatus.textContent = 'Tìm thấy 0 hội nghị · đang hiển thị 0–0';
   }
+  // Số kỳ khớp mọi điều kiện nhưng đang ẩn vì đã hết hạn: báo ra thay vì để người dùng tưởng không có.
+  const hiddenPast = countHiddenPast(catalog.editions, state, { now, validFields, getNextSubmission });
+  const showPast = () => {
+    changeFilters({ past: true });
+    focusResultStatus();
+  };
   if (!pageInfo.total) {
-    showState(host, {
-      title: 'Không có kết quả phù hợp',
-      message: 'Thử đổi từ khóa, nới bộ lọc hoặc đặt lại.',
-      action: {
-        label: 'Đặt lại bộ lọc',
-        onClick: () => {
-          setState(copyDefaultState());
-          focusResultStatus();
+    showState(host, hiddenPast > 0
+      ? {
+        title: `Có ${hiddenPast} kỳ khớp nhưng đã hết hạn nộp`,
+        message: 'Các kỳ này đang ẩn vì đã qua hạn. Bạn có thể xem để biết thời điểm nộp của kỳ sau.',
+        action: { label: 'Xem cả hạn đã qua', onClick: showPast },
+      }
+      : {
+        title: 'Không có kết quả phù hợp',
+        message: 'Thử đổi từ khóa, nới bộ lọc hoặc đặt lại.',
+        action: {
+          label: 'Đặt lại bộ lọc',
+          onClick: () => {
+            setState(copyDefaultState());
+            focusResultStatus();
+          },
         },
-      },
-    });
+      });
     paginationRoot.replaceChildren();
     return;
   }
@@ -425,7 +540,21 @@ function renderResults() {
     row.append(createEditionCard(item, { now, savedIds, onSavedChange: (ids) => { savedIds = ids; } }));
     list.append(row);
   });
-  host.replaceChildren(list);
+  const nodes = [list];
+  // Chỉ nhắc khi đang tìm theo tên hoặc còn ít kết quả; lúc duyệt mặc định có hàng nghìn kỳ cũ, nhắc chỉ gây nhiễu.
+  if (hiddenPast > 0 && (state.q || pageInfo.total < PAGE_SIZE)) {
+    const notice = document.createElement('p');
+    notice.className = 'explore-hidden';
+    notice.append(createIcon('help'), `Còn ${hiddenPast.toLocaleString('vi')} kỳ khớp bộ lọc đang ẩn vì đã hết hạn. `);
+    const button = document.createElement('button');
+    button.type = 'button';
+    button.className = 'button button--ghost explore-hidden__action';
+    button.textContent = 'Xem cả hạn đã qua';
+    button.addEventListener('click', showPast);
+    notice.append(button);
+    nodes.unshift(notice);
+  }
+  host.replaceChildren(...nodes);
   renderPagination(pageInfo);
 }
 

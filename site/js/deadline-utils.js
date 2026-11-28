@@ -98,6 +98,28 @@ export function getNextSubmission(edition, { kind = 'any', now = Date.now() } = 
   };
 }
 
+/**
+ * TV1-03: dự báo hạn kỳ sau cho kỳ đã đóng = hạn full paper (không có thì hạn muộn nhất) cộng 1 năm.
+ * Chỉ là ước lượng để người dùng biết khi nào nên chuẩn bị, KHÔNG dùng để đếm ngược hay xuất lịch.
+ * Trả null khi kỳ chưa đóng, không có mốc chính xác, hoặc kết quả dự báo cũng đã qua (kỳ quá cũ).
+ * @returns {{ instant: string, monthYear: string } | null}  monthYear dạng "tháng 11, 2027" theo GMT+7
+ */
+export function predictNextDeadline(edition, { now = Date.now() } = {}) {
+  const submission = getNextSubmission(edition, { kind: 'any', now });
+  if (submission.status !== 'closed') return null;
+  const exact = (edition.rounds ?? [])
+    .flatMap((round) => round?.deadlines ?? [])
+    .filter((d) => d && (d.type === 'paper' || d.type === 'abstract') && d.precision === 'instant' && Number.isFinite(Date.parse(d.instant)));
+  if (!exact.length) return null;
+  const papers = exact.filter((d) => d.type === 'paper');
+  const base = (papers.length ? papers : exact).reduce((a, b) => (Date.parse(a.instant) >= Date.parse(b.instant) ? a : b));
+  const next = new Date(Date.parse(base.instant));
+  next.setUTCFullYear(next.getUTCFullYear() + 1);
+  if (next.getTime() <= now) return null;
+  const monthYear = new Intl.DateTimeFormat('vi-VN', { timeZone: 'Asia/Ho_Chi_Minh', month: '2-digit', year: 'numeric' }).format(next);
+  return { instant: next.toISOString(), monthYear };
+}
+
 export function getUrgencyInfo(targetTime, now = Date.now()) {
   let timeMs = targetTime;
   if (typeof timeMs === 'string') {

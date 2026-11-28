@@ -1,6 +1,6 @@
 // Thẻ đeo hội nghị dùng chung cho trang Hội nghị và Đã lưu (style: .badge-card trong components.css).
 import { createIcon } from '../common.js';
-import { formatDateGMT7, formatTimeGMT7, getCountdownText, getUrgencyInfo } from '../deadline-utils.js';
+import { formatDateGMT7, formatTimeGMT7, getCountdownText, getUrgencyInfo, predictNextDeadline } from '../deadline-utils.js';
 import { ROUTES } from '../routes.js';
 import { toggleSaved } from '../saved-store.js';
 
@@ -26,7 +26,7 @@ export const FIELD_LABELS = {
   SE: 'SE — Kỹ thuật phần mềm',
 };
 
-function createRibbon(system, rank) {
+export function createRibbon(system, rank) {
   const classes = system === 'CORE' ? CORE_RIBBONS : CCF_RIBBONS;
   if (!Object.hasOwn(classes, rank)) return null;
   const ribbon = document.createElement('span');
@@ -166,6 +166,18 @@ export function createEditionCard(item, { now = Date.now(), savedIds = [], onSav
     const countdownText = getCountdownText(targetTime, now);
     countdown.textContent = countdownText.charAt(0).toLocaleUpperCase('vi') + countdownText.slice(1);
     status.append(countdown);
+  }
+
+  // Kỳ đã đóng: gợi ý thời điểm kỳ sau (ước lượng, ghi rõ "dự kiến" để không nhầm với hạn chính thức).
+  if (submission.status === 'closed') {
+    const predicted = predictNextDeadline(edition, { now });
+    if (predicted) {
+      const note = document.createElement('span');
+      note.className = 'badge-card__predict';
+      note.append(createIcon('approx'), `Kỳ sau dự kiến ${predicted.monthYear}`);
+      note.title = 'Ước lượng từ hạn năm nay cộng 1 năm, chưa phải hạn chính thức.';
+      status.append(note);
+    }
   }
 
   card.append(main, due, status, createSaveButton(edition, card, savedIds, onSavedChange));
