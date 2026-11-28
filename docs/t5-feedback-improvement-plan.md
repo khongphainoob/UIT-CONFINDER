@@ -31,6 +31,21 @@ Hướng sửa:
 3. **Thêm trang "Gợi ý hội nghị bằng AI"**: người dùng mô tả đề tài, hệ thống trả về 5 hội nghị phù hợp kèm lý do. Có chặn spam theo IP.
 4. **Viết tài liệu lưu vết prompt** trung thực.
 
+### Tiến độ (cập nhật 28/11/2026)
+
+| Hạng mục | Trạng thái | Ở đâu |
+|---|---|---|
+| Sửa lỗi CVPR, dự báo kỳ sau, báo số kỳ ẩn | Xong | `site/js/pages/explore-state.js`, `edition-card.js` |
+| Lọc châu lục / quốc gia / 180 ngày | Xong | `site/js/place-utils.js`, `conference-list.js` |
+| Backend Express + SQLite, `GET /api/conferences` đọc và lọc bằng SQL | Xong | `backend/src/routes/conferences.js`, `db.js` |
+| Gợi ý AI (`POST /api/match`), trang và widget | Xong | `backend/src/match.js`, `site/match.html` |
+| Chặn spam theo IP, ngân sách AI, giới hạn input | Xong | `backend/src/middleware/rate-limit.js`, `ai-budget.js` |
+| Ingest + crawl CFP + enrich, cron 03:00 hằng ngày | Xong, đã chạy thật | `backend/scripts/`, `.github/workflows/ingest.yml` |
+| Đồng bộ Google Calendar (OAuth) | Xong từ đợt trước (PR #20) | `site/js/google-calendar-sync.js` |
+| Lưu vết prompt | Xong phần TV4; TV1–TV3 bổ sung nhật ký phần mình | `docs/prompt-plan/` |
+| Deploy backend lên Render | **Chưa**: cần tài khoản Render của nhóm | `render.yaml` |
+| Đo lại Lighthouse sau khi thêm AI | **Chưa** | — |
+
 ---
 
 ## 2. Phạm vi (scope)
@@ -60,7 +75,7 @@ Chia theo mức ưu tiên. **Phải có** thì không được cắt. **Nên có
 
 | Không làm | Lý do |
 |---|---|
-| Đăng nhập, đăng ký | Thầy xác nhận không cần: công cụ tra cứu mở, ai vào dùng cũng được |
+| Tài khoản riêng của web (đăng ký, mật khẩu) | Thầy xác nhận không cần: công cụ tra cứu mở, ai vào dùng cũng được. **Đăng nhập Google để đồng bộ lịch vẫn có** (mục 2.1), nhưng chỉ để cấp quyền Calendar, web không lưu tài khoản |
 | Load balancing, nhiều server | Thầy xác nhận không cần: lượng truy cập thấp |
 | Viết lại frontend bằng React/Vue | Thầy không chê frontend. Viết lại mất nhiều thời gian mà không thêm điểm |
 | Lưu danh sách "Đã lưu" lên server | Không có tài khoản thì không biết lưu cho ai. Giữ `localStorage` |
@@ -207,11 +222,12 @@ Vì sao cách này tốt hơn "BM25 trên nguyên câu người dùng":
 
 **Bắt buộc cấu hình** `app.set('trust proxy', 1)`. Render chuyển request qua proxy, nếu thiếu dòng này thì mọi người dùng đều mang chung IP của proxy, và một người spam sẽ chặn cả trang.
 
-### QĐ10. Crawl trang CFP: `fetch` + `cheerio`
+### QĐ10. Crawl trang CFP: `fetch` + tách HTML bằng regex (không thêm thư viện)
 
 | | Lựa chọn | Đánh giá |
 |---|---|---|
-| ✅ **Chọn** | **`fetch` (có sẵn) + `cheerio` (đọc HTML)** | Nhẹ, nhanh, chạy tốt trên GitHub Actions. Phần lớn trang hội nghị là HTML tĩnh. |
+| ✅ **Chọn (khi làm thật)** | **`fetch` (có sẵn) + hàm tách link/chữ tự viết** | Chỉ cần 2 việc: lấy các thẻ `<a>` và lấy chữ của trang. Viết vài hàm nhỏ có test riêng (`backend/tests/cfp-crawler.test.js`), không thêm phụ thuộc. Chạy thật 28/11/2026 trên 385 hội nghị. |
+| ❌ (kế hoạch ban đầu) | `fetch` + `cheerio` | Đọc HTML chuẩn hơn, nhưng thêm một thư viện chỉ để làm 2 việc trên. Nếu sau này cần đọc cấu trúc phức tạp (bảng, nhiều tầng) thì chuyển sang cheerio. |
 | ❌ | Puppeteer, Playwright | Phải tải cả trình duyệt (vài trăm MB), chậm. Chỉ cần với trang render bằng JS, mà các trang đó có thể bỏ qua. |
 | ❌ | Không crawl, chỉ dùng tên hội nghị | AI chỉ biết tên nên gợi ý kém chính xác. Đây là phương án dự phòng nếu trễ. |
 
