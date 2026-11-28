@@ -137930,25 +137930,6 @@
       "enrichModel": "gemini-3.5-flash-lite",
       "enrichVersion": 1
     },
-    "SE/icse": {
-      "cfpCrawledAt": "2026-11-28T02:12:17.655Z",
-      "cfpUrl": "https://conf.researchr.org/track/cain-2027/cain-2027-call-for-papers",
-      "enrichTriedAt": "2026-11-28T02:36:32.581Z",
-      "summary": "CAIN focuses on software engineering for AI-enabled systems, applying software engineering principles and techniques to build systems that utilize AI and machine learning models.",
-      "topics": [
-        "agentic software",
-        "requirements engineering",
-        "security and safety engineering",
-        "data management for ai",
-        "software architecture",
-        "quality assurance",
-        "continuous integration and deployment",
-        "ai engineering life cycle"
-      ],
-      "enrichedAt": "2026-11-28T02:36:33.821Z",
-      "enrichModel": "gemini-3.5-flash-lite",
-      "enrichVersion": 1
-    },
     "CG/vis": {
       "cfpCrawledAt": "2026-11-28T02:12:23.556Z",
       "cfpError": "https://ieeevis.org/year/2026/info/call-participation/call-for-participation: trang CFP quá ngắn | https://ieeevis.org/year/2025/info/call-participation/call-for-participation: trang CFP quá ngắn"
@@ -139532,29 +139513,6 @@
       "enrichModel": "gemini-3.5-flash-lite",
       "enrichVersion": 1
     },
-    "SE/icsme": {
-      "cfpCrawledAt": "2026-11-28T02:18:27.218Z",
-      "cfpUrl": "https://conf.researchr.org/track/scam-2026/scam-2026-research-track",
-      "enrichTriedAt": "2026-11-28T02:43:46.535Z",
-      "summary": "The conference invites original and significant research papers focusing on source code analysis and manipulation, including static and dynamic analysis, program comprehension, bug location, and security vulnerability analysis.",
-      "topics": [
-        "abstract interpretation",
-        "bad smell detection",
-        "bug location and prediction",
-        "clone detection",
-        "decompilation",
-        "program comprehension",
-        "program slicing",
-        "program transformation and refactoring",
-        "security vulnerability analysis",
-        "source level metrics",
-        "source level optimization",
-        "source-level testing and verification"
-      ],
-      "enrichedAt": "2026-11-28T02:43:47.668Z",
-      "enrichModel": "gemini-3.5-flash-lite",
-      "enrichVersion": 1
-    },
     "SE/icsoc": {
       "cfpCrawledAt": "2026-11-28T02:18:33.340Z",
       "cfpUrl": "https://icsoc2026.it.p.lodz.pl/call-research-papers.html",
@@ -139618,25 +139576,6 @@
         "human mobility"
       ],
       "enrichedAt": "2026-11-28T02:44:04.564Z",
-      "enrichModel": "gemini-3.5-flash-lite",
-      "enrichVersion": 1
-    },
-    "DS/cgo": {
-      "cfpCrawledAt": "2026-11-28T02:18:42.244Z",
-      "cfpUrl": "https://conf.researchr.org/track/hpca-2027/hpca-2027-main-conference",
-      "enrichTriedAt": "2026-11-28T02:44:09.068Z",
-      "summary": "HPCA is a premier venue for presenting research results on high-performance computer architecture, including processor architecture, memory systems, parallelism, and emerging technologies.",
-      "topics": [
-        "processor, memory, and storage systems architecture",
-        "domain-specific architectures and accelerators",
-        "near/in-memory computing",
-        "cloud, datacenters, cluster/distributed systems",
-        "neuromorphic computing",
-        "quantum, superconducting and emerging technologies",
-        "reliability/fault tolerance",
-        "security/privacy"
-      ],
-      "enrichedAt": "2026-11-28T02:44:09.992Z",
       "enrichModel": "gemini-3.5-flash-lite",
       "enrichVersion": 1
     },
@@ -140040,26 +139979,6 @@
     "NW/mobisys": {
       "cfpCrawledAt": "2026-11-28T02:20:33.576Z",
       "cfpError": "https://www.sigmobile.org/mobisys/2027/: không thấy link CFP | https://www.sigmobile.org/mobisys/2026/: không thấy link CFP"
-    },
-    "SE/models": {
-      "cfpCrawledAt": "2026-11-28T02:20:35.619Z",
-      "cfpUrl": "https://conf.researchr.org/track/variability-2027/variability-2027-papers",
-      "enrichTriedAt": "2026-11-28T02:46:05.399Z",
-      "summary": "The conference solicits contributions on software and systems variability, reuse, configuration, and model-driven engineering, focusing on digital twins, software product lines, and AI-driven methods.",
-      "topics": [
-        "variability management",
-        "digital twins",
-        "software product lines",
-        "model-driven engineering",
-        "code synthesis",
-        "testing and analysis",
-        "runtime variability",
-        "machine learning for variability",
-        "software reuse"
-      ],
-      "enrichedAt": "2026-11-28T02:46:06.445Z",
-      "enrichModel": "gemini-3.5-flash-lite",
-      "enrichVersion": 1
     },
     "DS/msst": {
       "cfpCrawledAt": "2026-11-28T02:20:40.817Z",
@@ -144102,6 +144021,77 @@
         "industrial iot"
       ],
       "enrichedAt": "2026-11-28T03:04:41.464Z",
+      "enrichModel": "gemini-3.5-flash-lite",
+      "enrichVersion": 1
+    },
+    "SE/icse": {
+      "cfpCrawledAt": "2026-11-28T03:06:27.649Z",
+      "cfpUrl": "https://conf.researchr.org/home/icse-2027",
+      "enrichTriedAt": "2026-11-28T03:06:35.119Z",
+      "summary": "ICSE is the premier international conference for software engineering, welcoming research on empirical studies, industrial applications, user studies, and qualitative methods.",
+      "topics": [
+        "software engineering",
+        "empirical studies",
+        "industrial research",
+        "user studies",
+        "qualitative research",
+        "quantitative research"
+      ],
+      "enrichedAt": "2026-11-28T03:06:36.524Z",
+      "enrichModel": "gemini-3.5-flash-lite",
+      "enrichVersion": 1
+    },
+    "SE/icsme": {
+      "cfpCrawledAt": "2026-11-28T03:06:30.430Z",
+      "cfpUrl": "https://conf.researchr.org/home/icsme-2026",
+      "enrichTriedAt": "2026-11-28T03:06:41.034Z",
+      "summary": "ICSME is an international conference focused on software maintenance and evolution, featuring various tracks including research papers, replication and negative results, industry contributions, and tool demonstrations.",
+      "topics": [
+        "software maintenance",
+        "software evolution",
+        "replication and negative results",
+        "tool demonstration",
+        "data showcase",
+        "doctoral symposium"
+      ],
+      "enrichedAt": "2026-11-28T03:06:41.881Z",
+      "enrichModel": "gemini-3.5-flash-lite",
+      "enrichVersion": 1
+    },
+    "DS/cgo": {
+      "cfpCrawledAt": "2026-11-28T03:06:32.446Z",
+      "cfpUrl": "https://conf.researchr.org/home/cgo-2027",
+      "enrichTriedAt": "2026-11-28T03:06:46.387Z",
+      "summary": "CGO brings together researchers and practitioners working at the interface of hardware and software on optimization and code generation techniques, spanning static and dynamic approaches.",
+      "topics": [
+        "code generation",
+        "optimization techniques",
+        "hardware and software interface",
+        "static approaches",
+        "dynamic approaches",
+        "software-based methods",
+        "architectural features"
+      ],
+      "enrichedAt": "2026-11-28T03:06:47.415Z",
+      "enrichModel": "gemini-3.5-flash-lite",
+      "enrichVersion": 1
+    },
+    "SE/models": {
+      "cfpCrawledAt": "2026-11-28T03:06:34.467Z",
+      "cfpUrl": "https://conf.researchr.org/track/models-2027/models-2027-research-papers",
+      "enrichTriedAt": "2026-11-28T03:06:51.917Z",
+      "summary": "MoDELS solicits research on model-driven engineering languages and systems, covering foundations, generative approaches, AI applications, quality assurance, and domain-specific modeling techniques.",
+      "topics": [
+        "model-based engineering",
+        "model transformation",
+        "digital twins",
+        "generative ai",
+        "quality assurance",
+        "collaborative modeling",
+        "cyber-physical systems",
+        "language workbenches"
+      ],
+      "enrichedAt": "2026-11-28T03:06:52.980Z",
       "enrichModel": "gemini-3.5-flash-lite",
       "enrichVersion": 1
     }

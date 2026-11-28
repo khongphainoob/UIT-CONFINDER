@@ -2,7 +2,7 @@
 import { describe, test } from 'node:test';
 import assert from 'node:assert/strict';
 import {
-  cfpFileName, crawlSeries, createPoliteFetcher, extractLinks, findCfpLink, focusCfpText,
+  acronymTokens, cfpFileName, crawlSeries, createPoliteFetcher, extractLinks, findCfpLink, focusCfpText,
   htmlToText, isAllowed, looksLikeCfp, parseRobots, pickSeriesToCrawl,
 } from '../src/cfp-crawler.js';
 
@@ -223,5 +223,24 @@ describe('chất lượng văn bản CFP', () => {
   test('trang chủ chỉ có thông tin chung thì không bị coi là CFP', () => {
     const home = `ACL 2027 will take place in Kyoto. ${'News and important dates. '.repeat(40)} Topics`;
     assert.equal(looksLikeCfp(home), false);
+  });
+});
+
+describe('nhiều hội nghị chung một website (conf.researchr.org)', () => {
+  const home = 'https://conf.researchr.org/home/icse-2027';
+  const html = `
+    <a href="https://conf.researchr.org/track/cain-2027/cain-2027-call-for-papers">Call for Papers</a>
+    <a href="https://conf.researchr.org/track/icse-2027/icse-2027-research-track">Research Track</a>`;
+
+  test('ICSE không lấy CFP của CAIN tổ chức cùng chỗ', () => {
+    assert.equal(findCfpLink(extractLinks(html, home), home, 'ICSE').url, 'https://conf.researchr.org/track/icse-2027/icse-2027-research-track');
+  });
+
+  test('tên ghép vẫn khớp: ICSE-CHASE nhận track chase, IEEE/ACM CGO bỏ track hpca', () => {
+    assert.equal(acronymTokens('IEEE/ACM CGO').join(), 'cgo');
+    const chase = '<a href="https://conf.researchr.org/track/chase-2027/chase-2027-papers">Call for Papers</a>';
+    assert.ok(findCfpLink(extractLinks(chase, home), home, 'ICSE-CHASE'));
+    const hpca = '<a href="https://conf.researchr.org/track/hpca-2027/hpca-2027-main-conference">Call for Papers</a>';
+    assert.equal(findCfpLink(extractLinks(hpca, home), home, 'IEEE/ACM CGO'), null);
   });
 });

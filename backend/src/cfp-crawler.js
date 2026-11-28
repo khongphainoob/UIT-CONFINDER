@@ -78,8 +78,20 @@ const POSITIVE = [
 // Trang của workshop, tutorial… cũng ghi "call for papers" nhưng không phải chủ đề chính của hội nghị.
 const NEGATIVE = /workshop|tutorial|demo|poster|doctoral|phd|student|industry|artifact|competition|challenge|sponsor|volunteer|camera|registration|visa|award|journal|short|position|late[\s_-]*breaking|findings|reviewer/;
 
-export function scoreCfpLink({ url, text }, homeUrl) {
+const ORG_WORDS = new Set(['ieee', 'acm', 'usenix', 'the', 'int', 'intl', 'conf', 'and', 'for']);
+
+/** Tên viết tắt tách thành từ để so với URL: "IEEE/ACM CGO" → ["cgo"], "ICSE-CHASE" → ["icse", "chase"]. */
+export function acronymTokens(acronym = '') {
+  return acronym.toLowerCase().split(/[^a-z0-9]+/).filter((word) => word.length >= 3 && !ORG_WORDS.has(word));
+}
+
+export function scoreCfpLink({ url, text }, homeUrl, acronym = '') {
   const haystack = `${text} ${url}`.toLowerCase();
+  const tokens = acronymTokens(acronym);
+  // conf.researchr.org gom nhiều hội nghị tổ chức chung (ICSE cùng CAIN, CGO cùng HPCA…).
+  // Link /track/<tên>-<năm>/ không chứa tên hội nghị đang crawl là của hội nghị khác: loại.
+  const track = /\/track\/([a-z0-9-]+?)-\d{4}\//i.exec(url);
+  if (track && tokens.length && !tokens.some((token) => url.toLowerCase().includes(token))) return 0;
   let score = 0;
   for (const [pattern, weight] of POSITIVE) if (pattern.test(haystack)) score += weight;
   // Menu chỉ ghi "Papers" / "Technical Papers" (CHI, SIGGRAPH) vẫn là trang CFP của track chính.
@@ -90,15 +102,17 @@ export function scoreCfpLink({ url, text }, homeUrl) {
   try {
     if (new URL(url).hostname === new URL(homeUrl).hostname) score += 1;
   } catch { /* homeUrl hỏng thì bỏ qua điểm cộng */ }
+  // Link có tên chính hội nghị được ưu tiên hơn link chung chung.
+  if (tokens.some((token) => haystack.includes(token))) score += 2;
   return score;
 }
 
 /** Link CFP tốt nhất, điểm từ 4 trở lên mới nhận (tránh lấy nhầm link "Submission" chung chung). */
-export function findCfpLink(links, homeUrl) {
+export function findCfpLink(links, homeUrl, acronym = '') {
   let best = null;
   for (const link of links) {
     if (link.url === homeUrl) continue;
-    const score = scoreCfpLink(link, homeUrl);
+    const score = scoreCfpLink(link, homeUrl, acronym);
     if (score >= 4 && (!best || score > best.score)) best = { ...link, score };
   }
   return best;
@@ -290,12 +304,12 @@ export async function crawlSeries(target, fetchPage) {
     try {
       const home = await fetchPage(homeUrl);
       const homeLinks = extractLinks(home.html, home.url);
-      let link = findCfpLink(homeLinks, home.url);
+      let link = findCfpLink(homeLinks, home.url, target.acronym);
       const hub = link ? null : findCallsHub(homeLinks, home.url);
       if (hub) {
         try {
           const hubPage = await fetchPage(hub.url);
-          link = findCfpLink(extractLinks(hubPage.html, hubPage.url), hubPage.url);
+          link = findCfpLink(extractLinks(hubPage.html, hubPage.url), hubPage.url, target.acronym);
           // Trang "Calls" tự nó đã là CFP thì dùng luôn.
           if (!link && looksLikeCfp(focusCfpText(htmlToText(hubPage.html)))) link = { url: hubPage.url };
         } catch (error) {

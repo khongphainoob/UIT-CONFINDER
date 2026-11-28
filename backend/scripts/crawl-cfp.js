@@ -45,8 +45,12 @@ try {
   }
 
   await writeJsonAtomic(ENRICHED_PATH, catalog);
-  await writeFile(ERRORS_PATH, `${JSON.stringify(errors, null, 2)}\n`, 'utf8');
-  console.log(`Crawl xong: ${ok} thành công, ${errors.length} lỗi (chi tiết ở data/cfp-errors.json).`);
+  // File lỗi tổng hợp từ cả catalog (không chỉ lượt này), để chạy lại vài chuỗi không làm mất danh sách cũ.
+  const allErrors = Object.entries(catalog.series)
+    .filter(([, info]) => info.cfpError)
+    .map(([seriesKey, info]) => ({ seriesKey, crawledAt: info.cfpCrawledAt, error: info.cfpError }));
+  await writeFile(ERRORS_PATH, `${JSON.stringify(allErrors, null, 2)}\n`, 'utf8');
+  console.log(`Crawl xong: ${ok} thành công, ${errors.length} lỗi trong lượt này; tổng ${allErrors.length} chuỗi lỗi (data/cfp-errors.json).`);
 } catch (error) {
   console.error(`Crawl lỗi: ${error.message}`);
   process.exitCode = 1;
